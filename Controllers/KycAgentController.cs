@@ -22,43 +22,43 @@ public class KycAgentController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("process")]
-    public async Task<ActionResult<ResultForHttpsCode>> ProcessKycAgent(
-        [FromForm] List<IFormFile> documents,
-        [FromForm] IFormFile? licenseImage = null,
-        [FromForm] IFormFile? selfieImage = null)
-    {
-        if (documents == null || documents.Count == 0)
-        {
-            return BadRequest(new ResultForHttpsCode
-            {
-                id = 0,
-                EncryptOutput = "At least one document is required"
-            });
-        }
+    // [HttpPost("process")]
+    // public async Task<ActionResult<ResultForHttpsCode>> ProcessKycAgent(
+    //     [FromForm] List<IFormFile> documents,
+    //     [FromForm] IFormFile? licenseImage = null,
+    //     [FromForm] IFormFile? selfieImage = null)
+    // {
+    //     if (documents == null || documents.Count == 0)
+    //     {
+    //         return BadRequest(new ResultForHttpsCode
+    //         {
+    //             id = 0,
+    //             EncryptOutput = "At least one document is required"
+    //         });
+    //     }
 
-        try
-        {
-            // Process multiple documents
-            var result = await _kycAgentService.ProcessMultipleDocuments(documents, licenseImage, selfieImage);
-            
-            if (result.id == 0)
-            {
-                return BadRequest(result);
-            }
+    //     try
+    //     {
+    //         // Process multiple documents
+    //         var result = await _kycAgentService.ProcessMultipleDocuments(documents, licenseImage, selfieImage);
+    //         
+    //         if (result.id == 0)
+    //         {
+    //             return BadRequest(result);
+    //         }
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing KYC Agent");
-            return StatusCode(500, new ResultForHttpsCode
-            {
-                id = 0,
-                EncryptOutput = "Internal server error: " + ex.Message
-            });
-        }
-    }
+    //         return Ok(result);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Error processing KYC Agent");
+    //         return StatusCode(500, new ResultForHttpsCode
+    //         {
+    //             id = 0,
+    //             EncryptOutput = "Internal server error: " + ex.Message
+    //         });
+    //     }
+    // }
 
     [HttpPost("verify")]
     public async Task<ActionResult<KycVerificationResult>> VerifyKyc(

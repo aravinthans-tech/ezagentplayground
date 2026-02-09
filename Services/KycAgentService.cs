@@ -1,7 +1,7 @@
 using QRCodeAPI.Models;
-using Leadtools;
-using Leadtools.Codecs;
-using Leadtools.Ocr;
+// using Leadtools;
+// using Leadtools.Codecs;
+// using Leadtools.Ocr;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,10 +23,10 @@ public class KycAgentService
         _faceMatchingService = faceMatchingService;
     }
 
-    private bool InitLead()
-    {
-        return QrCodeService.SetLicense(false, _apiContentRootPath);
-    }
+    // private bool InitLead()
+    // {
+    //     return QrCodeService.SetLicense(false, _apiContentRootPath);
+    // }
 
     public async Task<ResultForHttpsCode> ProcessDocument(IFormFile file)
     {
@@ -42,12 +42,12 @@ public class KycAgentService
             }
 
             // Initialize LEADTOOLS
-            if (!InitLead())
-            {
-                result.id = 0;
-                result.EncryptOutput = "LEADTOOLS license initialization failed";
-                return result;
-            }
+            // if (!InitLead())
+            // {
+            //     result.id = 0;
+            //     result.EncryptOutput = "LEADTOOLS license initialization failed";
+            //     return result;
+            // }
 
             // Extract text from document
             string extractedText = await ExtractTextFromDocument(file);
@@ -97,12 +97,12 @@ public class KycAgentService
             }
 
             // Initialize LEADTOOLS
-            if (!InitLead())
-            {
-                result.id = 0;
-                result.EncryptOutput = "LEADTOOLS license initialization failed";
-                return result;
-            }
+            // if (!InitLead())
+            // {
+            //     result.id = 0;
+            //     result.EncryptOutput = "LEADTOOLS license initialization failed";
+            //     return result;
+            // }
 
             // Process each document
             var allKycData = new List<(KycData data, int index)>();
@@ -185,52 +185,55 @@ public class KycAgentService
                     }
 
                     // Use LEADTOOLS OCR to extract text
-                    using (RasterCodecs codecs = new RasterCodecs())
-                    {
-                        // Create OCR engine
-                        using (IOcrEngine ocrEngine = OcrEngineManager.CreateEngine(OcrEngineType.LEAD))
-                        {
-                            // Start the OCR engine
-                            ocrEngine.Startup(codecs, null, null, null);
+                    // using (RasterCodecs codecs = new RasterCodecs())
+                    // {
+                    //     // Create OCR engine
+                    //     using (IOcrEngine ocrEngine = OcrEngineManager.CreateEngine(OcrEngineType.LEAD))
+                    //     {
+                    //         // Start the OCR engine
+                    //         ocrEngine.Startup(codecs, null, null, null);
 
-                            try
-                            {
-                                // Create OCR document from file
-                                using (IOcrDocument ocrDocument = ocrEngine.DocumentManager.CreateDocument())
-                                {
-                                    // Add page from file
-                                    IOcrPage ocrPage = ocrDocument.Pages.AddPage(tempFilePath, null);
-                                    
-                                    // Recognize the page
-                                    ocrPage.Recognize(null);
+                    //         try
+                    //         {
+                    //             // Create OCR document from file
+                    //             using (IOcrDocument ocrDocument = ocrEngine.DocumentManager.CreateDocument())
+                    //             {
+                    //                 // Add page from file
+                    //                 IOcrPage ocrPage = ocrDocument.Pages.AddPage(tempFilePath, null);
+                    //                 
+                    //                 // Recognize the page
+                    //                 ocrPage.Recognize(null);
 
-                                    // Get recognized text
-                                    string extractedText = ocrPage.GetText(-1);
-                                    
-                                    return extractedText ?? string.Empty;
-                                }
-                            }
-                            catch (Exception ocrEx)
-                            {
-                                _logger.LogWarning(ocrEx, "OCR recognition failed, trying fallback method");
-                                
-                                // Fallback: Try to load as image and return placeholder
-                                RasterImage image = codecs.Load(tempFilePath, 0, CodecsLoadByteOrder.BgrOrGray, 1, 1);
-                                if (image != null)
-                                {
-                                    image.Dispose();
-                                    // Return a message indicating OCR failed but file was readable
-                                    return "OCR processing encountered an issue. Please ensure the document is clear and readable.";
-                                }
-                                
-                                return string.Empty;
-                            }
-                            finally
-                            {
-                                ocrEngine.Shutdown();
-                            }
-                        }
-                    }
+                    //                 // Get recognized text
+                    //                 string extractedText = ocrPage.GetText(-1);
+                    //                 
+                    //                 return extractedText ?? string.Empty;
+                    //             }
+                    //         }
+                    //         catch (Exception ocrEx)
+                    //         {
+                    //             _logger.LogWarning(ocrEx, "OCR recognition failed, trying fallback method");
+                    //             
+                    //             // Fallback: Try to load as image and return placeholder
+                    //             RasterImage image = codecs.Load(tempFilePath, 0, CodecsLoadByteOrder.BgrOrGray, 1, 1);
+                    //             if (image != null)
+                    //             {
+                    //                 image.Dispose();
+                    //                 // Return a message indicating OCR failed but file was readable
+                    //                 return "OCR processing encountered an issue. Please ensure the document is clear and readable.";
+                    //             }
+                    //             
+                    //             return string.Empty;
+                    //         }
+                    //         finally
+                    //         {
+                    //             ocrEngine.Shutdown();
+                    //         }
+                    //     }
+                    // }
+                    
+                    // Return empty string since OCR is disabled
+                    return string.Empty;
                 }
                 finally
                 {

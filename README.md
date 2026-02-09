@@ -1,6 +1,6 @@
 # QR Code Generation API
 
-A RESTful API built with ASP.NET Core 8 for generating QR codes using LEADTOOLS, featuring API key authentication and an interactive playground.
+A RESTful API built with ASP.NET Core 8 for generating QR codes, featuring API key authentication and an interactive playground.
 
 ## Features
 
@@ -13,8 +13,6 @@ A RESTful API built with ASP.NET Core 8 for generating QR codes using LEADTOOLS,
 ## Prerequisites
 
 - .NET 8 SDK
-- LEADTOOLS license files (LEADTOOLS.LIC and LEADTOOLS.LIC.key)
-- Valid LEADTOOLS NuGet packages
 
 ## Setup
 
@@ -35,31 +33,13 @@ A RESTful API built with ASP.NET Core 8 for generating QR codes using LEADTOOLS,
    }
    ```
 
-3. **Configure License Files**
-
-   Place your LEADTOOLS license files in:
-   ```
-   Common/Liscence/LEADTOOLS.LIC
-   Common/Liscence/LEADTOOLS.LIC.key
-   ```
-
-   Or configure a custom path in `appsettings.json`:
-
-   ```json
-   {
-     "License": {
-       "ContentRootPath": "C:\\Path\\To\\Your\\License\\Directory"
-     }
-   }
-   ```
-
-4. **Restore Dependencies**
+3. **Restore Dependencies**
 
    ```bash
    dotnet restore
    ```
 
-5. **Run the Application**
+4. **Run the Application**
 
    ```bash
    dotnet run
@@ -67,7 +47,7 @@ A RESTful API built with ASP.NET Core 8 for generating QR codes using LEADTOOLS,
 
    The API will be available at `https://localhost:5001` or `http://localhost:5000`
 
-6. **Access the Playground**
+5. **Access the Playground**
 
    Open your browser and navigate to:
    ```
@@ -222,37 +202,11 @@ Add valid API keys in `appsettings.json`:
 }
 ```
 
-### License Path
-
-Configure the license file directory:
-
-```json
-{
-  "License": {
-    "ContentRootPath": "C:\\Path\\To\\License\\Directory"
-  }
-}
-```
-
-If not specified, the application will use `AppDomain.CurrentDomain.BaseDirectory`.
-
 ## Dependencies
 
-- **Leadtools.Barcode** (22.0.0.8) - Barcode generation
-- **Leadtools.Document.Sdk** (22.0.0.8) - Document SDK
-- **Leadtools.Image.Processing** (22.0.0.8) - Image processing
-- **Leadtools.Pdf** (22.0.0.8) - PDF support
 - **System.Drawing.Common** (8.0.0) - Image conversion
 
 ## Troubleshooting
-
-### License Issues
-
-If you see license-related errors:
-
-1. Ensure `LEADTOOLS.LIC` and `LEADTOOLS.LIC.key` files exist in `Common/Liscence/` directory
-2. Verify the license files are valid and not expired
-3. Check the `ContentRootPath` configuration in `appsettings.json`
 
 ### API Key Not Working
 
@@ -260,7 +214,4 @@ If you see license-related errors:
 2. Check that the API key exists in `appsettings.json` under `ApiKeys:ValidKeys`
 3. Ensure the middleware is properly configured in `Program.cs`
 
-## License
-
-This project uses LEADTOOLS, which requires a valid license. Contact LEAD Sales for licensing information.
 

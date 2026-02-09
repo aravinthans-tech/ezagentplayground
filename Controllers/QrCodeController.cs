@@ -17,33 +17,33 @@ public class QrCodeController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("generate")]
-    public ActionResult<ResultForHttpsCode> GenerateQrCode([FromBody] QrCodeRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request?.qrvalue))
-        {
-            return BadRequest(new ResultForHttpsCode
-            {
-                id = 0,
-                EncryptOutput = "QR value is required"
-            });
-        }
+    // [HttpPost("generate")]
+    // public ActionResult<ResultForHttpsCode> GenerateQrCode([FromBody] QrCodeRequest request)
+    // {
+    //     if (string.IsNullOrWhiteSpace(request?.qrvalue))
+    //     {
+    //         return BadRequest(new ResultForHttpsCode
+    //         {
+    //             id = 0,
+    //             EncryptOutput = "QR value is required"
+    //         });
+    //     }
 
-        try
-        {
-            var result = _qrCodeService.GenerateQrCode(request.qrvalue);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating QR code");
-            return StatusCode(500, new ResultForHttpsCode
-            {
-                id = 0,
-                EncryptOutput = "Internal server error: " + ex.Message
-            });
-        }
-    }
+    //     try
+    //     {
+    //         var result = _qrCodeService.GenerateQrCode(request.qrvalue);
+    //         return Ok(result);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Error generating QR code");
+    //         return StatusCode(500, new ResultForHttpsCode
+    //         {
+    //             id = 0,
+    //             EncryptOutput = "Internal server error: " + ex.Message
+    //         });
+    //     }
+    // }
 }
 
 public class QrCodeRequest
