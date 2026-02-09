@@ -8,14 +8,14 @@ public class KycVerificationService
     private readonly DocumentProcessingService _documentProcessingService;
     private readonly AddressVerificationService _addressVerificationService;
     private readonly ConsistencyCheckService _consistencyCheckService;
-    private readonly FaceMatchingService _faceMatchingService;
+    private readonly FaceMatchingService? _faceMatchingService;
     private readonly ILogger<KycVerificationService> _logger;
 
     public KycVerificationService(
         DocumentProcessingService documentProcessingService,
         AddressVerificationService addressVerificationService,
         ConsistencyCheckService consistencyCheckService,
-        FaceMatchingService faceMatchingService,
+        FaceMatchingService? faceMatchingService,
         ILogger<KycVerificationService> logger)
     {
         _documentProcessingService = documentProcessingService;
@@ -43,9 +43,20 @@ public class KycVerificationService
 
             // Start face matching in parallel (if provided) - doesn't depend on document processing
             Task<(byte[]? licenseFace, byte[]? selfieFace, bool match, int matchScore, string message)>? faceMatchTask = null;
-            if (request.LicenseImage != null && request.SelfieImage != null)
+            if (request.LicenseImage != null && request.SelfieImage != null && _faceMatchingService != null)
             {
-                faceMatchTask = _faceMatchingService.ProcessAndCompare(request.LicenseImage, request.SelfieImage);
+                try
+                {
+                    faceMatchTask = _faceMatchingService.ProcessAndCompare(request.LicenseImage, request.SelfieImage);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Face matching service is unavailable. Skipping face verification.");
+                }
+            }
+            else if (request.LicenseImage != null && request.SelfieImage != null && _faceMatchingService == null)
+            {
+                _logger.LogWarning("Face matching requested but service is not available. OpenCV may not be properly initialized.");
             }
 
             // Phase 1: Process all documents in parallel to extract addresses (skip Google Maps verification)

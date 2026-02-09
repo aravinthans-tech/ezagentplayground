@@ -9,18 +9,35 @@ public class FaceMatchingService
     private readonly IConfiguration _configuration;
     private CascadeClassifier? _faceCascade;
 
+    private bool _isInitialized = false;
+    private readonly object _initLock = new object();
+
     public FaceMatchingService(ILogger<FaceMatchingService> logger, IConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
-        try
+        // Don't initialize OpenCV in constructor - use lazy initialization
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_isInitialized) return;
+        
+        lock (_initLock)
         {
-            InitializeFaceCascade();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
-            _faceCascade = null;
+            if (_isInitialized) return;
+            
+            try
+            {
+                InitializeFaceCascade();
+                _isInitialized = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
+                _faceCascade = null;
+                _isInitialized = true; // Mark as initialized even if failed, to prevent retry loops
+            }
         }
     }
 
@@ -76,6 +93,15 @@ public class FaceMatchingService
         IFormFile licenseImage, 
         IFormFile selfieImage)
     {
+        // Lazy initialize OpenCV only when actually needed
+        EnsureInitialized();
+        
+        // If OpenCV failed to initialize, return error message
+        if (_faceCascade == null)
+        {
+            return (null, null, false, 0, "❌ Face matching is currently unavailable. OpenCV native libraries could not be loaded.");
+        }
+        
         try
         {
             // Read images
