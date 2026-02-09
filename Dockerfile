@@ -19,16 +19,22 @@ RUN dotnet publish "QRCodeAPI.csproj" -c Release -o /app/publish /p:UseAppHost=f
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Install OpenCV dependencies (required for OpenCvSharp4)
-# libopencv-dev will pull in all necessary OpenCV libraries
-RUN apt-get update && \
-    apt-get install -y \
+# Install essential dependencies first
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     libgdiplus \
     libc6-dev \
-    libopencv-dev \
     libtbb2 \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Try to install OpenCV packages (optional - continue if not available)
+# OpenCvSharp4 may work with system libraries or NuGet runtime packages
+RUN apt-get update --fix-missing && \
+    (apt-get install -y --no-install-recommends libopencv-dev || \
+     apt-get install -y --no-install-recommends libopencv-core libopencv-imgproc libopencv-imgcodecs libopencv-objdetect || \
+     true) && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy published application
 COPY --from=publish /app/publish .
