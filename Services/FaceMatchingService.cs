@@ -3,42 +3,24 @@ using OpenCvSharp;
 
 namespace QRCodeAPI.Services;
 
-public class FaceMatchingService : IDisposable
+public class FaceMatchingService
 {
     private readonly ILogger<FaceMatchingService> _logger;
     private readonly IConfiguration _configuration;
     private CascadeClassifier? _faceCascade;
 
-    private bool _isInitialized = false;
-    private readonly object _initLock = new object();
-    private bool _disposed = false;
-
     public FaceMatchingService(ILogger<FaceMatchingService> logger, IConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
-        // Don't initialize OpenCV in constructor - use lazy initialization
-    }
-
-    private void EnsureInitialized()
-    {
-        if (_isInitialized) return;
-        
-        lock (_initLock)
+        try
         {
-            if (_isInitialized) return;
-            
-            try
-            {
-                InitializeFaceCascade();
-                _isInitialized = true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
-                _faceCascade = null;
-                _isInitialized = true; // Mark as initialized even if failed, to prevent retry loops
-            }
+            InitializeFaceCascade();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
+            _faceCascade = null;
         }
     }
 
@@ -67,38 +49,15 @@ public class FaceMatchingService : IDisposable
 
             if (cascadePath != null)
             {
-                try
+                _faceCascade = new CascadeClassifier(cascadePath);
+                if (_faceCascade.Empty())
                 {
-                    _faceCascade = new CascadeClassifier(cascadePath);
-                    if (_faceCascade.Empty())
-                    {
-                        _logger.LogWarning("Face cascade file is empty or invalid");
-                        try
-                        {
-                            _faceCascade.Dispose();
-                        }
-                        catch
-                        {
-                            // Ignore disposal errors during initialization
-                        }
-                        _faceCascade = null;
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Face cascade loaded successfully from: {Path}", cascadePath);
-                    }
-                }
-                catch (TypeInitializationException ex)
-                {
-                    _logger.LogError(ex.InnerException ?? ex, "OpenCV native libraries not available. Cannot create CascadeClassifier.");
+                    _logger.LogWarning("Face cascade file is empty or invalid");
                     _faceCascade = null;
-                    throw; // Re-throw to be caught by EnsureInitialized
                 }
-                catch (DllNotFoundException ex)
+                else
                 {
-                    _logger.LogError(ex, "OpenCV DLL not found. Cannot create CascadeClassifier.");
-                    _faceCascade = null;
-                    throw; // Re-throw to be caught by EnsureInitialized
+                    _logger.LogInformation("Face cascade loaded successfully from: {Path}", cascadePath);
                 }
             }
             else
@@ -117,15 +76,6 @@ public class FaceMatchingService : IDisposable
         IFormFile licenseImage, 
         IFormFile selfieImage)
     {
-        // Lazy initialize OpenCV only when actually needed
-        EnsureInitialized();
-        
-        // If OpenCV failed to initialize, return error message
-        if (_faceCascade == null)
-        {
-            return (null, null, false, 0, "❌ Face matching is currently unavailable. OpenCV native libraries could not be loaded.");
-        }
-        
         try
         {
             // Read images
@@ -412,62 +362,6 @@ public class FaceMatchingService : IDisposable
         {
             _logger.LogError(ex, "Error converting Mat to byte array");
             return null;
-        }
-    }
-
-    // Dispose pattern to properly clean up OpenCV resources and prevent finalizer crashes
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                // Dispose managed resources
-                if (_faceCascade != null)
-                {
-                    try
-                    {
-                        _faceCascade.Dispose();
-                    }
-                    catch (TypeInitializationException ex)
-                    {
-                        // Suppress finalizer exceptions - OpenCV native libraries may not be available
-                        _logger.LogWarning(ex.InnerException ?? ex, "Error disposing CascadeClassifier (OpenCV may not be available). This is safe to ignore.");
-                    }
-                    catch (DllNotFoundException ex)
-                    {
-                        // Suppress DLL not found exceptions during disposal
-                        _logger.LogWarning(ex, "OpenCV DLL not found during disposal. This is safe to ignore.");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log but don't throw - we're disposing, so errors are acceptable
-                        _logger.LogWarning(ex, "Error disposing CascadeClassifier. This is safe to ignore.");
-                    }
-                    finally
-                    {
-                        _faceCascade = null;
-                    }
-                }
-            }
-            _disposed = true;
-        }
-    }
-
-    // Finalizer - should not be called if Dispose is called, but added as safety net
-    ~FaceMatchingService()
-    {
-        // Only dispose unmanaged resources in finalizer
-        // CascadeClassifier is managed, so we just log if finalizer is called
-        if (!_disposed)
-        {
-            _logger.LogWarning("FaceMatchingService finalizer called. This should not happen if Dispose was called properly.");
         }
     }
 }
