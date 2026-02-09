@@ -19,62 +19,6 @@ public class QrCodeService
         _apiContentRootPath = _configuration["License:ContentRootPath"] ?? AppDomain.CurrentDomain.BaseDirectory;
     }
 
-    // public static bool SetLicense()
-    // {
-    //     return SetLicense(false, AppDomain.CurrentDomain.BaseDirectory);
-    // }
-
-    // public static bool SetLicense(bool silent, string? apiContentRootPath = null)
-    // {
-    //     string rootPath = apiContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
-    //     
-    //     if (RasterSupport.KernelExpired)
-    //     {
-    //         string dir = Path.Combine(rootPath, "Common");
-    //         string licenseFileRelativePath = Path.Combine(dir, "Liscence", "LEADTOOLS.LIC");
-    //         string keyFileRelativePath = Path.Combine(dir, "Liscence", "LEADTOOLS.LIC.key");
-
-    //         if (System.IO.File.Exists(licenseFileRelativePath) && System.IO.File.Exists(keyFileRelativePath))
-    //         {
-    //             string developerKey = System.IO.File.ReadAllText(keyFileRelativePath);
-    //             try
-    //             {
-    //                 RasterSupport.SetLicense(licenseFileRelativePath, developerKey);
-    //             }
-    //             catch (Exception ex)
-    //             {
-    //                 System.Diagnostics.Debug.Write(ex.Message);
-    //             }
-    //         }
-    //     }
-
-    //     if (RasterSupport.KernelExpired)
-    //     {
-    //         if (silent == false)
-    //         {
-    //             string msg = "Your license file is missing, invalid or expired. LEADTOOLS will not function. Please contact LEAD Sales for information on obtaining a valid license.";
-    //             string logmsg = string.Format("*** NOTE: {0} ***{1}", msg, Environment.NewLine);
-    //             System.Diagnostics.Debugger.Log(0, null, "*******************************************************************************" + Environment.NewLine);
-    //             System.Diagnostics.Debugger.Log(0, null, logmsg);
-    //             System.Diagnostics.Debugger.Log(0, null, "*******************************************************************************" + Environment.NewLine);
-
-    //             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-    //             {
-    //                 FileName = "https://www.leadtools.com/downloads/evaluation-form.asp?evallicenseonly=true",
-    //                 UseShellExecute = true
-    //             });
-    //         }
-
-    //         return false;
-    //     }
-
-    //     return true;
-    // }
-
-    // public bool InitLead()
-    // {
-    //     return SetLicense(false, _apiContentRootPath);
-    // }
 
     public ResultForHttpsCode GenerateQrCode(string qrvalue)
     {
