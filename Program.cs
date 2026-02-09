@@ -34,34 +34,54 @@ builder.Services.AddScoped<DocumentProcessingService>();
 builder.Services.AddScoped<AddressVerificationService>();
 builder.Services.AddScoped<ConsistencyCheckService>();
 
-// Register FaceMatchingService - use factory pattern to handle potential OpenCV initialization failures
-// OpenCV can throw TypeInitializationException during class loading, so we use lazy initialization
-// The service will be created on first request, and if OpenCV fails, it will gracefully degrade
-builder.Services.AddScoped<FaceMatchingService>(serviceProvider =>
+// Register FaceMatchingService conditionally - handle OpenCV loading failures gracefully
+// TypeInitializationException can occur during class loading, so we wrap the entire registration
+try
 {
-    try
+    builder.Services.AddScoped<FaceMatchingService?>(serviceProvider =>
     {
-        var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
-        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-        return new FaceMatchingService(logger, configuration);
-    }
-    catch (TypeInitializationException ex)
-    {
-        // If OpenCV fails to load, create a service instance anyway (it will handle the error gracefully)
-        var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
-        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-        logger.LogError(ex, "OpenCV failed to initialize during FaceMatchingService creation. Face matching will be unavailable.");
-        return new FaceMatchingService(logger, configuration);
-    }
-    catch (Exception ex)
-    {
-        // Catch any other exceptions
-        var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
-        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-        logger.LogWarning(ex, "Warning during FaceMatchingService creation. Face matching may be unavailable.");
-        return new FaceMatchingService(logger, configuration);
-    }
-});
+        try
+        {
+            // Try to create the service - if OpenCV isn't available, this will fail gracefully
+            var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            var service = new FaceMatchingService(logger, configuration);
+            return service;
+        }
+        catch (TypeInitializationException ex)
+        {
+            // OpenCV native libraries not available - return null instead of crashing
+            var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
+            logger.LogWarning(ex.InnerException ?? ex, "OpenCV native libraries not available. Face matching will be unavailable.");
+            return null;
+        }
+        catch (DllNotFoundException ex)
+        {
+            // OpenCV DLL not found - return null
+            var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
+            logger.LogWarning(ex, "OpenCV DLL not found. Face matching will be unavailable.");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            // Other exceptions - log and return null
+            var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
+            logger.LogWarning(ex, "Failed to create FaceMatchingService. Face matching will be unavailable.");
+            return null;
+        }
+    });
+}
+catch (TypeInitializationException)
+{
+    // If OpenCV fails during class loading (when JIT compiles the class), skip registration entirely
+    // This prevents the app from crashing - KycVerificationService will handle null FaceMatchingService
+    Console.WriteLine("WARNING: OpenCV failed to load during class initialization. FaceMatchingService will not be available.");
+}
+catch (Exception ex)
+{
+    // Log any other errors but don't crash
+    Console.WriteLine($"WARNING: Could not register FaceMatchingService: {ex.Message}");
+}
 
 builder.Services.AddScoped<KycVerificationService>();
 
@@ -77,6 +97,22 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Early check for OpenCV availability - log warning if not available but don't crash
+try
+{
+    // Try to reference FaceMatchingService type to see if OpenCV can be loaded
+    var faceMatchingType = typeof(FaceMatchingService);
+    app.Logger.LogInformation("FaceMatchingService type loaded successfully");
+}
+catch (TypeInitializationException ex)
+{
+    app.Logger.LogWarning(ex.InnerException ?? ex, "OpenCV native libraries not available. Face matching will be unavailable.");
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Could not verify FaceMatchingService availability. Face matching may be unavailable.");
+}
 
 // Configure the HTTP request pipeline
 app.UseCors("AllowAll");
