@@ -19,10 +19,7 @@ RUN apt-get update && \
         libc6-dev \
         libtbb2 \
         libgomp1 \
-        libopencv-core4.7 \
-        libopencv-imgproc4.7 \
-        libopencv-imgcodecs4.7 \
-        libopencv-objdetect4.7 \
+        libopencv-dev \
         ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
@@ -37,3 +34,4 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "QRCodeAPI.dll"]
+
