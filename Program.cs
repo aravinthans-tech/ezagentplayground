@@ -6,7 +6,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Add HttpClientFactory for external API calls
+// Add HttpClientFactory for external API calls with timeout configuration
+builder.Services.AddHttpClient("OpenRouter", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(180); // 3 minutes for LLM API calls
+});
+
+builder.Services.AddHttpClient("Unstract", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(300); // 5 minutes for OCR processing
+});
+
+// Default HttpClient for other services
 builder.Services.AddHttpClient();
 
 // Register QrCodeService

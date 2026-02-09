@@ -32,9 +32,11 @@ public class DocumentProcessingService
 
     public async Task<string> ExtractTextFromFile(IFormFile file)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("Unstract");
+            _logger.LogInformation("Starting OCR text extraction for file: {FileName}", file.FileName);
             var fileName = file.FileName;
             var contentType = file.ContentType ?? "application/octet-stream";
 
@@ -143,6 +145,9 @@ public class DocumentProcessingService
             var responseContentType = retrieveResponse.Content.Headers.ContentType?.MediaType ?? "";
             var responseContent = await retrieveResponse.Content.ReadAsStringAsync();
             
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogInformation("OCR text extraction completed in {ElapsedSeconds:F2} seconds", elapsedTime);
+            
             // When text_only=true, Unstract API returns plain text (text/plain content type)
             // Handle text/plain explicitly as it's the expected format
             if (responseContentType.Contains("text/plain"))
@@ -192,18 +197,33 @@ public class DocumentProcessingService
                 return responseContent.Trim();
             }
         }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException || ex.CancellationToken.IsCancellationRequested)
+        {
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Timeout error extracting text from file after {ElapsedSeconds:F2} seconds. Request may have exceeded timeout limit.", elapsedTime);
+            throw new Exception($"OCR request timed out after {elapsedTime:F2} seconds. The file may be too large or the service is slow. Please try again.");
+        }
+        catch (TimeoutException ex)
+        {
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Timeout error extracting text from file after {ElapsedSeconds:F2} seconds", elapsedTime);
+            throw new Exception($"OCR request timed out after {elapsedTime:F2} seconds. Please try again.");
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting text from file");
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Error extracting text from file after {ElapsedSeconds:F2} seconds", elapsedTime);
             throw;
         }
     }
 
     public async Task<string> ExtractAddressWithLLM(string text, string modelChoice)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("OpenRouter");
+            _logger.LogInformation("Starting address extraction with LLM (Model: {Model})", modelChoice);
             var modelMap = new Dictionary<string, string>
             {
                 { "Mistral", "mistralai/Mistral-7B-Instruct-v0.2" },
@@ -272,10 +292,12 @@ Address:";
             request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
             var response = await httpClient.SendAsync(request);
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
             
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("OpenRouter API request failed after {ElapsedSeconds:F2} seconds. Status: {StatusCode}, Error: {Error}", elapsedTime, response.StatusCode, errorContent);
                 if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                 {
                     throw new Exception($"OpenRouter API service temporarily unavailable (503). Please try again in a few moments. Error: {errorContent}");
@@ -283,6 +305,7 @@ Address:";
                 throw new Exception($"OpenRouter API request failed ({response.StatusCode}): {errorContent}");
             }
 
+            _logger.LogInformation("Address extraction completed in {ElapsedSeconds:F2} seconds", elapsedTime);
             var responseJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             var extractedAddress = responseJson.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
 
@@ -299,9 +322,40 @@ Address:";
             
             return cleanedAddress;
         }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException || ex.CancellationToken.IsCancellationRequested)
+        {
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Timeout error extracting address with LLM after {ElapsedSeconds:F2} seconds. Attempting fallback extraction.", elapsedTime);
+            // On timeout, try fallback extraction instead of throwing
+            try
+            {
+                return ExtractAddressFallback(text);
+            }
+            catch
+            {
+                _logger.LogError("Fallback address extraction also failed");
+                return "None";
+            }
+        }
+        catch (TimeoutException ex)
+        {
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Timeout error extracting address with LLM after {ElapsedSeconds:F2} seconds. Attempting fallback extraction.", elapsedTime);
+            // On timeout, try fallback extraction instead of throwing
+            try
+            {
+                return ExtractAddressFallback(text);
+            }
+            catch
+            {
+                _logger.LogError("Fallback address extraction also failed");
+                return "None";
+            }
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting address with LLM. Attempting fallback extraction.");
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Error extracting address with LLM after {ElapsedSeconds:F2} seconds. Attempting fallback extraction.", elapsedTime);
             // On error, try fallback extraction instead of throwing
             try
             {
@@ -317,9 +371,11 @@ Address:";
 
     public async Task<Dictionary<string, object>> ExtractKycFields(string text, string modelChoice)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("OpenRouter");
+            _logger.LogInformation("Starting KYC fields extraction with LLM (Model: {Model})", modelChoice);
             var modelMap = new Dictionary<string, string>
             {
                 { "Mistral", "mistralai/Mistral-7B-Instruct-v0.2" },
@@ -386,10 +442,12 @@ Text:
             request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
             var response = await httpClient.SendAsync(request);
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
             
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("OpenRouter API request failed after {ElapsedSeconds:F2} seconds. Status: {StatusCode}, Error: {Error}", elapsedTime, response.StatusCode, errorContent);
                 if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                 {
                     throw new Exception($"OpenRouter API service temporarily unavailable (503). Please try again in a few moments. Error: {errorContent}");
@@ -397,6 +455,7 @@ Text:
                 throw new Exception($"OpenRouter API request failed ({response.StatusCode}): {errorContent}");
             }
 
+            _logger.LogInformation("KYC fields extraction completed in {ElapsedSeconds:F2} seconds", elapsedTime);
             var responseJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             var rawOutput = responseJson.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
 
@@ -425,9 +484,22 @@ Text:
                 { "raw_output", rawOutput }
             };
         }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException || ex.CancellationToken.IsCancellationRequested)
+        {
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Timeout error extracting KYC fields after {ElapsedSeconds:F2} seconds. Request may have exceeded timeout limit.", elapsedTime);
+            throw new Exception($"KYC fields extraction timed out after {elapsedTime:F2} seconds. Please try again.");
+        }
+        catch (TimeoutException ex)
+        {
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Timeout error extracting KYC fields after {ElapsedSeconds:F2} seconds", elapsedTime);
+            throw new Exception($"KYC fields extraction timed out after {elapsedTime:F2} seconds. Please try again.");
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting KYC fields");
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogError(ex, "Error extracting KYC fields after {ElapsedSeconds:F2} seconds", elapsedTime);
             throw;
         }
     }
