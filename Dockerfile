@@ -13,7 +13,7 @@ RUN dotnet build "QRCodeAPI.csproj" -c Release -o /app/build
 
 # Publish the application
 FROM build AS publish
-RUN dotnet publish "QRCodeAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "QRCodeAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:IncludeNativeLibrariesForSelfExtract=true
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
@@ -34,13 +34,28 @@ RUN apt-get update --fix-missing && \
 # Copy published application
 COPY --from=publish /app/publish .
 
-# Verify OpenCvSharp native libraries are present and set library path
-RUN echo "Checking for OpenCvSharp native libraries..." && \
-    find . -name "OpenCvSharpExtern.so" -o -name "libOpenCvSharpExtern.so" 2>/dev/null | head -5 || \
-    echo "Warning: OpenCvSharp native libraries not found. Face detection may not work." && \
-    echo "Contents of runtimes directory:" && \
-    (ls -la runtimes/ 2>/dev/null || echo "No runtimes directory found") && \
-    (ls -la runtimes/linux-x64/native/ 2>/dev/null || echo "No linux-x64 native directory found")
+# Verify and ensure OpenCvSharp native libraries are in the correct location
+# The publish should include them automatically, but we verify and provide diagnostics
+RUN echo "=== Verifying OpenCvSharp native libraries ===" && \
+    if [ -f "runtimes/linux-x64/native/libOpenCvSharpExtern.so" ] || [ -f "runtimes/linux-x64/native/OpenCvSharpExtern.so" ]; then \
+        echo "✓ OpenCvSharp native libraries found in runtimes/linux-x64/native/"; \
+        ls -lh runtimes/linux-x64/native/*OpenCvSharp* 2>/dev/null || true; \
+    else \
+        echo "⚠ Warning: OpenCvSharp native libraries not found in runtimes/linux-x64/native/"; \
+        echo "Searching entire publish output for OpenCvSharp libraries:"; \
+        find . -name "*OpenCvSharp*" -type f 2>/dev/null | head -10 || echo "No OpenCvSharp libraries found"; \
+        echo "Attempting to copy from build output if available..."; \
+        if [ -d "/app/build/runtimes/linux-x64/native" ]; then \
+            mkdir -p runtimes/linux-x64/native && \
+            cp /app/build/runtimes/linux-x64/native/*OpenCvSharp* runtimes/linux-x64/native/ 2>/dev/null && \
+            echo "✓ Copied libraries from build output" || echo "Could not copy from build output"; \
+        else \
+            echo "Build output not available in this stage"; \
+        fi; \
+    fi && \
+    echo "Final verification:" && \
+    (ls -lh runtimes/linux-x64/native/*OpenCvSharp* 2>/dev/null && echo "✓ Libraries confirmed" || echo "⚠ Libraries still not found - face detection will be unavailable") && \
+    echo "LD_LIBRARY_PATH will be: /app/runtimes/linux-x64/native"
 
 # Copy static files (wwwroot)
 COPY wwwroot ./wwwroot
@@ -54,7 +69,8 @@ EXPOSE 8080
 
 # Set environment variables for ASP.NET Core and library loading
 ENV ASPNETCORE_URLS=http://+:8080
-ENV LD_LIBRARY_PATH=/app/runtimes/linux-x64/native:${LD_LIBRARY_PATH}
+# Set LD_LIBRARY_PATH to include both the app's native directory and system paths
+ENV LD_LIBRARY_PATH=/app/runtimes/linux-x64/native:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}
 
 # Run the application
 ENTRYPOINT ["dotnet", "QRCodeAPI.dll"]
