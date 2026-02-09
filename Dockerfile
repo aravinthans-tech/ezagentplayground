@@ -20,9 +20,15 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
 # Install OpenCV dependencies (required for OpenCvSharp4)
+# libopencv-dev will pull in all necessary OpenCV libraries
 RUN apt-get update && \
-    apt-get install -y libgdiplus libc6-dev && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y \
+    libgdiplus \
+    libc6-dev \
+    libopencv-dev \
+    libtbb2 \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy published application
 COPY --from=publish /app/publish .
