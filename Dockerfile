@@ -19,21 +19,16 @@ RUN dotnet publish "QRCodeAPI.csproj" -c Release -o /app/publish /p:UseAppHost=f
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Install essential dependencies first
+# Install dependencies individually (continue even if some fail)
+# This ensures the build succeeds even if some packages aren't available
 RUN apt-get update --fix-missing && \
-    apt-get install -y --no-install-recommends \
-    libgdiplus \
-    libc6-dev \
-    libtbb2 \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Try to install OpenCV packages (optional - continue if not available)
-# OpenCvSharp4 may work with system libraries or NuGet runtime packages
-RUN apt-get update --fix-missing && \
+    (apt-get install -y --no-install-recommends libgdiplus || echo "libgdiplus not available") && \
+    (apt-get install -y --no-install-recommends libc6-dev || echo "libc6-dev not available") && \
+    (apt-get install -y --no-install-recommends libtbb2 || echo "libtbb2 not available") && \
+    (apt-get install -y --no-install-recommends libgomp1 || echo "libgomp1 not available") && \
     (apt-get install -y --no-install-recommends libopencv-dev || \
      apt-get install -y --no-install-recommends libopencv-core libopencv-imgproc libopencv-imgcodecs libopencv-objdetect || \
-     true) && \
+     echo "OpenCV packages not available") && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy published application
