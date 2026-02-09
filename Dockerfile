@@ -36,46 +36,63 @@ COPY --from=publish /app/publish .
 
 # Verify and copy OpenCvSharp native libraries to where OpenCV expects them
 # OpenCV looks in /usr/share/dotnet/shared/Microsoft.NETCore.App/{version}/ first
-RUN echo "=== Setting up OpenCvSharp native libraries ===" && \
-    DOTNET_VERSION=$(dotnet --version) && \
+RUN echo "=== Setting up OpenCvSharp native libraries ==="
+
+# Get .NET version
+RUN dotnet --version > /tmp/dotnet_version.txt
+
+# Set up target directory
+RUN DOTNET_VERSION=$(cat /tmp/dotnet_version.txt) && \
     DOTNET_SHARED_PATH="/usr/share/dotnet/shared/Microsoft.NETCore.App/${DOTNET_VERSION}" && \
     echo "Target .NET version: ${DOTNET_VERSION}" && \
     echo "Target path: ${DOTNET_SHARED_PATH}" && \
-    mkdir -p "${DOTNET_SHARED_PATH}" || true
+    mkdir -p "${DOTNET_SHARED_PATH}"
 
-# Find and copy the library (simplified to avoid complex conditionals)
-RUN DOTNET_VERSION=$(dotnet --version) && \
+# Try to copy library from runtimes/linux-x64/native/libOpenCvSharpExtern.so
+RUN DOTNET_VERSION=$(cat /tmp/dotnet_version.txt) && \
     DOTNET_SHARED_PATH="/usr/share/dotnet/shared/Microsoft.NETCore.App/${DOTNET_VERSION}" && \
     if [ -f "runtimes/linux-x64/native/libOpenCvSharpExtern.so" ]; then \
-        cp "runtimes/linux-x64/native/libOpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" && \
-        cp "runtimes/linux-x64/native/libOpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so" && \
-        chmod 755 "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" && \
-        chmod 755 "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so" && \
-        echo "Libraries copied from runtimes/linux-x64/native/"; \
-    elif [ -f "runtimes/linux-x64/native/OpenCvSharpExtern.so" ]; then \
-        cp "runtimes/linux-x64/native/OpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so" && \
-        cp "runtimes/linux-x64/native/OpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" && \
-        chmod 755 "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" && \
-        chmod 755 "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so" && \
-        echo "Libraries copied from runtimes/linux-x64/native/"; \
+        cp "runtimes/linux-x64/native/libOpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so"; \
+        cp "runtimes/linux-x64/native/libOpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so"; \
+        chmod 755 "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so"; \
+        chmod 755 "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so"; \
+        echo "Libraries copied successfully"; \
     else \
-        LIB_PATH=$(find . -name "*OpenCvSharpExtern.so" -type f 2>/dev/null | head -1) && \
-        if [ -n "${LIB_PATH}" ] && [ -f "${LIB_PATH}" ]; then \
-            cp "${LIB_PATH}" "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" && \
-            cp "${LIB_PATH}" "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so" && \
-            chmod 755 "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" && \
-            chmod 755 "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so" && \
+        echo "Library not found in runtimes/linux-x64/native/libOpenCvSharpExtern.so"; \
+    fi
+
+# Try alternative location if first attempt failed
+RUN DOTNET_VERSION=$(cat /tmp/dotnet_version.txt) && \
+    DOTNET_SHARED_PATH="/usr/share/dotnet/shared/Microsoft.NETCore.App/${DOTNET_VERSION}" && \
+    if [ ! -f "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" ] && [ -f "runtimes/linux-x64/native/OpenCvSharpExtern.so" ]; then \
+        cp "runtimes/linux-x64/native/OpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so"; \
+        cp "runtimes/linux-x64/native/OpenCvSharpExtern.so" "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so"; \
+        chmod 755 "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so"; \
+        chmod 755 "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so"; \
+        echo "Libraries copied from alternative location"; \
+    fi
+
+# Search entire directory if still not found
+RUN DOTNET_VERSION=$(cat /tmp/dotnet_version.txt) && \
+    DOTNET_SHARED_PATH="/usr/share/dotnet/shared/Microsoft.NETCore.App/${DOTNET_VERSION}" && \
+    if [ ! -f "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" ]; then \
+        LIB_PATH=$(find . -name "*OpenCvSharpExtern.so" -type f 2>/dev/null | head -1); \
+        if [ -n "${LIB_PATH}" ]; then \
+            cp "${LIB_PATH}" "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so"; \
+            cp "${LIB_PATH}" "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so"; \
+            chmod 755 "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so"; \
+            chmod 755 "${DOTNET_SHARED_PATH}/OpenCvSharpExtern.so"; \
             echo "Libraries copied from ${LIB_PATH}"; \
         else \
             echo "Warning: OpenCvSharp native libraries not found"; \
         fi; \
     fi
 
-# Verify libraries were copied
-RUN DOTNET_VERSION=$(dotnet --version) && \
+# Verify
+RUN DOTNET_VERSION=$(cat /tmp/dotnet_version.txt) && \
     DOTNET_SHARED_PATH="/usr/share/dotnet/shared/Microsoft.NETCore.App/${DOTNET_VERSION}" && \
     if [ -f "${DOTNET_SHARED_PATH}/libOpenCvSharpExtern.so" ]; then \
-        echo "Verification: Libraries exist in ${DOTNET_SHARED_PATH}/" && \
+        echo "Verification: Libraries exist"; \
         ls -lh "${DOTNET_SHARED_PATH}"/*OpenCvSharp* 2>/dev/null || true; \
     else \
         echo "Warning: Libraries not found in ${DOTNET_SHARED_PATH}/"; \
