@@ -202,7 +202,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 # License files (keep structure but ignore actual license files)
-Common/Liscence/*.LIC
-Common/Liscence/*.key
-!Common/Liscence/.gitkeep
+
 
