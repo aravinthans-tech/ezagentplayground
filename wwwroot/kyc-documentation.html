@@ -13,6 +13,40 @@
             padding: 20px;
             color: #333;
         }
+        nav {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 12px 24px;
+            margin: -20px -20px 20px -20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-logo img {
+            height: 32px;
+            width: auto;
+            object-fit: contain;
+            max-width: 120px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 16px;
+        }
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .nav-links a:hover {
+            background-color: #f0f0f0;
+        }
         h1 {
             color: #2c3e50;
             border-bottom: 3px solid #3498db;
@@ -77,6 +111,19 @@
     </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="nav-logo">
+            <img src="/logo.png" alt="Logo" onerror="this.style.display='none';">
+        </div>
+        <div class="nav-links">
+            <a href="/index.html">Home</a>
+            <a href="/apikey.html">API Key</a>
+            <a href="/kycagent.html">KYC Agent</a>
+            <a href="/examples.html">Examples</a>
+        </div>
+    </nav>
+    
     <h1>KYC Agent API Documentation</h1>
     
     <h2>Overview</h2>
