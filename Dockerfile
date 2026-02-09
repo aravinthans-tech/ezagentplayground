@@ -34,6 +34,14 @@ RUN apt-get update --fix-missing && \
 # Copy published application
 COPY --from=publish /app/publish .
 
+# Verify OpenCvSharp native libraries are present and set library path
+RUN echo "Checking for OpenCvSharp native libraries..." && \
+    find . -name "OpenCvSharpExtern.so" -o -name "libOpenCvSharpExtern.so" 2>/dev/null | head -5 || \
+    echo "Warning: OpenCvSharp native libraries not found. Face detection may not work." && \
+    echo "Contents of runtimes directory:" && \
+    (ls -la runtimes/ 2>/dev/null || echo "No runtimes directory found") && \
+    (ls -la runtimes/linux-x64/native/ 2>/dev/null || echo "No linux-x64 native directory found")
+
 # Copy static files (wwwroot)
 COPY wwwroot ./wwwroot
 
@@ -44,8 +52,9 @@ COPY appsettings.Development.json .
 # Expose port 8080 (Render default)
 EXPOSE 8080
 
-# Set environment variable for ASP.NET Core
+# Set environment variables for ASP.NET Core and library loading
 ENV ASPNETCORE_URLS=http://+:8080
+ENV LD_LIBRARY_PATH=/app/runtimes/linux-x64/native:${LD_LIBRARY_PATH}
 
 # Run the application
 ENTRYPOINT ["dotnet", "QRCodeAPI.dll"]
