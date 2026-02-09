@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=build /app/publish .
 
 # Copy LEADTOOLS license files (if they exist)
-COPY Common/Liscence ./Common/Liscence
+
 
 # Ensure wwwroot is copied (static files)
 COPY wwwroot ./wwwroot
