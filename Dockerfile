@@ -34,13 +34,17 @@ RUN apt-get update --fix-missing && \
 # Copy published application
 COPY --from=publish /app/publish .
 
-# Verify OpenCvSharp native libraries are present and set library path
+# Copy OpenCvSharp native libraries to where .NET expects them
 RUN echo "Checking for OpenCvSharp native libraries..." && \
-    find . -name "OpenCvSharpExtern.so" -o -name "libOpenCvSharpExtern.so" 2>/dev/null | head -5 || \
-    echo "Warning: OpenCvSharp native libraries not found. Face detection may not work." && \
-    echo "Contents of runtimes directory:" && \
-    (ls -la runtimes/ 2>/dev/null || echo "No runtimes directory found") && \
-    (ls -la runtimes/linux-x64/native/ 2>/dev/null || echo "No linux-x64 native directory found")
+    if [ -f "runtimes/linux-x64/native/OpenCvSharpExtern.so" ]; then \
+        mkdir -p /usr/share/dotnet/shared/Microsoft.NETCore.App/8.0.23 && \
+        cp runtimes/linux-x64/native/OpenCvSharpExtern.so /usr/share/dotnet/shared/Microsoft.NETCore.App/8.0.23/ && \
+        cp runtimes/linux-x64/native/libOpenCvSharpExtern.so /usr/share/dotnet/shared/Microsoft.NETCore.App/8.0.23/ 2>/dev/null || true && \
+        echo "OpenCvSharp libraries copied to .NET runtime directory"; \
+    else \
+        echo "Warning: OpenCvSharp native libraries not found in runtimes/linux-x64/native/"; \
+        find . -name "*OpenCvSharp*" -type f 2>/dev/null | head -10; \
+    fi
 
 # Copy static files (wwwroot)
 COPY wwwroot ./wwwroot

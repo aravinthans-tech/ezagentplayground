@@ -13,7 +13,15 @@ public class FaceMatchingService
     {
         _logger = logger;
         _configuration = configuration;
-        InitializeFaceCascade();
+        try
+        {
+            InitializeFaceCascade();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
+            _faceCascade = null;
+        }
     }
 
     private void InitializeFaceCascade()
