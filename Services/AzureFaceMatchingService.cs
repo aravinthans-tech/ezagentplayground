@@ -33,7 +33,7 @@ public class AzureFaceMatchingService
             ?? throw new InvalidOperationException("Azure Face API subscription key not configured. Please set ExternalApis:AzureFaceApi:SubscriptionKey in appsettings.json");
 
         // Configure HttpClient for Azure Face API
-        _httpClient.BaseAddress = new Uri(_endpoint);
+        // Don't set BaseAddress - we'll construct full URLs including /face/v1.0
         _httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", _subscriptionKey);
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
@@ -112,26 +112,53 @@ public class AzureFaceMatchingService
         {
             _logger.LogDebug("Detecting face in {ImageType} image", imageType);
 
-            // Prepare request
-            using var content = new StreamContent(image.OpenReadStream());
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(image.ContentType ?? "image/jpeg");
+            // 🔑 REQUIRED Azure Face API header
+            _httpClient.DefaultRequestHeaders.Remove("Ocp-Apim-Subscription-Key");
+            _httpClient.DefaultRequestHeaders.Add(
+                "Ocp-Apim-Subscription-Key",
+                _subscriptionKey
+            );
+
+            // ✅ Use MultipartFormDataContent
+            using var multipart = new MultipartFormDataContent();
+
+            using var stream = image.OpenReadStream();
+            var imageContent = new StreamContent(stream);
+            imageContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    image.ContentType ?? "application/octet-stream");
+
+            multipart.Add(imageContent, "image", image.FileName);
 
             // Call Azure Face API detect endpoint
-            var detectUrl = $"{_endpoint.TrimEnd('/')}/detect?returnFaceId=true&returnFaceLandmarks=false";
-            var response = await _httpClient.PostAsync(detectUrl, content);
+            var detectUrl =
+                $"{_endpoint.TrimEnd('/')}/face/v1.0/detect" +
+                "?returnFaceId=true" +
+                "&returnFaceLandmarks=false";
+
+            var response = await _httpClient.PostAsync(detectUrl, multipart);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Azure Face API detect failed: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                _logger.LogError(
+                    "Azure Face API detect failed: {StatusCode} - URL: {Url} - Error: {Error}",
+                    response.StatusCode, detectUrl, errorContent);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _logger.LogError(
+                        "403 Forbidden - Check: 1) Face resource type, " +
+                        "2) Face API enabled, 3) Valid subscription key");
+                }
+
                 return null;
             }
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var detectResults = JsonSerializer.Deserialize<List<FaceDetectionResult>>(jsonResponse, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var detectResults = JsonSerializer.Deserialize<List<FaceDetectionResult>>(
+                jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (detectResults == null || detectResults.Count == 0)
             {
@@ -139,9 +166,11 @@ public class AzureFaceMatchingService
                 return null;
             }
 
-            // Use the first detected face (largest if multiple)
             var faceId = detectResults[0].FaceId;
-            _logger.LogInformation("Face detected in {ImageType} image. Face ID: {FaceId}", imageType, faceId);
+            _logger.LogInformation(
+                "Face detected in {ImageType} image. Face ID: {FaceId}",
+                imageType, faceId);
+
             return faceId;
         }
         catch (Exception ex)
@@ -150,6 +179,7 @@ public class AzureFaceMatchingService
             return null;
         }
     }
+
 
     /// <summary>
     /// Verifies if two face IDs belong to the same person.
@@ -169,13 +199,23 @@ public class AzureFaceMatchingService
             var jsonContent = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            var verifyUrl = $"{_endpoint.TrimEnd('/')}/verify";
+            var verifyUrl = $"{_endpoint.TrimEnd('/')}/face/v1.0/verify";
             var response = await _httpClient.PostAsync(verifyUrl, content);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Azure Face API verify failed: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                _logger.LogError("Azure Face API verify failed: {StatusCode} - URL: {Url} - Error: {Error}", 
+                    response.StatusCode, verifyUrl, errorContent);
+                
+                // If 403 Unsupported Feature, provide helpful error message
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _logger.LogError("403 Forbidden - This usually means Face API is not enabled on your Azure resource. " +
+                        "Please check: 1) Your resource is a 'Face' resource (not just Cognitive Services), " +
+                        "2) Face API feature is enabled, 3) Your subscription supports Face API");
+                }
+                
                 return null;
             }
 

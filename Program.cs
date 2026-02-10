@@ -17,11 +17,6 @@ builder.Services.AddHttpClient("Unstract", client =>
     client.Timeout = TimeSpan.FromSeconds(300); // 5 minutes for OCR processing
 });
 
-builder.Services.AddHttpClient("AzureFaceAPI", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30); // 30 seconds for face API calls
-});
-
 // Default HttpClient for other services
 builder.Services.AddHttpClient();
 
@@ -39,10 +34,10 @@ builder.Services.AddScoped<DocumentProcessingService>();
 builder.Services.AddScoped<AddressVerificationService>();
 builder.Services.AddScoped<ConsistencyCheckService>();
 
-// Register Azure Face API service first (required by FaceMatchingService)
-builder.Services.AddScoped<AzureFaceMatchingService>();
+// Register AWS Rekognition service first (required by FaceMatchingService)
+builder.Services.AddScoped<AwsRekognitionMatchingService>();
 
-// Register FaceMatchingService (wrapper that uses Azure Face API)
+// Register FaceMatchingService (wrapper that uses AWS Rekognition)
 builder.Services.AddScoped<FaceMatchingService>();
 
 builder.Services.AddScoped<KycVerificationService>();
