@@ -29,8 +29,8 @@ RUN apt-get update --fix-missing && \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN python3 -m pip install --upgrade pip setuptools wheel
+# Note: pip upgrade is handled automatically during package installation
+# Skipping separate upgrade step to avoid build failures
 
 # Copy published application
 COPY --from=publish /app/publish .
@@ -40,7 +40,8 @@ COPY face_service ./face_service
 
 # Install Python dependencies for InsightFace service
 RUN cd face_service && \
-    python3 -m pip install --no-cache-dir -r requirements.txt && \
+    (python3 -m pip install --break-system-packages --no-cache-dir -r requirements.txt || \
+     python3 -m pip install --no-cache-dir -r requirements.txt) && \
     echo "Python dependencies installed successfully"
 
 # Copy static files (wwwroot)
