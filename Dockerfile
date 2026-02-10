@@ -19,28 +19,29 @@ RUN dotnet publish "QRCodeAPI.csproj" -c Release -o /app/publish /p:UseAppHost=f
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Install dependencies individually (continue even if some fail)
-# This ensures the build succeeds even if some packages aren't available
+# Install Python 3.9+ and pip, plus system dependencies
 RUN apt-get update --fix-missing && \
-    (apt-get install -y --no-install-recommends libgdiplus || echo "libgdiplus not available") && \
-    (apt-get install -y --no-install-recommends libc6-dev || echo "libc6-dev not available") && \
-    (apt-get install -y --no-install-recommends libtbb2 || echo "libtbb2 not available") && \
-    (apt-get install -y --no-install-recommends libgomp1 || echo "libgomp1 not available") && \
-    (apt-get install -y --no-install-recommends libopencv-dev || \
-     apt-get install -y --no-install-recommends libopencv-core libopencv-imgproc libopencv-imgcodecs libopencv-objdetect || \
-     echo "OpenCV packages not available") && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-dev \
+    libgdiplus \
+    libc6-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip setuptools wheel
 
 # Copy published application
 COPY --from=publish /app/publish .
 
-# Verify OpenCvSharp native libraries are present and set library path
-RUN echo "Checking for OpenCvSharp native libraries..." && \
-    find . -name "OpenCvSharpExtern.so" -o -name "libOpenCvSharpExtern.so" 2>/dev/null | head -5 || \
-    echo "Warning: OpenCvSharp native libraries not found. Face detection may not work." && \
-    echo "Contents of runtimes directory:" && \
-    (ls -la runtimes/ 2>/dev/null || echo "No runtimes directory found") && \
-    (ls -la runtimes/linux-x64/native/ 2>/dev/null || echo "No linux-x64 native directory found")
+# Copy Python face service
+COPY face_service ./face_service
+
+# Install Python dependencies for InsightFace service
+RUN cd face_service && \
+    python3 -m pip install --no-cache-dir -r requirements.txt && \
+    echo "Python dependencies installed successfully"
 
 # Copy static files (wwwroot)
 COPY wwwroot ./wwwroot
@@ -49,13 +50,17 @@ COPY wwwroot ./wwwroot
 COPY appsettings.json .
 COPY appsettings.Development.json .
 
+# Copy startup script
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 # Expose port 8080 (Render default)
+# Port 5001 is for Python service (internal only, not exposed)
 EXPOSE 8080
 
-# Set environment variables for ASP.NET Core and library loading
+# Set environment variables for ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:8080
-ENV LD_LIBRARY_PATH=/app/runtimes/linux-x64/native:${LD_LIBRARY_PATH}
 
-# Run the application
-ENTRYPOINT ["dotnet", "QRCodeAPI.dll"]
+# Run both Python and .NET services using startup script
+ENTRYPOINT ["./start.sh"]
 
