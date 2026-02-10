@@ -20,11 +20,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
 # Install Python 3.9+ and pip, plus system dependencies
+# Include build-essential for compiling InsightFace (requires C++ compiler)
 RUN apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     python3-dev \
+    build-essential \
+    g++ \
+    gcc \
+    make \
     libgdiplus \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
