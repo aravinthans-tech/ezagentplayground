@@ -30,6 +30,8 @@ app.add_middleware(
 # Global variables for InsightFace models
 face_analyzer = None
 face_detector = None
+models_ready = False  # Flag to track when models are fully loaded and ready
+models_loading = False  # Flag to track if models are currently downloading
 
 def initialize_insightface():
     """Initialize InsightFace models."""
@@ -37,14 +39,68 @@ def initialize_insightface():
     try:
         import insightface
         from insightface.app import FaceAnalysis
+        import os
+        from pathlib import Path
+        import glob
         
         logger.info("Initializing InsightFace...")
+        
+        # First, check for pre-downloaded models in local directory (for Docker)
+        script_dir = Path(__file__).parent
+        local_models_dir = script_dir / "models" / "buffalo_l"
+        local_onnx_files = list(local_models_dir.glob("*.onnx")) if local_models_dir.exists() else []
+        
+        if local_onnx_files:
+            logger.info(f"✅ Found {len(local_onnx_files)} pre-downloaded model file(s) in local directory")
+            logger.info(f"   Using models from: {local_models_dir}")
+            logger.info("   (Models are pre-baked in Docker image - no download needed)")
+            
+            # Use local models directory as root
+            try:
+                # Try different initialization methods for different InsightFace versions
+                model_root = str(local_models_dir.parent)
+                
+                # Method 1: Try with name, root, and providers (for newer versions that support it)
+                try:
+                    face_analyzer = FaceAnalysis(name='buffalo_l', root=model_root, providers=['CPUExecutionProvider'])
+                    face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
+                    logger.info("✅ InsightFace initialized with pre-downloaded models (method 1)")
+                    return True
+                except (TypeError, AssertionError):
+                    # Method 2: Try with just name and root (for versions that don't support providers parameter)
+                    try:
+                        face_analyzer = FaceAnalysis(name='buffalo_l', root=model_root)
+                        face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
+                        logger.info("✅ InsightFace initialized with pre-downloaded models (method 2)")
+                        return True
+                    except (TypeError, AssertionError):
+                        # Method 3: Set environment variable and use default initialization
+                        # Some versions use INSIGHTFACE_ROOT environment variable
+                        os.environ['INSIGHTFACE_ROOT'] = model_root
+                        face_analyzer = FaceAnalysis(providers=['CPUExecutionProvider'])
+                        face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
+                        logger.info("✅ InsightFace initialized with pre-downloaded models (method 3)")
+                        return True
+            except Exception as e:
+                logger.warning(f"Failed to use local models: {e}")
+                logger.info("Falling back to default model location...")
+                # Clear any environment variables we might have set
+                if 'INSIGHTFACE_ROOT' in os.environ:
+                    del os.environ['INSIGHTFACE_ROOT']
+        
+        # Fallback: Check default location or auto-download
+        logger.info("Checking default model location or downloading models...")
+        logger.info("Note: Model download may take 2-5 minutes on first run...")
+        
         # Initialize face analysis with default model
         # Handle different InsightFace API versions
         try:
             # Try newer API first (with providers parameter - version 0.7+)
+            logger.info("Attempting to initialize InsightFace 0.7.3+ (with auto-download)...")
             face_analyzer = FaceAnalysis(providers=['CPUExecutionProvider'])
+            logger.info("FaceAnalysis created, preparing models (this may download models)...")
             face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
+            logger.info("✅ InsightFace models prepared successfully")
         except (TypeError, AssertionError):
             # Fall back to older API (0.2.1 and earlier)
             # Version 0.2.1 requires 'name' parameter and models must be downloaded first
@@ -120,7 +176,7 @@ def initialize_insightface():
                 # Don't raise - allow service to start without face detection
                 return False
         
-        logger.info("InsightFace initialized successfully")
+        logger.info("✅ InsightFace initialized successfully - models are ready")
         return True
     except ImportError as e:
         logger.error(f"InsightFace not installed. Please install: pip install insightface. Error: {e}")
@@ -131,9 +187,36 @@ def initialize_insightface():
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize models on startup."""
-    if not initialize_insightface():
-        logger.warning("InsightFace initialization failed. Service will return errors.")
+    """Initialize models on startup - wait for models to be ready before accepting requests."""
+    import asyncio
+    
+    global models_loading, models_ready
+    
+    models_loading = True
+    logger.info("Starting InsightFace model initialization...")
+    logger.info("This may take 1-2 minutes if models need to be loaded from disk...")
+    
+    try:
+        # Run initialization in thread pool to avoid blocking event loop
+        # But we wait for it to complete before the service is ready
+        loop = asyncio.get_event_loop()
+        success = await loop.run_in_executor(None, initialize_insightface)
+        
+        if success:
+            models_ready = True
+            models_loading = False
+            logger.info("✅ InsightFace models loaded and ready for face detection")
+            logger.info("Service is now ready to accept face detection requests")
+        else:
+            models_loading = False
+            logger.warning("⚠️ InsightFace initialization failed. Face detection will be unavailable.")
+            logger.warning("Service will start, but face detection requests will return errors.")
+    except Exception as e:
+        models_loading = False
+        logger.error(f"Error during model initialization: {e}", exc_info=True)
+        logger.warning("Service will start, but face detection may be unavailable.")
+    
+    # Note: Service startup is complete, but models_ready flag controls request handling
 
 @app.get("/")
 async def root():
@@ -141,15 +224,22 @@ async def root():
     return {
         "status": "running",
         "service": "InsightFace Face Matching",
-        "insightface_loaded": face_analyzer is not None
+        "insightface_loaded": face_analyzer is not None,
+        "models_ready": models_ready,
+        "models_loading": models_loading
     }
 
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
+    """Health check endpoint - responds immediately for Render's 30s timeout."""
+    # Always return healthy immediately (even if models are loading)
+    # This ensures Render doesn't kill the service during model download
     return {
         "status": "healthy",
-        "insightface_loaded": face_analyzer is not None
+        "insightface_loaded": face_analyzer is not None,
+        "models_ready": models_ready,
+        "models_loading": models_loading,
+        "face_detection_available": models_ready and face_analyzer is not None
     }
 
 def image_to_numpy(image_bytes: bytes) -> np.ndarray:
@@ -174,13 +264,22 @@ async def detect_face(file: UploadFile = File(...)):
         - confidence: Detection confidence score
         - bbox: Bounding box coordinates [x, y, width, height]
     """
-    if face_analyzer is None:
-        return {
-            "faceId": None,
-            "confidence": 0.0,
-            "bbox": None,
-            "message": "InsightFace models not loaded. Service running but face detection unavailable."
-        }
+    # Check if models are ready
+    if not models_ready or face_analyzer is None:
+        if models_loading:
+            return {
+                "faceId": None,
+                "confidence": 0.0,
+                "bbox": None,
+                "message": "⏳ Models are currently downloading. Please wait 30-60 seconds and try again. This only happens on first startup."
+            }
+        else:
+            return {
+                "faceId": None,
+                "confidence": 0.0,
+                "bbox": None,
+                "message": "❌ InsightFace models not loaded. Face detection is unavailable."
+            }
     
     try:
         # Read image bytes
@@ -251,14 +350,24 @@ async def verify_faces(data: Dict[str, Any]):
         - confidence: Similarity score (0.0 to 1.0)
         - matchScore: Integer score from 0-5
     """
-    if face_analyzer is None:
-        return {
-            "isIdentical": False,
-            "confidence": 0.0,
-            "matchScore": 0,
-            "threshold": 0.65,
-            "message": "InsightFace models not loaded. Service running but face verification unavailable."
-        }
+    # Check if models are ready
+    if not models_ready or face_analyzer is None:
+        if models_loading:
+            return {
+                "isIdentical": False,
+                "confidence": 0.0,
+                "matchScore": 0,
+                "threshold": 0.65,
+                "message": "⏳ Models are currently downloading. Please wait 30-60 seconds and try again. This only happens on first startup."
+            }
+        else:
+            return {
+                "isIdentical": False,
+                "confidence": 0.0,
+                "matchScore": 0,
+                "threshold": 0.65,
+                "message": "❌ InsightFace models not loaded. Face verification is unavailable."
+            }
     
     try:
         face_id1 = data.get("faceId1")

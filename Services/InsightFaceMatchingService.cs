@@ -53,14 +53,37 @@ public class InsightFaceMatchingService : IFaceMatchingService, IDisposable
             var licenseFaceResult = await DetectFaceAsync(licenseImage, "license");
             var selfieFaceResult = await DetectFaceAsync(selfieImage, "selfie");
 
-            if (licenseFaceResult == null || string.IsNullOrEmpty(licenseFaceResult.FaceId))
+            // Check if models are still loading or unavailable
+            if (licenseFaceResult == null)
             {
-                return (null, null, false, 0, "❌ Photo Verification Failed<br>No face detected in license image.");
+                return (null, null, false, 0, "❌ Photo Verification Failed<br>Unable to connect to face detection service.");
             }
 
-            if (selfieFaceResult == null || string.IsNullOrEmpty(selfieFaceResult.FaceId))
+            if (string.IsNullOrEmpty(licenseFaceResult.FaceId))
             {
-                return (null, null, false, 0, "❌ Photo Verification Failed<br>No face detected in selfie image.");
+                // Check if the message indicates models are loading
+                var licenseMessage = licenseFaceResult.Message ?? "";
+                if (licenseMessage.Contains("downloading") || licenseMessage.Contains("not loaded") || licenseMessage.Contains("unavailable") || licenseMessage.Contains("Models are"))
+                {
+                    return (null, null, false, 0, $"⏳ {licenseMessage}<br>Please wait for models to load and try again in 30-60 seconds.");
+                }
+                return (null, null, false, 0, $"❌ Photo Verification Failed<br>{licenseMessage}");
+            }
+
+            if (selfieFaceResult == null)
+            {
+                return (null, null, false, 0, "❌ Photo Verification Failed<br>Unable to connect to face detection service.");
+            }
+
+            if (string.IsNullOrEmpty(selfieFaceResult.FaceId))
+            {
+                // Check if the message indicates models are loading
+                var selfieMessage = selfieFaceResult.Message ?? "";
+                if (selfieMessage.Contains("downloading") || selfieMessage.Contains("not loaded") || selfieMessage.Contains("unavailable") || selfieMessage.Contains("Models are"))
+                {
+                    return (null, null, false, 0, $"⏳ {selfieMessage}<br>Please wait for models to load and try again in 30-60 seconds.");
+                }
+                return (null, null, false, 0, $"❌ Photo Verification Failed<br>{selfieMessage}");
             }
 
             // Step 2: Verify if faces match
@@ -134,10 +157,24 @@ public class InsightFaceMatchingService : IFaceMatchingService, IDisposable
                 PropertyNameCaseInsensitive = true
             });
 
-            if (detectResult == null || string.IsNullOrEmpty(detectResult.FaceId))
+            if (detectResult == null)
             {
-                _logger.LogWarning("No face detected in {ImageType} image", imageType);
+                _logger.LogWarning("Invalid response from InsightFace service for {ImageType} image", imageType);
                 return null;
+            }
+
+            // Check if models are loading or unavailable (message will indicate this)
+            if (string.IsNullOrEmpty(detectResult.FaceId))
+            {
+                var message = detectResult.Message ?? "";
+                if (message.Contains("downloading") || message.Contains("not loaded") || message.Contains("unavailable"))
+                {
+                    _logger.LogWarning("Models not ready for {ImageType} image: {Message}", imageType, message);
+                    // Return result with message so caller can check it
+                    return detectResult;
+                }
+                _logger.LogWarning("No face detected in {ImageType} image: {Message}", imageType, message);
+                return detectResult; // Return result even if no face, so message can be checked
             }
 
             _logger.LogInformation("Face detected in {ImageType} image. Confidence: {Confidence}", imageType, detectResult.Confidence);
