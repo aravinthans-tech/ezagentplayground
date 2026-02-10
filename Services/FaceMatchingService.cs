@@ -3,7 +3,7 @@ using OpenCvSharp;
 
 namespace QRCodeAPI.Services;
 
-public class FaceMatchingService
+public class FaceMatchingService : IFaceMatchingService
 {
     private readonly ILogger<FaceMatchingService> _logger;
     private readonly IConfiguration _configuration;
@@ -21,6 +21,25 @@ public class FaceMatchingService
         {
             _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
             _faceCascade = null;
+        }
+    }
+
+    // Protected constructor for wrapper classes that don't want to initialize OpenCV
+    protected FaceMatchingService(ILogger<FaceMatchingService> logger, IConfiguration configuration, bool skipInitialization)
+    {
+        _logger = logger;
+        _configuration = configuration;
+        if (!skipInitialization)
+        {
+            try
+            {
+                InitializeFaceCascade();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize OpenCvSharp. Face detection will be disabled.");
+                _faceCascade = null;
+            }
         }
     }
 
@@ -72,7 +91,7 @@ public class FaceMatchingService
         }
     }
 
-    public async Task<(byte[]? licenseFace, byte[]? selfieFace, bool match, int matchScore, string message)> ProcessAndCompare(
+    public virtual async Task<(byte[]? licenseFace, byte[]? selfieFace, bool match, int matchScore, string message)> ProcessAndCompare(
         IFormFile licenseImage, 
         IFormFile selfieImage)
     {

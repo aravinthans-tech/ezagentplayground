@@ -33,7 +33,22 @@ builder.Services.AddScoped<KycAgentService>();
 builder.Services.AddScoped<DocumentProcessingService>();
 builder.Services.AddScoped<AddressVerificationService>();
 builder.Services.AddScoped<ConsistencyCheckService>();
-builder.Services.AddScoped<FaceMatchingService>();
+
+// Register StubFaceMatchingService instead of FaceMatchingService to avoid OpenCV dependencies
+// This allows testing if the app works without OpenCV
+// To re-enable OpenCV, change this to: builder.Services.AddScoped<IFaceMatchingService, FaceMatchingService>();
+builder.Services.AddScoped<IFaceMatchingService, StubFaceMatchingService>();
+
+// Also register as FaceMatchingService for backward compatibility (will use stub)
+builder.Services.AddScoped<FaceMatchingService>(serviceProvider =>
+{
+    var stubService = (StubFaceMatchingService)serviceProvider.GetRequiredService<IFaceMatchingService>();
+    var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    // Create a wrapper that extends FaceMatchingService but uses stub implementation
+    return new FaceMatchingServiceWrapper(stubService, logger, configuration);
+});
+
 builder.Services.AddScoped<KycVerificationService>();
 
 // Configure CORS
