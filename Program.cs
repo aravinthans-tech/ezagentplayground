@@ -17,9 +17,9 @@ builder.Services.AddHttpClient("Unstract", client =>
     client.Timeout = TimeSpan.FromSeconds(300); // 5 minutes for OCR processing
 });
 
-builder.Services.AddHttpClient("InsightFaceAPI", client =>
+builder.Services.AddHttpClient("AzureFaceAPI", client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(60); // 60 seconds for face processing
+    client.Timeout = TimeSpan.FromSeconds(30); // 30 seconds for face API calls
 });
 
 // Default HttpClient for other services
@@ -39,20 +39,11 @@ builder.Services.AddScoped<DocumentProcessingService>();
 builder.Services.AddScoped<AddressVerificationService>();
 builder.Services.AddScoped<ConsistencyCheckService>();
 
-// Register InsightFaceMatchingService for face matching using InsightFace Python service
-// This replaces OpenCV with a Python-based solution that works on any platform
-builder.Services.AddScoped<IFaceMatchingService, InsightFaceMatchingService>();
+// Register Azure Face API service first (required by FaceMatchingService)
+builder.Services.AddScoped<AzureFaceMatchingService>();
 
-// Also register as FaceMatchingService for backward compatibility
-// This creates a wrapper that uses InsightFaceMatchingService internally
-builder.Services.AddScoped<FaceMatchingService>(serviceProvider =>
-{
-    var insightFaceService = serviceProvider.GetRequiredService<IFaceMatchingService>();
-    var logger = serviceProvider.GetRequiredService<ILogger<FaceMatchingService>>();
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    // Create a wrapper that extends FaceMatchingService but uses InsightFace implementation
-    return new FaceMatchingServiceWrapper(insightFaceService, logger, configuration);
-});
+// Register FaceMatchingService (wrapper that uses Azure Face API)
+builder.Services.AddScoped<FaceMatchingService>();
 
 builder.Services.AddScoped<KycVerificationService>();
 

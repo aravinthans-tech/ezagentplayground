@@ -650,7 +650,7 @@ var result = JsonSerializer.Deserialize&lt;KycVerificationResult&gt;(await respo
     
     <h3>Face Matching</h3>
     <ul>
-        <li><strong>Technology:</strong> OpenCV (Haar Cascade for detection, ORB for feature matching)</li>
+        <li><strong>Technology:</strong> Azure Face API (cloud-based face recognition service)</li>
         <li><strong>Preprocessing:</strong> CLAHE (Contrast Limited Adaptive Histogram Equalization)</li>
         <li><strong>Threshold:</strong> Minimum score of 4/5 required to pass (configurable)</li>
         <li><strong>Rotation Handling:</strong> Automatically handles rotated images (0°, 90°, 180°, 270°)</li>

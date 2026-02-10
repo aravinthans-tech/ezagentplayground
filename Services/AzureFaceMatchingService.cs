@@ -6,17 +6,15 @@ namespace QRCodeAPI.Services;
 
 /// <summary>
 /// Face matching service using Azure Face API.
-/// This implementation uses Azure Cognitive Services Face API via REST API,
-/// eliminating the need for native OpenCV libraries.
+/// Provides cloud-based face detection and verification without native dependencies.
 /// </summary>
-public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
+public class AzureFaceMatchingService
 {
     private readonly ILogger<AzureFaceMatchingService> _logger;
     private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
-    private readonly string _apiEndpoint;
+    private readonly string _endpoint;
     private readonly string _subscriptionKey;
-    private bool _disposed = false;
 
     public AzureFaceMatchingService(
         ILogger<AzureFaceMatchingService> logger,
@@ -26,24 +24,25 @@ public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
         _logger = logger;
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient("AzureFaceAPI");
-        
+
         // Get Azure Face API configuration
-        _apiEndpoint = _configuration["ExternalApis:AzureFace:Endpoint"] 
-            ?? throw new InvalidOperationException("Azure Face API endpoint not configured. Please set ExternalApis:AzureFace:Endpoint in appsettings.json");
+        _endpoint = _configuration["ExternalApis:AzureFaceApi:Endpoint"] 
+            ?? throw new InvalidOperationException("Azure Face API endpoint not configured. Please set ExternalApis:AzureFaceApi:Endpoint in appsettings.json");
         
-        _subscriptionKey = _configuration["ExternalApis:AzureFace:SubscriptionKey"]
-            ?? throw new InvalidOperationException("Azure Face API subscription key not configured. Please set ExternalApis:AzureFace:SubscriptionKey in appsettings.json");
+        _subscriptionKey = _configuration["ExternalApis:AzureFaceApi:SubscriptionKey"]
+            ?? throw new InvalidOperationException("Azure Face API subscription key not configured. Please set ExternalApis:AzureFaceApi:SubscriptionKey in appsettings.json");
 
         // Configure HttpClient for Azure Face API
-        _httpClient.BaseAddress = new Uri(_apiEndpoint);
+        _httpClient.BaseAddress = new Uri(_endpoint);
         _httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", _subscriptionKey);
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
-        _logger.LogInformation("AzureFaceMatchingService initialized with endpoint: {Endpoint}", _apiEndpoint);
+        _logger.LogInformation("AzureFaceMatchingService initialized with endpoint: {Endpoint}", _endpoint);
     }
 
     /// <summary>
-    /// Compares faces from license and selfie images using Azure Face API.
+    /// Processes and compares two face images using Azure Face API.
+    /// Returns the same interface as the original FaceMatchingService for backward compatibility.
     /// </summary>
     public async Task<(byte[]? licenseFace, byte[]? selfieFace, bool match, int matchScore, string message)> ProcessAndCompare(
         IFormFile licenseImage,
@@ -68,19 +67,23 @@ public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
             }
 
             // Step 2: Verify if faces match
-            var (isIdentical, confidence) = await VerifyFacesAsync(licenseFaceId, selfieFaceId);
+            var verifyResult = await VerifyFacesAsync(licenseFaceId, selfieFaceId);
 
-            // Convert confidence (0.0-1.0) to match score (0-5) for consistency with OpenCV implementation
-            var matchScore = (int)Math.Round(confidence * 5);
+            if (verifyResult == null)
+            {
+                return (null, null, false, 0, "❌ Photo Verification Failed<br>Unable to verify faces.");
+            }
+
+            // Convert confidence (0.0-1.0) to match score (0-5)
+            var matchScore = ConvertConfidenceToMatchScore(verifyResult.Confidence);
             var threshold = _configuration.GetValue<int>("KycVerification:FaceMatchThreshold", 4);
-            var match = isIdentical && matchScore >= threshold;
+            var match = verifyResult.IsIdentical && matchScore >= threshold;
 
             var resultMessage = match
-                ? $"✅ Photo Verification Passed<br>Match Score: {matchScore}/5 (Confidence: {confidence:P0})"
-                : $"❌ Photo Verification Failed<br>Match Score: {matchScore}/5 (Confidence: {confidence:P0}, Required: {threshold}/5)";
+                ? $"✅ Photo Verification Passed<br>Match Score: {matchScore}/5 (Confidence: {verifyResult.Confidence:P0})"
+                : $"❌ Photo Verification Failed<br>Match Score: {matchScore}/5 (Confidence: {verifyResult.Confidence:P0}, Required: {threshold}/5)";
 
-            // Azure Face API doesn't return cropped face images, so we return null for images
-            // The UI can still display the original images if needed
+            // Azure Face API doesn't return cropped face images, so return null for backward compatibility
             return (null, null, match, matchScore, resultMessage);
         }
         catch (HttpRequestException ex)
@@ -109,22 +112,13 @@ public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
         {
             _logger.LogDebug("Detecting face in {ImageType} image", imageType);
 
-            // Read image bytes
-            byte[] imageBytes;
-            using (var stream = image.OpenReadStream())
-            using (var memoryStream = new MemoryStream())
-            {
-                await stream.CopyToAsync(memoryStream);
-                imageBytes = memoryStream.ToArray();
-            }
-
-            // Prepare request - use relative path since BaseAddress is already set
-            var requestUri = "/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=";
-            var content = new ByteArrayContent(imageBytes);
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            // Prepare request
+            using var content = new StreamContent(image.OpenReadStream());
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(image.ContentType ?? "image/jpeg");
 
             // Call Azure Face API detect endpoint
-            var response = await _httpClient.PostAsync(requestUri, content);
+            var detectUrl = $"{_endpoint.TrimEnd('/')}/detect?returnFaceId=true&returnFaceLandmarks=false";
+            var response = await _httpClient.PostAsync(detectUrl, content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -134,24 +128,21 @@ public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
             }
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var faceDetections = JsonSerializer.Deserialize<JsonElement[]>(jsonResponse);
-
-            if (faceDetections == null || faceDetections.Length == 0)
+            var detectResults = JsonSerializer.Deserialize<List<FaceDetectionResult>>(jsonResponse, new JsonSerializerOptions
             {
-                _logger.LogWarning("No faces detected in {ImageType} image", imageType);
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (detectResults == null || detectResults.Count == 0)
+            {
+                _logger.LogWarning("No face detected in {ImageType} image", imageType);
                 return null;
             }
 
-            // Get the first (largest) face
-            var firstFace = faceDetections[0];
-            if (firstFace.TryGetProperty("faceId", out var faceIdElement))
-            {
-                var faceId = faceIdElement.GetString();
-                _logger.LogInformation("Face detected in {ImageType} image. FaceId: {FaceId}", imageType, faceId);
-                return faceId;
-            }
-
-            return null;
+            // Use the first detected face (largest if multiple)
+            var faceId = detectResults[0].FaceId;
+            _logger.LogInformation("Face detected in {ImageType} image. Face ID: {FaceId}", imageType, faceId);
+            return faceId;
         }
         catch (Exception ex)
         {
@@ -161,15 +152,14 @@ public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
     }
 
     /// <summary>
-    /// Verifies if two faces belong to the same person.
+    /// Verifies if two face IDs belong to the same person.
     /// </summary>
-    private async Task<(bool isIdentical, double confidence)> VerifyFacesAsync(string faceId1, string faceId2)
+    private async Task<FaceVerificationResult?> VerifyFacesAsync(string faceId1, string faceId2)
     {
         try
         {
-            _logger.LogDebug("Verifying faces: {FaceId1} and {FaceId2}", faceId1, faceId2);
+            _logger.LogDebug("Verifying faces");
 
-            // Prepare request body
             var requestBody = new
             {
                 faceId1 = faceId1,
@@ -179,57 +169,66 @@ public class AzureFaceMatchingService : IFaceMatchingService, IDisposable
             var jsonContent = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            // Call Azure Face API verify endpoint - use relative path since BaseAddress is already set
-            var requestUri = "/face/v1.0/verify";
-            var response = await _httpClient.PostAsync(requestUri, content);
+            var verifyUrl = $"{_endpoint.TrimEnd('/')}/verify";
+            var response = await _httpClient.PostAsync(verifyUrl, content);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Azure Face API verify failed: {StatusCode} - {Error}", response.StatusCode, errorContent);
-                return (false, 0.0);
+                return null;
             }
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var verifyResult = JsonSerializer.Deserialize<JsonElement>(jsonResponse);
-
-            if (verifyResult.TryGetProperty("isIdentical", out var isIdenticalElement) &&
-                verifyResult.TryGetProperty("confidence", out var confidenceElement))
+            var verifyResult = JsonSerializer.Deserialize<FaceVerificationResult>(jsonResponse, new JsonSerializerOptions
             {
-                var isIdentical = isIdenticalElement.GetBoolean();
-                var confidence = confidenceElement.GetDouble();
-                
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (verifyResult != null)
+            {
                 _logger.LogInformation("Face verification result: IsIdentical={IsIdentical}, Confidence={Confidence}", 
-                    isIdentical, confidence);
-                
-                return (isIdentical, confidence);
+                    verifyResult.IsIdentical, verifyResult.Confidence);
             }
 
-            return (false, 0.0);
+            return verifyResult;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying faces");
-            return (false, 0.0);
+            return null;
         }
     }
 
-    public void Dispose()
+    /// <summary>
+    /// Converts Azure Face API confidence (0.0-1.0) to match score (0-5).
+    /// </summary>
+    private int ConvertConfidenceToMatchScore(double confidence)
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        // Map confidence to 0-5 scale
+        // 0.0-0.5 -> 0
+        // 0.5-0.6 -> 1
+        // 0.6-0.7 -> 2
+        // 0.7-0.8 -> 3
+        // 0.8-0.9 -> 4
+        // 0.9-1.0 -> 5
+        if (confidence < 0.5) return 0;
+        if (confidence < 0.6) return 1;
+        if (confidence < 0.7) return 2;
+        if (confidence < 0.8) return 3;
+        if (confidence < 0.9) return 4;
+        return 5;
     }
 
-    protected virtual void Dispose(bool disposing)
+    private class FaceDetectionResult
     {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _httpClient?.Dispose();
-            }
-            _disposed = true;
-        }
+        public string? FaceId { get; set; }
+    }
+
+    private class FaceVerificationResult
+    {
+        public bool IsIdentical { get; set; }
+        public double Confidence { get; set; }
     }
 }
 
