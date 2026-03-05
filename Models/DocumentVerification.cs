@@ -4,6 +4,7 @@ public class DocumentVerification
 {
     public int DocumentIndex { get; set; }
     public string DocumentType { get; set; } = string.Empty;
+    public string DocumentNumber { get; set; } = string.Empty;
     public string ExtractedAddress { get; set; } = string.Empty;
     public string ExtractedName { get; set; } = string.Empty;
     public double SimilarityToExpected { get; set; }
