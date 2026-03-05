@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate API Key - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .animate-slideInLeft {
+            animation: slideInLeft 0.6s ease-out forwards;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .toast {
+            transition: all 0.3s ease-in-out;
+        }
+        html, body {
+            overflow-x: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        #sidebar {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+            background-color: white !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        code, pre {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .button-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-hover:hover {
+            transform: scale(1.02);
+        }
+        .button-hover:active {
+            transform: scale(0.98);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+        .gradient-animate {
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+        }
+        .delay-100 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+        .delay-200 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .delay-300 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+        .delay-400 {
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        .sidebar-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-btn:hover {
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+        <div class="flex items-center space-x-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+        </div>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+128px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 hidden">
+                Generate QR
+            </a>
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Code Examples
+            </a>
+            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">
+                API Key
+            </a>
+            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Documentation
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-16 right-4 z-50 toast">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
+            <p id="toastMessage" class="font-medium text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <!-- API KEY Section -->
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition duration-200 hover:shadow-lg active"
+                        data-function="generate-apikey"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </div>
+                    </button>
+                </div>
+
+                <!-- FUNCTIONS Section -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95 hidden"
+                        data-function="generate-qrcode"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Generate QR Code
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="file-summary"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            File Summary
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="kyc-agent"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            KYC Agent
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 pb-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Page Header -->
+                <div class="text-center mb-8 animate-fadeInUp">
+                    <h2 class="text-4xl font-semibold text-gray-900 mb-2">Generate API Key</h2>
+                    <p class="text-lg text-gray-600">Generate a secure API key for accessing the API</p>
+                </div>
+
+                <!-- Grid Layout for Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- API Key Generation Card -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInLeft delay-100">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">User Credentials</h3>
+                    <form id="apiKeyForm" class="space-y-6">
+                        <div>
+                            <label for="userEmail" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                id="userEmail" 
+                                name="userEmail"
+                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                placeholder="admin@ezofis.com"
+                                required
+                            />
+                            <p id="emailError" class="hidden text-xs text-red-600 mt-1"></p>
+                            <p class="text-xs text-gray-500 mt-1">Enter a valid email address (e.g., admin@ezofis.com)</p>
+                        </div>
+
+                        <div>
+                            <label for="userPassword" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Password <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="password" 
+                                id="userPassword" 
+                                name="userPassword"
+                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                placeholder="Enter password"
+                                required
+                            />
+                            <p id="passwordError" class="hidden text-xs text-red-600 mt-1"></p>
+                            <p class="text-xs text-gray-500 mt-1">Must be at least 8 characters with 1 capital letter and 1 special character</p>
+                        </div>
+
+                        <div class="flex space-x-3">
+                            <button 
+                                type="button"
+                                id="generateApiKeyBtn"
+                                class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                            >
+                                <span id="btnText">Generate API Key</span>
+                                <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                            <button 
+                                type="button"
+                                id="viewApiKeyBtn"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                            >
+                                <span id="viewBtnText">View API Key</span>
+                                <svg id="viewLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+
+
+                    <!-- Error Display -->
+                    <div id="errorSection" class="hidden mt-6">
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded animate-fadeInUp">
+                            <h4 class="text-sm font-semibold text-red-800 mb-2">Error</h4>
+                            <p id="errorMessage" class="text-sm text-red-700"></p>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- API Key Modal Popup -->
+                    <div id="apiKeyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                        <div class="modal-content bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 relative">
+                            <!-- Close Button -->
+                            <button 
+                                id="closeModalBtn"
+                                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Modal Content -->
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-xl p-6 border-b-2 border-purple-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-xl font-semibold text-gray-900">Your API Key Details</h4>
+                                    <div id="apiKeyStatus" class="px-3 py-1 rounded-full text-xs font-semibold"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Tenant ID</label>
+                                    <input 
+                                        type="text" 
+                                        id="tenantId" 
+                                        readonly
+                                        class="w-full px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg font-mono"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Token</label>
+                                    <input 
+                                        type="text" 
+                                        id="token" 
+                                        readonly
+                                        class="w-full px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg font-mono"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">API Key</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input 
+                                            type="text" 
+                                            id="generatedApiKey" 
+                                            readonly
+                                            class="flex-1 px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg font-mono"
+                                        />
+                                        <button 
+                                            id="copyApiKeyBtn"
+                                            class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-4 rounded-lg button-hover"
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-xs text-gray-500 mt-4 text-center">
+                                    <span class="font-semibold text-red-600">Important:</span> Save this API key securely. You won't be able to see it again.
+                                </p>
+                            </div>
+                            
+                            <!-- Modal Footer -->
+                            <div class="bg-gray-50 rounded-b-xl px-6 py-4 flex justify-between items-center">
+                                <button 
+                                    id="downloadApiKeyBtn"
+                                    class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-sm py-2 px-6 rounded-lg button-hover flex items-center space-x-2"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    <span>Download</span>
+                                </button>
+                                <button 
+                                    id="closeModalBtnFooter"
+                                    class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-sm py-2 px-6 rounded-lg button-hover"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Information Card -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInRight delay-200">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">API Key Information</h3>
+                    <div class="space-y-4 text-sm">
+                        <div class="border-l-4 border-purple-500 pl-3">
+                            <div class="font-semibold text-gray-700 mb-1 text-xs">Generate API Key</div>
+                            <code class="text-xs font-mono text-gray-800">POST /api/Client/apiKey</code>
+                            <div class="text-xs text-gray-600 mt-1">Query: ?userName=email&password=pass</div>
+                        </div>
+                        <div class="border-l-4 border-cyan-500 pl-3">
+                            <div class="font-semibold text-gray-700 mb-1 text-xs">View API Key</div>
+                            <code class="text-xs font-mono text-gray-800">GET /api/Client/apiKey</code>
+                            <div class="text-xs text-gray-600 mt-1">Query: ?userName=email&password=pass</div>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-3">
+                            <div class="font-semibold text-gray-700 mb-1 text-xs">Authentication</div>
+                            <div class="text-xs text-gray-600">No authentication required</div>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-3">
+                            <div class="font-semibold text-gray-700 mb-1 text-xs">Response Format</div>
+                            <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{<br>  "tenantId": "string",<br>  "token": "string",<br>  "apiKey": "string"<br>}</pre>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-2">
+                                    <h4 class="text-xs font-semibold text-yellow-800">Security Notice</h4>
+                                    <div class="mt-1 text-xs text-yellow-700">
+                                        <p>API keys are generated based on your email and password. If an API key already exists, it will be returned. Save your API key securely.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        
+        const generateApiKeyBtn = document.getElementById('generateApiKeyBtn');
+        const viewApiKeyBtn = document.getElementById('viewApiKeyBtn');
+        const btnText = document.getElementById('btnText');
+        const viewBtnText = document.getElementById('viewBtnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const viewLoadingSpinner = document.getElementById('viewLoadingSpinner');
+        const apiKeyModal = document.getElementById('apiKeyModal');
+        const errorSection = document.getElementById('errorSection');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeModalBtnFooter = document.getElementById('closeModalBtnFooter');
+        const generatedApiKey = document.getElementById('generatedApiKey');
+        const tenantIdInput = document.getElementById('tenantId');
+        const tokenInput = document.getElementById('token');
+        const copyApiKeyBtn = document.getElementById('copyApiKeyBtn');
+        const downloadApiKeyBtn = document.getElementById('downloadApiKeyBtn');
+        const userEmail = document.getElementById('userEmail');
+        const userPassword = document.getElementById('userPassword');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const apiKeyStatus = document.getElementById('apiKeyStatus');
+
+        // Validation functions
+        function validateEmail(email) {
+            if (!email) {
+                return 'Email is required';
+            }
+            // Basic email validation - must contain @ and a domain
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return 'Please enter a valid email address';
+            }
+            return '';
+        }
+
+        function validatePassword(password) {
+            if (!password) {
+                return 'Password is required';
+            }
+            if (password.length < 8) {
+                return 'Password must be at least 8 characters';
+            }
+            if (!/[A-Z]/.test(password)) {
+                return 'Password must contain at least one capital letter';
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                return 'Password must contain at least one special character';
+            }
+            return '';
+        }
+
+        // Real-time validation
+        userEmail.addEventListener('blur', () => {
+            const error = validateEmail(userEmail.value);
+            if (error) {
+                emailError.textContent = error;
+                emailError.classList.remove('hidden');
+                userEmail.classList.add('border-red-500');
+            } else {
+                emailError.classList.add('hidden');
+                userEmail.classList.remove('border-red-500');
+            }
+        });
+
+        userPassword.addEventListener('blur', () => {
+            const error = validatePassword(userPassword.value);
+            if (error) {
+                passwordError.textContent = error;
+                passwordError.classList.remove('hidden');
+                userPassword.classList.add('border-red-500');
+            } else {
+                passwordError.classList.add('hidden');
+                userPassword.classList.remove('border-red-500');
+            }
+        });
+
+        // Close Modal
+        function closeModal() {
+            apiKeyModal.classList.add('hidden');
+        }
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        closeModalBtnFooter.addEventListener('click', closeModal);
+        
+        // Close modal when clicking outside
+        apiKeyModal.addEventListener('click', (e) => {
+            if (e.target === apiKeyModal) {
+                closeModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !apiKeyModal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // Generate API Key
+        generateApiKeyBtn.addEventListener('click', async () => {
+            // Clear previous errors
+            errorSection.classList.add('hidden');
+            apiKeyModal.classList.add('hidden');
+            
+            // Validate inputs
+            const emailErrorMsg = validateEmail(userEmail.value);
+            const passwordErrorMsg = validatePassword(userPassword.value);
+            
+            if (emailErrorMsg) {
+                emailError.textContent = emailErrorMsg;
+                emailError.classList.remove('hidden');
+                userEmail.classList.add('border-red-500');
+            } else {
+                emailError.classList.add('hidden');
+                userEmail.classList.remove('border-red-500');
+            }
+            
+            if (passwordErrorMsg) {
+                passwordError.textContent = passwordErrorMsg;
+                passwordError.classList.remove('hidden');
+                userPassword.classList.add('border-red-500');
+            } else {
+                passwordError.classList.add('hidden');
+                userPassword.classList.remove('border-red-500');
+            }
+            
+            if (emailErrorMsg || passwordErrorMsg) {
+                return;
+            }
+
+            generateApiKeyBtn.disabled = true;
+            btnText.textContent = 'Generating...';
+            loadingSpinner.classList.remove('hidden');
+
+            try {
+                const userName = userEmail.value;
+                const password = userPassword.value;
+                
+                // First check if API key already exists
+                const checkUrl = `${API_BASE_URL}/api/Client/apiKey?userName=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`;
+                const checkResponse = await fetch(checkUrl, { method: 'GET' });
+                const keyExists = checkResponse.ok;
+                
+                // Now generate/retrieve the API key
+                const url = `${API_BASE_URL}/api/Client/apiKey?userName=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    tenantIdInput.value = data.tenantId || '';
+                    tokenInput.value = data.token || '';
+                    generatedApiKey.value = data.apiKey || '';
+                    
+                    // Set status based on whether key existed before
+                    if (keyExists) {
+                        apiKeyStatus.textContent = 'Existing API Key Retrieved';
+                        apiKeyStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800';
+                        showToast('Existing API key retrieved successfully!', 'success');
+                    } else {
+                        apiKeyStatus.textContent = 'Newly Generated API Key';
+                        apiKeyStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800';
+                        showToast('New API key generated successfully!', 'success');
+                    }
+                    
+                    apiKeyModal.classList.remove('hidden');
+                    errorSection.classList.add('hidden');
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('errorMessage').textContent = errorText;
+                    errorSection.classList.remove('hidden');
+                    apiKeyModal.classList.add('hidden');
+                    showToast('Failed to generate API key', 'error');
+                }
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = 'Network error: ' + error.message;
+                errorSection.classList.remove('hidden');
+                apiKeySection.classList.add('hidden');
+                showToast('Network error occurred', 'error');
+            } finally {
+                generateApiKeyBtn.disabled = false;
+                btnText.textContent = 'Generate API Key';
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // View API Key
+        viewApiKeyBtn.addEventListener('click', async () => {
+            // Clear previous errors
+            errorSection.classList.add('hidden');
+            apiKeyModal.classList.add('hidden');
+            
+            // Validate inputs
+            const emailErrorMsg = validateEmail(userEmail.value);
+            const passwordErrorMsg = validatePassword(userPassword.value);
+            
+            if (emailErrorMsg) {
+                emailError.textContent = emailErrorMsg;
+                emailError.classList.remove('hidden');
+                userEmail.classList.add('border-red-500');
+            } else {
+                emailError.classList.add('hidden');
+                userEmail.classList.remove('border-red-500');
+            }
+            
+            if (passwordErrorMsg) {
+                passwordError.textContent = passwordErrorMsg;
+                passwordError.classList.remove('hidden');
+                userPassword.classList.add('border-red-500');
+            } else {
+                passwordError.classList.add('hidden');
+                userPassword.classList.remove('border-red-500');
+            }
+            
+            if (emailErrorMsg || passwordErrorMsg) {
+                return;
+            }
+
+            viewApiKeyBtn.disabled = true;
+            viewBtnText.textContent = 'Loading...';
+            viewLoadingSpinner.classList.remove('hidden');
+
+            try {
+                const userName = userEmail.value;
+                const password = userPassword.value;
+                const url = `${API_BASE_URL}/api/Client/apiKey?userName=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    tenantIdInput.value = data.tenantId || '';
+                    tokenInput.value = data.token || '';
+                    generatedApiKey.value = data.apiKey || '';
+                    
+                    // View API Key always shows existing key
+                    apiKeyStatus.textContent = 'Existing API Key Retrieved';
+                    apiKeyStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800';
+                    
+                    apiKeyModal.classList.remove('hidden');
+                    errorSection.classList.add('hidden');
+                    showToast('Existing API key retrieved successfully!', 'success');
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('errorMessage').textContent = errorText;
+                    errorSection.classList.remove('hidden');
+                    apiKeyModal.classList.add('hidden');
+                    showToast('Failed to retrieve API key', 'error');
+                }
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = 'Network error: ' + error.message;
+                errorSection.classList.remove('hidden');
+                apiKeySection.classList.add('hidden');
+                showToast('Network error occurred', 'error');
+            } finally {
+                viewApiKeyBtn.disabled = false;
+                viewBtnText.textContent = 'View API Key';
+                viewLoadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // Copy API Key
+        copyApiKeyBtn.addEventListener('click', () => {
+            generatedApiKey.select();
+            document.execCommand('copy');
+            showToast('API key copied to clipboard!', 'success');
+        });
+
+        // Download API Key Details
+        downloadApiKeyBtn.addEventListener('click', () => {
+            const tenantId = tenantIdInput.value || '';
+            const token = tokenInput.value || '';
+            const apiKey = generatedApiKey.value || '';
+
+            if (!tenantId && !token && !apiKey) {
+                showToast('No data available to download', 'error');
+                return;
+            }
+
+            // Create JSON object with all three values
+            const data = {
+                tenantId: tenantId,
+                token: token,
+                apiKey: apiKey
+            };
+
+            // Convert to JSON string
+            const jsonString = JSON.stringify(data, null, 2);
+
+            // Create a blob with the JSON data
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            // Create a temporary anchor element and trigger download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `api-key-details-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+
+            // Clean up
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('API key details downloaded successfully!', 'success');
+        });
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toastContent');
+            const toastMessage = document.getElementById('toastMessage');
+
+            if (toast && toastContent && toastMessage) {
+                toastMessage.textContent = message;
+                
+                if (type === 'success') {
+                    toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500';
+                    toastMessage.className = 'font-medium text-cyan-800 text-sm';
+                } else {
+                    toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-red-500';
+                    toastMessage.className = 'font-medium text-red-800 text-sm';
+                }
+
+                toast.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // Sidebar API function selection
+        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
+
+        apiFunctionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const functionName = button.getAttribute('data-function');
+                
+                // Update active button with animation
+                apiFunctionButtons.forEach(btn => {
+                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                });
+                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+
+                // Navigate to the function page
+                if (functionName === 'generate-qrcode') {
+                    window.location.href = '/index.html';
+                } else if (functionName === 'generate-apikey') {
+                    window.location.href = '/apikey.html';
+                } else if (functionName === 'file-summary') {
+                    window.location.href = '/filesummary.html';
+                } else if (functionName === 'kyc-agent') {
+                    window.location.href = '/kycagent.html';
+                }
+            });
+        });
+
+        // Smooth reveal animations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate cards
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, index * 100);
+            });
+
+            // Animate inputs on focus
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.classList.add('scale-105');
+                });
+                input.addEventListener('blur', function() {
+                    this.classList.remove('scale-105');
+                });
+            });
+        });
+
+        // Smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>
+

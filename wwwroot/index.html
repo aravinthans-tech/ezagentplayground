@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate QR Code - QR Code API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .animate-slideInLeft {
+            animation: slideInLeft 0.6s ease-out forwards;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+        .toast {
+            transition: all 0.3s ease-in-out;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        code, pre {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+        }
+        html, body {
+            overflow-x: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        #sidebar {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+            background-color: white !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .button-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-hover:hover {
+            transform: scale(1.02);
+        }
+        .button-hover:active {
+            transform: scale(0.98);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+        .delay-100 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+        .delay-200 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .delay-300 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+        .animate-blink {
+            animation: blink 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+        <div class="flex items-center space-x-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+        </div>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+128px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hidden">
+                Generate QR
+            </a>
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Code Examples
+            </a>
+            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                API Key
+            </a>
+            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Documentation
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-16 right-4 z-50 toast">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
+            <p id="toastMessage" class="font-medium text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <!-- API KEY Section -->
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="generate-apikey"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </div>
+                    </button>
+                </div>
+
+                <!-- FUNCTIONS Section -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition-all duration-300 hover:shadow-lg active hidden"
+                        data-function="generate-qrcode"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Generate QR Code
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="file-summary"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            File Summary
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="kyc-agent"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            KYC Agent
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 pb-8">
+            <!-- API Information Section -->
+            <div id="apiInfoSection" class="bg-white rounded-lg shadow-md p-6 mb-4 card-hover animate-fadeInUp">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">API Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono text-xs">POST /api/qrcode/generate</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600 text-xs">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Request Body</div>
+                        <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{"qrvalue": "string"}</pre>
+                    </div>
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Response</div>
+                        <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{"output": "base64", "id": 1}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+            <!-- Left Column: Generate Form -->
+            <div class="flex flex-col space-y-4">
+                <div class="bg-white rounded-lg shadow-md p-6 flex-shrink-0 card-hover animate-slideInLeft delay-100">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Generate QR Code</h2>
+                    <form id="apiForm" class="space-y-4">
+                        <div>
+                            <label for="apiKey" class="block text-sm font-semibold text-gray-700 mb-2">
+                                API Key <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="apiKey" 
+                                name="apiKey"
+                                value="dev-api-key-12345"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                placeholder="Enter your API key"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label for="qrValue" class="block text-sm font-semibold text-gray-700 mb-2">
+                                QR Code Value <span class="text-red-500">*</span>
+                            </label>
+                            <textarea 
+                                id="qrValue" 
+                                name="qrValue"
+                                rows="4"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none input-focus"
+                                placeholder="Enter text to encode in QR code"
+                                required
+                            >Hello World</textarea>
+                        </div>
+                        <button 
+                            type="submit" 
+                            id="generateBtn"
+                            class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                        >
+                            <span id="btnText">Generate QR Code</span>
+                            <svg id="loadingSpinner" class="hidden animate-spin h-5 w-5 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- QR Code Display -->
+                <div id="resultSection" class="hidden bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Generated QR Code</h3>
+                    <div class="flex flex-col items-center space-y-4">
+                        <div id="qrImageContainer" class="bg-white p-4 rounded-lg border-2 border-gray-200 shadow-inner">
+                            <img id="qrImage" src="" alt="QR Code" class="max-w-full h-auto" />
+                        </div>
+                        <div class="flex space-x-3">
+                            <button 
+                                id="downloadBtn"
+                                class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg button-hover"
+                            >
+                                Download QR Code
+                            </button>
+                            <button 
+                                id="clearBtn"
+                                class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                        <div class="w-full bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div class="text-sm">
+                                <span class="font-semibold text-gray-700">Status:</span>
+                                <span id="responseStatus" class="ml-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-medium"></span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-semibold text-gray-700">Response Time:</span>
+                                <span id="responseTime" class="ml-2 text-gray-900 font-medium"></span>
+                            </div>
+                        </div>
+                        <!-- Code Examples Button -->
+                        <div id="codeExamplesButton" class="hidden mt-4 w-full">
+                            <button 
+                                id="viewCodeExamplesBtn"
+                                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl button-hover animate-blink"
+                            >
+                                <div class="flex items-center justify-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                    </svg>
+                                    View Code Examples
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Display -->
+                <div id="errorSection" class="hidden bg-white rounded-lg shadow-md p-6">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                        <h3 class="text-sm font-semibold text-red-800 mb-2">Error</h3>
+                        <p id="errorMessage" class="text-sm text-red-700"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: JSON Result -->
+            <div class="flex flex-col">
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover animate-slideInRight delay-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">JSON Response</h2>
+                        <button 
+                            id="copyJsonBtn"
+                            class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm"
+                        >
+                            Copy JSON
+                        </button>
+                    </div>
+                    <pre id="jsonResponse" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto border-2 border-gray-800"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        
+        // Get form elements
+        const apiForm = document.getElementById('apiForm');
+        const apiKeyInput = document.getElementById('apiKey');
+        const qrValueInput = document.getElementById('qrValue');
+        const generateBtn = document.getElementById('generateBtn');
+        const btnText = document.getElementById('btnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultSection = document.getElementById('resultSection');
+        const errorSection = document.getElementById('errorSection');
+        const qrImage = document.getElementById('qrImage');
+        const jsonResponse = document.getElementById('jsonResponse');
+        const responseStatus = document.getElementById('responseStatus');
+        const responseTime = document.getElementById('responseTime');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyJsonBtn = document.getElementById('copyJsonBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Copy JSON response
+        copyJsonBtn.addEventListener('click', () => {
+            copyToClipboard(jsonResponse.textContent);
+            showToast('JSON copied to clipboard!', 'success');
+        });
+
+        // Form submission
+        apiForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const apiKey = apiKeyInput.value.trim();
+            const qrValue = qrValueInput.value.trim();
+
+            if (!apiKey || !qrValue) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            // Show loading state
+            generateBtn.disabled = true;
+            btnText.textContent = 'Generating...';
+            loadingSpinner.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            jsonResponse.textContent = '';
+
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/qrcode/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({ qrvalue: qrValue })
+                });
+
+                const endTime = performance.now();
+                const responseTimeMs = (endTime - startTime).toFixed(2);
+
+                const data = await response.json();
+
+                // Always show JSON response
+                jsonResponse.textContent = JSON.stringify(data, null, 2);
+
+                if (response.ok && data.id === 1 && data.output) {
+                    // Success
+                    qrImage.src = `data:image/png;base64,${data.output}`;
+                    responseStatus.textContent = 'Success';
+                    responseStatus.className = 'ml-2 text-green-600 font-medium';
+                    responseTime.textContent = `${responseTimeMs} ms`;
+                    
+                    // Save to localStorage
+                    saveToLocalStorage('qrcode', {
+                        apiKey: apiKeyInput.value,
+                        qrValue: qrValueInput.value,
+                        result: data
+                    });
+                    
+                    resultSection.classList.remove('hidden');
+                    errorSection.classList.add('hidden');
+                    document.getElementById('codeExamplesButton').classList.remove('hidden');
+                    showToast('QR code generated successfully!', 'success');
+                } else {
+                    // Error in response
+                    errorMessage.textContent = data.EncryptOutput || 'Failed to generate QR code';
+                    errorSection.classList.remove('hidden');
+                    resultSection.classList.add('hidden');
+                    showToast('Failed to generate QR code', 'error');
+                }
+            } catch (error) {
+                const endTime = performance.now();
+                const responseTimeMs = (endTime - startTime).toFixed(2);
+                
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                responseTime.textContent = `${responseTimeMs} ms`;
+                jsonResponse.textContent = JSON.stringify({ error: error.message }, null, 2);
+                showToast('Network error occurred', 'error');
+            } finally {
+                generateBtn.disabled = false;
+                btnText.textContent = 'Generate QR Code';
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // Sidebar API function selection
+        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
+        const apiInfoSection = document.getElementById('apiInfoSection');
+
+        apiFunctionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const functionName = button.getAttribute('data-function');
+                
+                // Navigate to the function page
+                if (functionName === 'generate-qrcode') {
+                    // Already on this page, just update API info
+                    apiFunctionButtons.forEach(btn => {
+                        btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                        btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    });
+                    button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                    button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    updateApiInfo(functionName);
+                } else if (functionName === 'generate-apikey') {
+                    window.location.href = '/apikey.html';
+                } else if (functionName === 'file-summary') {
+                    window.location.href = '/filesummary.html';
+                } else if (functionName === 'kyc-agent') {
+                    window.location.href = '/kycagent.html';
+                }
+            });
+        });
+
+        function updateApiInfo(functionName) {
+            if (functionName === 'generate-qrcode') {
+                apiInfoSection.innerHTML = `
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">API Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                            <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono text-xs">POST /api/qrcode/generate</code>
+                        </div>
+                        <div class="border-l-4 border-cyan-500 pl-4">
+                            <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                            <div class="text-gray-600 text-xs">X-API-Key header required</div>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <div class="font-semibold text-gray-700 mb-1">Request Body</div>
+                            <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{"qrvalue": "string"}</pre>
+                        </div>
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <div class="font-semibold text-gray-700 mb-1">Response</div>
+                            <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{"output": "base64", "id": 1}</pre>
+                        </div>
+                    </div>
+                `;
+            }
+            // Add more function cases here in the future
+        }
+
+        // Download QR code
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = qrImage.src;
+            link.download = 'qrcode.png';
+            link.click();
+            showToast('QR code downloaded!', 'success');
+        });
+
+        // Clear results
+        clearBtn.addEventListener('click', () => {
+            resultSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            document.getElementById('codeExamplesButton').classList.add('hidden');
+            jsonResponse.textContent = '';
+            qrValueInput.value = '';
+            // Clear localStorage on explicit clear
+            localStorage.removeItem('lastApiCall');
+            localStorage.removeItem('qrcode_data');
+        });
+        
+        // View Code Examples button
+        const viewCodeExamplesBtn = document.getElementById('viewCodeExamplesBtn');
+        viewCodeExamplesBtn.addEventListener('click', () => {
+            window.location.href = '/examples.html?function=qrcode';
+        });
+        
+        // localStorage functions
+        function saveToLocalStorage(apiType, data) {
+            localStorage.setItem('lastApiCall', apiType);
+            localStorage.setItem(`${apiType}_data`, JSON.stringify(data));
+        }
+        
+        function loadFromLocalStorage(apiType) {
+            const data = localStorage.getItem(`${apiType}_data`);
+            return data ? JSON.parse(data) : null;
+        }
+        
+        // Load data on page load (only if not refreshed)
+        window.addEventListener('load', () => {
+            // Check if this is a refresh
+            const navigationEntries = performance.getEntriesByType('navigation');
+            const isRefresh = navigationEntries.length > 0 && 
+                (navigationEntries[0].type === 'reload' || 
+                 navigationEntries[0].type === 'back_forward' && 
+                 !sessionStorage.getItem('navigated'));
+            
+            // Mark that we've navigated (not refreshed)
+            if (!isRefresh && !sessionStorage.getItem('navigated')) {
+                sessionStorage.setItem('navigated', 'true');
+            }
+            
+            if (!isRefresh) {
+                // Restore QR Code data if exists
+                const qrcodeData = loadFromLocalStorage('qrcode');
+                if (qrcodeData) {
+                    apiKeyInput.value = qrcodeData.apiKey || '';
+                    qrValueInput.value = qrcodeData.qrValue || '';
+                    if (qrcodeData.result && qrcodeData.result.id === 1 && qrcodeData.result.output) {
+                        qrImage.src = `data:image/png;base64,${qrcodeData.result.output}`;
+                        jsonResponse.textContent = JSON.stringify(qrcodeData.result, null, 2);
+                        resultSection.classList.remove('hidden');
+                        document.getElementById('codeExamplesButton').classList.remove('hidden');
+                    }
+                }
+            } else {
+                // Clear on refresh
+                localStorage.removeItem('lastApiCall');
+                localStorage.removeItem('qrcode_data');
+                localStorage.removeItem('filesummary_data');
+                sessionStorage.removeItem('navigated');
+            }
+        });
+
+        // Copy to clipboard helper
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).catch(err => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            });
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toastContent');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            
+            if (type === 'success') {
+                toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500';
+                toastMessage.className = 'font-medium text-cyan-800 text-sm';
+            } else {
+                toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-red-500';
+                toastMessage.className = 'font-medium text-red-800 text-sm';
+            }
+
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Smooth reveal animations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate cards
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, index * 100);
+            });
+
+            // Animate inputs on focus
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.classList.add('scale-105');
+                });
+                input.addEventListener('blur', function() {
+                    this.classList.remove('scale-105');
+                });
+            });
+        });
+
+        // Smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>

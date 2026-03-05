@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Summary - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-slideInLeft {
+            animation: slideInLeft 0.6s ease-out forwards;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+        .toast {
+            transition: all 0.3s ease-in-out;
+        }
+        html, body {
+            overflow-x: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        #sidebar {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+            background-color: white !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        code, pre {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .button-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-hover:hover {
+            transform: scale(1.02);
+        }
+        .button-hover:active {
+            transform: scale(0.98);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+        .delay-100 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+        .delay-200 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .delay-300 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+        .animate-blink {
+            animation: blink 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+        <div class="flex items-center space-x-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+        </div>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+128px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 hidden">
+                Generate QR
+            </a>
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Code Examples
+            </a>
+            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                API Key
+            </a>
+            <a href="/filesummary.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">
+                File Summary
+            </a>
+            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Documentation
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-16 right-4 z-50 toast">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
+            <p id="toastMessage" class="font-medium text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <!-- API KEY Section -->
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="generate-apikey"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </div>
+                    </button>
+                </div>
+
+                <!-- FUNCTIONS Section -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95 hidden"
+                        data-function="generate-qrcode"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Generate QR Code
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition-all duration-300 hover:shadow-lg active"
+                        data-function="file-summary"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            File Summary
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="kyc-agent"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            KYC Agent
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 pb-8">
+            <div class="max-w-6xl mx-auto">
+                <!-- Page Header -->
+                <div class="text-center mb-8 animate-fadeInUp">
+                    <h2 class="text-4xl font-semibold text-gray-900 mb-2">File Summary</h2>
+                    <p class="text-lg text-gray-600">Get and decrypt file summary information</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Input Form Card -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">File Summary Request</h3>
+                        <form id="fileSummaryForm" class="space-y-4">
+                            <div>
+                                <label for="apiKey" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    API Key <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="apiKey" 
+                                    name="apiKey"
+                                    class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Enter your API key"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label for="token" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Token <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="token" 
+                                    name="token"
+                                    class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Enter your token"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label for="fileInput" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    File <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="fileInput" 
+                                    name="file"
+                                    accept=".pdf,.doc,.docx,.txt"
+                                    class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                    required
+                                />
+                                <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, TXT</p>
+                            </div>
+
+                            <button 
+                                type="button"
+                                id="submitBtn"
+                                class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                            >
+                                <span id="btnText">Get File Summary</span>
+                                <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                        </form>
+
+                        <!-- Error Display -->
+                        <div id="errorSection" class="hidden mt-6">
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded animate-fadeInUp">
+                                <h4 class="text-sm font-semibold text-red-800 mb-2">Error</h4>
+                                <p id="errorMessage" class="text-sm text-red-700"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Display Card -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">File Summary Result</h3>
+                        <div id="resultSection" class="hidden">
+                            <div id="summaryContent" class="space-y-4"></div>
+                            <!-- Code Examples Button -->
+                            <div id="codeExamplesButton" class="hidden mt-6 text-center">
+                                <button 
+                                    id="viewCodeExamplesBtn"
+                                    class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl button-hover animate-blink"
+                                >
+                                    <div class="flex items-center justify-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                        </svg>
+                                        View Code Examples
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="emptyState" class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="mt-4 text-sm text-gray-500">Enter details and click "Get File Summary" to view results</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultSection = document.getElementById('resultSection');
+        const summaryContent = document.getElementById('summaryContent');
+        const emptyState = document.getElementById('emptyState');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+
+        const API_BASE_URL = window.location.origin;
+
+        submitBtn.addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const token = document.getElementById('token').value.trim();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            // Validate inputs
+            if (!apiKey || !token || !file) {
+                errorMessage.textContent = 'API Key, Token, and File are required';
+                errorSection.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            btnText.textContent = 'Processing...';
+            loadingSpinner.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            errorSection.classList.add('hidden');
+
+            try {
+                // Create FormData for multipart/form-data
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('token', token);
+
+                // Call local API endpoint with API key validation
+                const response = await fetch(`${API_BASE_URL}/api/FileSummary/getSummary`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey
+                        // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    let errorMessage = `API error: ${response.status} ${response.statusText}`;
+                    try {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const errorData = await response.json();
+                            errorMessage = errorData.encryptOutput || errorData.message || errorMessage;
+                        } else {
+                            const errorText = await response.text();
+                            errorMessage = errorText || errorMessage;
+                        }
+                    } catch (e) {
+                        // If parsing fails, use default error message
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json();
+
+                if (result.id === 0) {
+                    throw new Error(result.encryptOutput || 'Failed to get file summary');
+                }
+
+                if (!result.output) {
+                    throw new Error('No output received from API');
+                }
+
+                // Parse and display HTML
+                parseAndDisplayHtml(result.output);
+                
+                // Save to localStorage
+                saveToLocalStorage('filesummary', {
+                    apiKey: apiKey,
+                    token: token,
+                    result: result
+                });
+
+                resultSection.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                document.getElementById('codeExamplesButton').classList.remove('hidden');
+                showToast('File summary retrieved successfully!', 'success');
+
+            } catch (error) {
+                errorMessage.textContent = error.message || 'An error occurred while processing the request';
+                errorSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                showToast('Failed to get file summary', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = 'Get File Summary';
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        function parseAndDisplayHtml(htmlString) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlString, 'text/html');
+
+            // Extract summary
+            const summaryBox = doc.querySelector('.summary-box');
+            const summaryText = summaryBox ? summaryBox.textContent.trim() : '';
+
+            // Extract key points table
+            const keyPointsTable = doc.querySelector('table');
+            const keyPoints = [];
+            if (keyPointsTable) {
+                const rows = keyPointsTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const key = row.querySelector('.kp-key')?.textContent.trim() || '';
+                    const desc = row.querySelector('.kp-desc')?.textContent.trim() || '';
+                    if (key && desc) {
+                        keyPoints.push({ key, desc });
+                    }
+                });
+            }
+
+            // Extract footer pills (Seal/Signature)
+            const pills = doc.querySelectorAll('.pill');
+            const sealSignature = [];
+            pills.forEach(pill => {
+                const text = pill.textContent.trim();
+                const isYes = pill.classList.contains('pill-yes');
+                sealSignature.push({ text, isYes });
+            });
+
+            // Build display HTML
+            let displayHtml = '';
+
+            // Summary section
+            if (summaryText) {
+                displayHtml += `
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border-2 border-purple-200 mb-4">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-3">Summary</h4>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(summaryText)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Key Points section
+            if (keyPoints.length > 0) {
+                displayHtml += `
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-200 mb-4">
+                        <h4 class="text-base font-semibold text-gray-900 mb-2">Key Points</h4>
+                        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Key Point</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${keyPoints.map(kp => `
+                                        <tr class="border-t border-gray-200 hover:bg-gray-50">
+                                            <td class="px-3 py-2 text-xs font-semibold text-gray-900">${escapeHtml(kp.key)}</td>
+                                            <td class="px-3 py-2 text-xs text-gray-700 whitespace-pre-wrap">${escapeHtml(kp.desc)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Seal/Signature section
+            if (sealSignature.length > 0) {
+                displayHtml += `
+                    <div class="flex flex-wrap gap-2">
+                        ${sealSignature.map(item => `
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                                item.isYes 
+                                    ? 'bg-green-100 text-green-800 border border-green-300' 
+                                    : 'bg-red-100 text-red-800 border border-red-300'
+                            }">
+                                ${escapeHtml(item.text)}
+                            </span>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            summaryContent.innerHTML = displayHtml || '<p class="text-gray-500">No content to display</p>';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toastContent');
+            const toastMessage = document.getElementById('toastMessage');
+
+            if (toast && toastContent && toastMessage) {
+                toastMessage.textContent = message;
+                
+                if (type === 'success') {
+                    toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500';
+                    toastMessage.className = 'font-medium text-cyan-800 text-sm';
+                } else {
+                    toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-red-500';
+                    toastMessage.className = 'font-medium text-red-800 text-sm';
+                }
+
+                toast.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // View Code Examples button
+        const viewCodeExamplesBtn = document.getElementById('viewCodeExamplesBtn');
+        if (viewCodeExamplesBtn) {
+            viewCodeExamplesBtn.addEventListener('click', () => {
+                window.location.href = '/examples.html?function=filesummary';
+            });
+        }
+        
+        // localStorage functions
+        function saveToLocalStorage(apiType, data) {
+            localStorage.setItem('lastApiCall', apiType);
+            localStorage.setItem(`${apiType}_data`, JSON.stringify(data));
+        }
+        
+        function loadFromLocalStorage(apiType) {
+            const data = localStorage.getItem(`${apiType}_data`);
+            return data ? JSON.parse(data) : null;
+        }
+        
+        // Load data on page load (only if not refreshed)
+        window.addEventListener('load', () => {
+            // Check if this is a refresh
+            const navigationEntries = performance.getEntriesByType('navigation');
+            const isRefresh = navigationEntries.length > 0 && 
+                (navigationEntries[0].type === 'reload' || 
+                 navigationEntries[0].type === 'back_forward' && 
+                 !sessionStorage.getItem('navigated'));
+            
+            // Mark that we've navigated (not refreshed)
+            if (!isRefresh && !sessionStorage.getItem('navigated')) {
+                sessionStorage.setItem('navigated', 'true');
+            }
+            
+            if (!isRefresh) {
+                // Restore File Summary data if exists
+                const filesummaryData = loadFromLocalStorage('filesummary');
+                if (filesummaryData) {
+                    document.getElementById('apiKey').value = filesummaryData.apiKey || '';
+                    document.getElementById('token').value = filesummaryData.token || '';
+                    document.getElementById('rId').value = filesummaryData.rId || '';
+                    document.getElementById('itemId').value = filesummaryData.itemId || '';
+                    if (filesummaryData.result && filesummaryData.result.id === 1 && filesummaryData.result.output) {
+                        parseAndDisplayHtml(filesummaryData.result.output);
+                        resultSection.classList.remove('hidden');
+                        emptyState.classList.add('hidden');
+                        document.getElementById('codeExamplesButton').classList.remove('hidden');
+                    }
+                }
+            } else {
+                // Clear on refresh
+                localStorage.removeItem('lastApiCall');
+                localStorage.removeItem('qrcode_data');
+                localStorage.removeItem('filesummary_data');
+                sessionStorage.removeItem('navigated');
+            }
+        });
+        
+        // Sidebar navigation
+        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
+        apiFunctionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const functionName = button.getAttribute('data-function');
+                
+                apiFunctionButtons.forEach(btn => {
+                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                });
+                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+
+                if (functionName === 'generate-qrcode') {
+                    window.location.href = '/index.html';
+                } else if (functionName === 'generate-apikey') {
+                    window.location.href = '/apikey.html';
+                } else if (functionName === 'file-summary') {
+                    window.location.href = '/filesummary.html';
+                } else if (functionName === 'kyc-agent') {
+                    window.location.href = '/kycagent.html';
+                }
+            });
+        });
+
+        // Smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>
+

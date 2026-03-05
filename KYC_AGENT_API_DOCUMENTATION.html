@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Agent API Documentation</title>
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .endpoint {
+            background-color: #e8f4f8;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            margin: 10px 0;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>KYC Agent API Documentation</h1>
+    
+    <h2>Overview</h2>
+    <p>The KYC Agent API provides comprehensive Know Your Customer (KYC) verification services. It processes documents, extracts KYC information, verifies addresses with Google Maps, checks document consistency, and performs face matching between license and selfie images.</p>
+    
+    <h2>Base URL</h2>
+    <pre>http://localhost:5000/api/KycAgent</pre>
+    <p>or</p>
+    <pre>https://localhost:51347/api/KycAgent</pre>
+    
+    <h2>Authentication</h2>
+    <p>All endpoints require API key authentication via the <code>X-API-Key</code> header:</p>
+    <pre>X-API-Key: your-api-key-here</pre>
+    
+    <hr>
+    
+    <h2>Endpoints</h2>
+    
+    <h3>1. Process Documents</h3>
+    <div class="endpoint">
+        <strong>POST</strong> <code>/api/KycAgent/process</code>
+    </div>
+    <p>Extracts KYC data from one or more documents using OCR and optional face matching.</p>
+    
+    <h4>Request</h4>
+    <p><strong>Content-Type:</strong> <code>multipart/form-data</code></p>
+    
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>documents</code></td>
+            <td>File[]</td>
+            <td>Yes</td>
+            <td>One or more document files (PDF, DOC, DOCX, TXT, JPG, JPEG, PNG)</td>
+        </tr>
+        <tr>
+            <td><code>licenseImage</code></td>
+            <td>File</td>
+            <td>No</td>
+            <td>License/ID image for face matching (JPG, JPEG, PNG)</td>
+        </tr>
+        <tr>
+            <td><code>selfieImage</code></td>
+            <td>File</td>
+            <td>No</td>
+            <td>Selfie image for face matching (JPG, JPEG, PNG)</td>
+        </tr>
+    </table>
+    
+    <h4>Response</h4>
+    <p><strong>Success (200 OK):</strong></p>
+    <pre>{
+  "id": 1,
+  "output": "&lt;html&gt;KYC Agent Report with extracted data...&lt;/html&gt;",
+  "encryptOutput": null
+}</pre>
+    
+    <p><strong>Error (400 Bad Request):</strong></p>
+    <pre>{
+  "id": 0,
+  "output": null,
+  "encryptOutput": "At least one document is required"
+}</pre>
+    
+    <h4>Features</h4>
+    <ul>
+        <li>Extracts text from documents using OCR (Unstract API)</li>
+        <li>Extracts KYC fields (name, address, document type, etc.) using LLM</li>
+        <li>Performs face matching if both license and selfie images are provided</li>
+        <li>Returns HTML report with all extracted information</li>
+    </ul>
+    
+    <hr>
+    
+    <h3>2. Verify Documents</h3>
+    <div class="endpoint">
+        <strong>POST</strong> <code>/api/KycAgent/verify</code>
+    </div>
+    <p>Comprehensive document verification with address matching, consistency checks, and face verification.</p>
+    
+    <h4>Request</h4>
+    <p><strong>Content-Type:</strong> <code>multipart/form-data</code></p>
+    
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>documents</code></td>
+            <td>File[]</td>
+            <td>Yes</td>
+            <td>-</td>
+            <td>At least 2 document files (PDF, DOC, DOCX, TXT, JPG, JPEG, PNG)</td>
+        </tr>
+        <tr>
+            <td><code>expectedAddress</code></td>
+            <td>string</td>
+            <td>Yes</td>
+            <td>-</td>
+            <td>The expected address to match against extracted addresses</td>
+        </tr>
+        <tr>
+            <td><code>modelChoice</code></td>
+            <td>string</td>
+            <td>No</td>
+            <td>"Mistral"</td>
+            <td>LLM model: "Mistral" or "OpenAI"</td>
+        </tr>
+        <tr>
+            <td><code>consistencyThreshold</code></td>
+            <td>double</td>
+            <td>No</td>
+            <td>0.82</td>
+            <td>Address consistency threshold (0.0 to 1.0)</td>
+        </tr>
+        <tr>
+            <td><code>licenseImage</code></td>
+            <td>File</td>
+            <td>No</td>
+            <td>null</td>
+            <td>License/ID image for face matching (JPG, JPEG, PNG)</td>
+        </tr>
+        <tr>
+            <td><code>selfieImage</code></td>
+            <td>File</td>
+            <td>No</td>
+            <td>null</td>
+            <td>Selfie image for face matching (JPG, JPEG, PNG)</td>
+        </tr>
+    </table>
+    
+    <h4>Response Structure</h4>
+    <pre>{
+  "finalResult": true,
+  "addressConsistencyScore": 0.95,
+  "nameConsistencyScore": 0.98,
+  "documentConsistencyScore": 0.95,
+  "averageAuthenticityScore": 0.92,
+  "documentsConsistent": true,
+  "documents": [
+    {
+      "documentIndex": 1,
+      "extractedAddress": "10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004",
+      "extractedName": "ARAVINDHAN S",
+      "similarityToExpected": 1.0,
+      "addressMatch": true,
+      "googleMapsVerified": true,
+      "googleMapsFormattedAddress": "10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004, India",
+      "authenticityScore": 0.95,
+      "extractedFields": {
+        "full_name": "ARAVINDHAN S",
+        "address": "10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004",
+        "document_type": "Driving License",
+        "date_of_birth": "1990-01-01"
+      }
+    }
+  ],
+  "faceMatch": {
+    "match": true,
+    "matchScore": 4,
+    "message": "✅ Photo Verification Passed<br>Match Score: 4/5",
+    "licenseFaceImage": "base64_encoded_image",
+    "selfieFaceImage": "base64_encoded_image"
+  },
+  "statusHtml": "&lt;div&gt;Verification status HTML...&lt;/div&gt;",
+  "verificationTableHtml": "&lt;div&gt;Verification table HTML...&lt;/div&gt;",
+  "extractedFields": {
+    "document_1": {},
+    "document_2": {}
+  }
+}</pre>
+    
+    <h4>Response Fields</h4>
+    <table>
+        <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>finalResult</code></td>
+            <td>boolean</td>
+            <td>Overall verification result (true = passed, false = failed)</td>
+        </tr>
+        <tr>
+            <td><code>addressConsistencyScore</code></td>
+            <td>double</td>
+            <td>Address similarity score between documents (0.0 to 1.0)</td>
+        </tr>
+        <tr>
+            <td><code>nameConsistencyScore</code></td>
+            <td>double</td>
+            <td>Name similarity score between documents (0.0 to 1.0)</td>
+        </tr>
+        <tr>
+            <td><code>documentConsistencyScore</code></td>
+            <td>double</td>
+            <td>Overall document consistency score</td>
+        </tr>
+        <tr>
+            <td><code>averageAuthenticityScore</code></td>
+            <td>double</td>
+            <td>Average authenticity score across all documents</td>
+        </tr>
+        <tr>
+            <td><code>documentsConsistent</code></td>
+            <td>boolean</td>
+            <td>Whether addresses from documents match each other</td>
+        </tr>
+        <tr>
+            <td><code>documents</code></td>
+            <td>array</td>
+            <td>Array of document verification results</td>
+        </tr>
+        <tr>
+            <td><code>faceMatch</code></td>
+            <td>object</td>
+            <td>Face matching result (if license and selfie provided)</td>
+        </tr>
+        <tr>
+            <td><code>statusHtml</code></td>
+            <td>string</td>
+            <td>HTML formatted verification status</td>
+        </tr>
+        <tr>
+            <td><code>verificationTableHtml</code></td>
+            <td>string</td>
+            <td>HTML formatted verification table</td>
+        </tr>
+        <tr>
+            <td><code>extractedFields</code></td>
+            <td>object</td>
+            <td>Extracted KYC fields from all documents</td>
+        </tr>
+    </table>
+    
+    <h4>Document Verification Object</h4>
+    <table>
+        <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>documentIndex</code></td>
+            <td>integer</td>
+            <td>Document number (1, 2, 3, ...)</td>
+        </tr>
+        <tr>
+            <td><code>extractedAddress</code></td>
+            <td>string</td>
+            <td>Address extracted from document</td>
+        </tr>
+        <tr>
+            <td><code>extractedName</code></td>
+            <td>string</td>
+            <td>Full name extracted from document</td>
+        </tr>
+        <tr>
+            <td><code>similarityToExpected</code></td>
+            <td>double</td>
+            <td>Similarity to expected address (0.0 to 1.0)</td>
+        </tr>
+        <tr>
+            <td><code>addressMatch</code></td>
+            <td>boolean</td>
+            <td>Whether address matches expected address</td>
+        </tr>
+        <tr>
+            <td><code>googleMapsVerified</code></td>
+            <td>boolean</td>
+            <td>Whether address was verified by Google Maps</td>
+        </tr>
+        <tr>
+            <td><code>googleMapsFormattedAddress</code></td>
+            <td>string</td>
+            <td>Google Maps formatted address</td>
+        </tr>
+        <tr>
+            <td><code>authenticityScore</code></td>
+            <td>double</td>
+            <td>Document authenticity score (0.0 to 1.0)</td>
+        </tr>
+        <tr>
+            <td><code>extractedFields</code></td>
+            <td>object</td>
+            <td>All extracted KYC fields from document</td>
+        </tr>
+    </table>
+    
+    <h4>Face Match Result Object</h4>
+    <table>
+        <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td><code>match</code></td>
+            <td>boolean</td>
+            <td>Whether face match passed (score >= threshold)</td>
+        </tr>
+        <tr>
+            <td><code>matchScore</code></td>
+            <td>integer</td>
+            <td>Face match score (0 to 5)</td>
+        </tr>
+        <tr>
+            <td><code>message</code></td>
+            <td>string</td>
+            <td>HTML formatted message about face match result</td>
+        </tr>
+        <tr>
+            <td><code>licenseFaceImage</code></td>
+            <td>string</td>
+            <td>Base64 encoded processed license face image</td>
+        </tr>
+        <tr>
+            <td><code>selfieFaceImage</code></td>
+            <td>string</td>
+            <td>Base64 encoded processed selfie face image</td>
+        </tr>
+    </table>
+    
+    <hr>
+    
+    <h2>Verification Process</h2>
+    
+    <h3>Step 1: Document Processing</h3>
+    <ol>
+        <li>OCR text extraction from all documents (parallel processing)</li>
+        <li>KYC field extraction using LLM (name, address, DOB, etc.)</li>
+        <li>Address extraction from each document</li>
+    </ol>
+    
+    <h3>Step 2: Address Consistency Check</h3>
+    <ol>
+        <li>Compare addresses from all documents</li>
+        <li>Normalize addresses (expand abbreviations: TN → Tamil Nadu)</li>
+        <li>Calculate similarity score using Jaccard similarity</li>
+        <li><strong>If addresses match:</strong> Proceed to Google Maps verification</li>
+        <li><strong>If addresses don't match:</strong> Skip Google Maps, mark as not verified</li>
+    </ol>
+    
+    <h3>Step 3: Google Maps Verification (if addresses match)</h3>
+    <ol>
+        <li>Verify each document's address with Google Maps Geocoding API</li>
+        <li>Get formatted address from Google Maps</li>
+        <li>Calculate authenticity score (similarity between extracted and Google formatted address)</li>
+    </ol>
+    
+    <h3>Step 4: Face Matching (if provided)</h3>
+    <ol>
+        <li>Detect and crop faces from license and selfie images</li>
+        <li>Preprocess images (CLAHE, grayscale, resize)</li>
+        <li>Compare faces using ORB feature matching</li>
+        <li>Calculate match score (0-5)</li>
+        <li>Pass if score >= 4 (configurable threshold)</li>
+    </ol>
+    
+    <h3>Step 5: Final Result Calculation</h3>
+    <ul>
+        <li>All documents must have matching addresses</li>
+        <li>Address consistency score >= threshold</li>
+        <li>Face match must pass (if face images provided)</li>
+        <li>Google Maps verification must pass (if addresses matched)</li>
+    </ul>
+    
+    <hr>
+    
+    <h2>Code Examples</h2>
+    
+    <h3>cURL - Process Documents</h3>
+    <pre>curl -X POST "http://localhost:5000/api/KycAgent/process" \
+  -H "X-API-Key: your-api-key-here" \
+  -F "documents=@document1.pdf" \
+  -F "documents=@document2.pdf" \
+  -F "licenseImage=@license.jpg" \
+  -F "selfieImage=@selfie.jpg"</pre>
+    
+    <h3>cURL - Verify Documents</h3>
+    <pre>curl -X POST "http://localhost:5000/api/KycAgent/verify" \
+  -H "X-API-Key: your-api-key-here" \
+  -F "documents=@document1.pdf" \
+  -F "documents=@document2.pdf" \
+  -F "expectedAddress=10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004" \
+  -F "modelChoice=Mistral" \
+  -F "consistencyThreshold=0.82" \
+  -F "licenseImage=@license.jpg" \
+  -F "selfieImage=@selfie.jpg"</pre>
+    
+    <h3>Python - Process Documents</h3>
+    <pre>import requests
+
+url = "http://localhost:5000/api/KycAgent/process"
+headers = {"X-API-Key": "your-api-key-here"}
+
+files = [
+    ("documents", ("doc1.pdf", open("doc1.pdf", "rb"), "application/pdf")),
+    ("documents", ("doc2.pdf", open("doc2.pdf", "rb"), "application/pdf")),
+    ("licenseImage", ("license.jpg", open("license.jpg", "rb"), "image/jpeg")),
+    ("selfieImage", ("selfie.jpg", open("selfie.jpg", "rb"), "image/jpeg"))
+]
+
+response = requests.post(url, headers=headers, files=files)
+result = response.json()
+
+if result["id"] == 1:
+    print("HTML Report:", result["output"])
+else:
+    print("Error:", result["encryptOutput"])</pre>
+    
+    <h3>Python - Verify Documents</h3>
+    <pre>import requests
+
+url = "http://localhost:5000/api/KycAgent/verify"
+headers = {"X-API-Key": "your-api-key-here"}
+
+files = [
+    ("documents", ("doc1.pdf", open("doc1.pdf", "rb"), "application/pdf")),
+    ("documents", ("doc2.pdf", open("doc2.pdf", "rb"), "application/pdf")),
+    ("licenseImage", ("license.jpg", open("license.jpg", "rb"), "image/jpeg")),
+    ("selfieImage", ("selfie.jpg", open("selfie.jpg", "rb"), "image/jpeg"))
+]
+
+data = {
+    "expectedAddress": "10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004",
+    "modelChoice": "Mistral",
+    "consistencyThreshold": 0.82
+}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+result = response.json()
+
+print(f"Verification: {'✅ Passed' if result['finalResult'] else '❌ Failed'}")
+print(f"Address Consistency: {result['addressConsistencyScore']:.2%}")
+print(f"Name Consistency: {result['nameConsistencyScore']:.2%}")
+
+if result.get('faceMatch'):
+    print(f"Face Match: {'✅ Passed' if result['faceMatch']['match'] else '❌ Failed'}")
+    print(f"Face Score: {result['faceMatch']['matchScore']}/5")</pre>
+    
+    <h3>JavaScript (Browser) - Verify Documents</h3>
+    <pre>async function verifyKYC() {
+    const formData = new FormData();
+    
+    // Add documents
+    const docInputs = document.querySelectorAll('input[type="file"][name="documents"]');
+    docInputs.forEach(input => {
+        if (input.files[0]) {
+            formData.append('documents', input.files[0]);
+        }
+    });
+    
+    // Add expected address
+    formData.append('expectedAddress', '10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004');
+    formData.append('modelChoice', 'Mistral');
+    formData.append('consistencyThreshold', '0.82');
+    
+    // Add face images
+    const licenseInput = document.getElementById('licenseImage');
+    const selfieInput = document.getElementById('selfieImage');
+    if (licenseInput?.files[0]) formData.append('licenseImage', licenseInput.files[0]);
+    if (selfieInput?.files[0]) formData.append('selfieImage', selfieInput.files[0]);
+    
+    const response = await fetch('http://localhost:5000/api/KycAgent/verify', {
+        method: 'POST',
+        headers: { 'X-API-Key': 'your-api-key-here' },
+        body: formData
+    });
+    
+    const result = await response.json();
+    console.log('Verification Result:', result);
+    return result;
+}</pre>
+    
+    <h3>C# - Verify Documents</h3>
+    <pre>using System.Net.Http;
+using System.Text.Json;
+
+var client = new HttpClient();
+client.DefaultRequestHeaders.Add("X-API-Key", "your-api-key-here");
+
+var formData = new MultipartFormDataContent();
+
+// Add documents
+formData.Add(new ByteArrayContent(File.ReadAllBytes("doc1.pdf")), "documents", "doc1.pdf");
+formData.Add(new ByteArrayContent(File.ReadAllBytes("doc2.pdf")), "documents", "doc2.pdf");
+
+// Add expected address
+formData.Add(new StringContent("10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004"), "expectedAddress");
+formData.Add(new StringContent("Mistral"), "modelChoice");
+formData.Add(new StringContent("0.82"), "consistencyThreshold");
+
+// Add face images
+if (File.Exists("license.jpg"))
+    formData.Add(new ByteArrayContent(File.ReadAllBytes("license.jpg")), "licenseImage", "license.jpg");
+if (File.Exists("selfie.jpg"))
+    formData.Add(new ByteArrayContent(File.ReadAllBytes("selfie.jpg")), "selfieImage", "selfie.jpg");
+
+var response = await client.PostAsync("http://localhost:5000/api/KycAgent/verify", formData);
+var result = JsonSerializer.Deserialize&lt;KycVerificationResult&gt;(await response.Content.ReadAsStringAsync());</pre>
+    
+    <hr>
+    
+    <h2>Features</h2>
+    
+    <h3>Address Verification Logic</h3>
+    <ol>
+        <li><strong>Address Consistency Check First:</strong> Documents are checked for address consistency before Google Maps verification</li>
+        <li><strong>Conditional Google Maps Verification:</strong> Google Maps API is only called if addresses from documents match</li>
+        <li><strong>Address Normalization:</strong> State/province abbreviations are automatically expanded (TN → Tamil Nadu, ON → Ontario)</li>
+        <li><strong>Similarity Calculation:</strong> Uses Jaccard similarity with normalized addresses</li>
+    </ol>
+    
+    <h3>Face Matching</h3>
+    <ul>
+        <li><strong>Technology:</strong> OpenCV (Haar Cascade for detection, ORB for feature matching)</li>
+        <li><strong>Preprocessing:</strong> CLAHE (Contrast Limited Adaptive Histogram Equalization)</li>
+        <li><strong>Threshold:</strong> Minimum score of 4/5 required to pass (configurable)</li>
+        <li><strong>Rotation Handling:</strong> Automatically handles rotated images (0°, 90°, 180°, 270°)</li>
+    </ul>
+    
+    <h3>Performance Optimizations</h3>
+    <ul>
+        <li><strong>Parallel Processing:</strong> Documents processed in parallel</li>
+        <li><strong>Concurrent Operations:</strong> OCR, LLM calls, and Google Maps verification run concurrently</li>
+        <li><strong>Early Face Matching:</strong> Face matching starts in parallel with document processing</li>
+        <li><strong>Optimized OCR Polling:</strong> Reduced polling interval for faster results</li>
+    </ul>
+    
+    <hr>
+    
+    <h2>Configuration</h2>
+    
+    <h3>appsettings.json</h3>
+    <pre>{
+  "KycVerification": {
+    "FaceMatchThreshold": 4,
+    "ConsistencyThreshold": 0.82
+  },
+  "ExternalApis": {
+    "Unstract": {
+      "ApiKey": "your-unstract-api-key",
+      "BaseUrl": "https://api.unstract.com"
+    },
+    "OpenRouter": {
+      "ApiKey": "your-openrouter-api-key",
+      "BaseUrl": "https://openrouter.ai/api/v1"
+    },
+    "GoogleMaps": {
+      "ApiKey": "your-google-maps-api-key",
+      "GeocodingUrl": "https://maps.googleapis.com/maps/api/geocode/json"
+    }
+  }
+}</pre>
+    
+    <hr>
+    
+    <h2>Error Handling</h2>
+    
+    <h3>Common Error Responses</h3>
+    <p><strong>400 Bad Request:</strong></p>
+    <ul>
+        <li>"At least one document is required" (process endpoint)</li>
+        <li>"Please upload at least two documents" (verify endpoint)</li>
+        <li>"Expected address is required" (verify endpoint)</li>
+    </ul>
+    
+    <p><strong>401 Unauthorized:</strong></p>
+    <ul>
+        <li>"API Key was not provided"</li>
+        <li>"Invalid API Key"</li>
+    </ul>
+    
+    <p><strong>500 Internal Server Error:</strong></p>
+    <ul>
+        <li>OCR service errors</li>
+        <li>LLM API errors</li>
+        <li>Google Maps API errors</li>
+        <li>Face matching errors</li>
+    </ul>
+    
+    <h3>Error Response Format</h3>
+    <pre>{
+  "id": 0,
+  "output": null,
+  "encryptOutput": "Error message here"
+}</pre>
+    
+    <p>or for verify endpoint:</p>
+    <pre>{
+  "statusHtml": "❌ &lt;b style='color:red;'&gt;Error message&lt;/b&gt;",
+  "finalResult": false
+}</pre>
+    
+    <hr>
+    
+    <h2>Best Practices</h2>
+    <ol>
+        <li><strong>Document Quality:</strong> Ensure documents are clear and readable for better OCR accuracy</li>
+        <li><strong>Address Format:</strong> Provide expected address in consistent format</li>
+        <li><strong>Face Images:</strong> Use clear, front-facing photos for better face matching</li>
+        <li><strong>API Key Security:</strong> Never expose API keys in client-side code</li>
+        <li><strong>Error Handling:</strong> Always check response status and handle errors appropriately</li>
+        <li><strong>File Size:</strong> Keep document file sizes reasonable for faster processing</li>
+    </ol>
+    
+    <hr>
+    
+    <h2>Limitations</h2>
+    <ol>
+        <li><strong>OCR Quota:</strong> Free tier has 100 pages per day limit (Unstract)</li>
+        <li><strong>Google Maps:</strong> Requires valid API key with Geocoding API enabled</li>
+        <li><strong>Face Matching:</strong> Requires clear, front-facing faces in images</li>
+        <li><strong>HTTPS Required:</strong> Camera access requires HTTPS (except localhost)</li>
+    </ol>
+    
+    <hr>
+    
+    <h2>Support</h2>
+    <p>For issues or questions, check application logs for detailed error messages.</p>
+    
+</body>
+</html>
+

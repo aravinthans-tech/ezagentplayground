@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Examples - QR Code API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.02);
+            }
+        }
+        .animate-blink {
+            animation: blink 1.5s ease-in-out infinite;
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .animate-slideInLeft {
+            animation: slideInLeft 0.6s ease-out forwards;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+        .toast {
+            transition: all 0.3s ease-in-out;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        html, body {
+            overflow-x: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        #sidebar {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+            background-color: white !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        code, pre, .code-block {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .button-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-hover:hover {
+            transform: scale(1.02);
+        }
+        .button-hover:active {
+            transform: scale(0.98);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+        .delay-100 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+        .delay-200 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .delay-300 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+        <div class="flex items-center space-x-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+        </div>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+128px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 hidden">
+                Generate QR
+            </a>
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">
+                Code Examples
+            </a>
+            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                API Key
+            </a>
+            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Documentation
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-16 right-4 z-50 toast">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
+            <p id="toastMessage" class="font-medium text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <!-- API KEY Section -->
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="generate-apikey"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </div>
+                    </button>
+                </div>
+
+                <!-- FUNCTIONS Section -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95 hidden"
+                        data-function="generate-qrcode"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Generate QR Code
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="file-summary"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            File Summary
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="kyc-agent"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            KYC Agent
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 pb-8">
+        <div class="grid grid-cols-3 gap-4">
+            <!-- Left Column: Configuration -->
+            <div class="flex flex-col space-y-4">
+                <div class="bg-white rounded-lg shadow-md p-6 flex-shrink-0 card-hover animate-slideInLeft delay-100">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Configuration</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="functionType" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Function Type
+                            </label>
+                            <select 
+                                id="functionType" 
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                            >
+                                <option value="qrcode">Generate QR Code</option>
+                                <option value="filesummary">File Summary</option>
+                                <option value="kycagent">KYC Agent</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="apiKey" class="block text-sm font-semibold text-gray-700 mb-2">
+                                API Key
+                            </label>
+                            <input 
+                                type="text" 
+                                id="apiKey" 
+                                name="apiKey"
+                                value="dev-api-key-12345"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                placeholder="Enter your API key"
+                            />
+                        </div>
+                        
+                        <!-- QR Code Fields -->
+                        <div id="qrcode-fields">
+                            <div>
+                                <label for="qrValue" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Sample QR Value
+                                </label>
+                                <textarea 
+                                    id="qrValue" 
+                                    name="qrValue"
+                                    rows="3"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none input-focus"
+                                    placeholder="Enter sample text"
+                                >Hello World</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- File Summary Fields -->
+                        <div id="filesummary-fields" class="hidden">
+                            <div>
+                                <label for="token" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Token
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="token" 
+                                    name="token"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Enter your token"
+                                />
+                            </div>
+                            <div>
+                                <label for="fileInputExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    File
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="fileInputExample" 
+                                    name="file"
+                                    accept=".pdf,.doc,.docx,.txt"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                />
+                                <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, TXT</p>
+                            </div>
+                        </div>
+                        
+                        <!-- KYC Agent Fields -->
+                        <div id="kycagent-fields" class="hidden">
+                            <div>
+                                <label for="fileInputKyc" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    File
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="fileInputKyc" 
+                                    name="file"
+                                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                />
+                                <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG</p>
+                            </div>
+                        </div>
+                        
+                        <p class="text-xs text-gray-500">Code examples will update automatically based on your inputs above.</p>
+                    </div>
+                </div>
+
+                <!-- API Information -->
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover animate-slideInLeft delay-200">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">API Information</h2>
+                    <div id="apiInfoContent" class="space-y-4 text-sm">
+                        <!-- Content will be dynamically updated -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle & Right Columns: Code Examples -->
+            <div class="col-span-2 flex flex-col">
+                <div class="bg-white rounded-lg shadow-md p-6 card-hover animate-slideInRight delay-300">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Code Examples</h2>
+                        <div class="flex space-x-2">
+                            <button class="tab-button active px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg button-hover" data-tab="curl">cURL</button>
+                            <button class="tab-button px-4 py-2 text-sm font-semibold bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 button-hover" data-tab="python">Python</button>
+                            <button class="tab-button px-4 py-2 text-sm font-semibold bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 button-hover" data-tab="javascript">JavaScript</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col">
+                        <!-- cURL Tab -->
+                        <div id="curl-tab" class="tab-content flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-semibold text-gray-900">cURL Command</h3>
+                                <button 
+                                    class="copy-code-btn bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm"
+                                    data-code="curl"
+                                >
+                                    Copy Code
+                                </button>
+                            </div>
+                            <pre id="curl-code" class="bg-gray-900 text-green-400 p-5 rounded-lg text-sm overflow-x-auto code-block border-2 border-gray-800"></pre>
+                        </div>
+
+                        <!-- Python Tab -->
+                        <div id="python-tab" class="tab-content hidden flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-semibold text-gray-900">Python Code</h3>
+                                <button 
+                                    class="copy-code-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm"
+                                    data-code="python"
+                                >
+                                    Copy Code
+                                </button>
+                            </div>
+                            <pre id="python-code" class="bg-gray-900 text-green-400 p-5 rounded-lg text-sm overflow-x-auto code-block border-2 border-gray-800"></pre>
+                        </div>
+
+                        <!-- JavaScript Tab -->
+                        <div id="javascript-tab" class="tab-content hidden flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-semibold text-gray-900">JavaScript Code</h3>
+                                <button 
+                                    class="copy-code-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm"
+                                    data-code="javascript"
+                                >
+                                    Copy Code
+                                </button>
+                            </div>
+                            <pre id="javascript-code" class="bg-gray-900 text-green-400 p-5 rounded-lg text-sm overflow-x-auto code-block border-2 border-gray-800"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        
+        // Get elements
+        const functionTypeSelect = document.getElementById('functionType');
+        const apiKeyInput = document.getElementById('apiKey');
+        const qrValueInput = document.getElementById('qrValue');
+        const tokenInput = document.getElementById('token');
+        const fileInputExample = document.getElementById('fileInputExample');
+        const fileInputKyc = document.getElementById('fileInputKyc');
+        const qrcodeFields = document.getElementById('qrcode-fields');
+        const filesummaryFields = document.getElementById('filesummary-fields');
+        const kycagentFields = document.getElementById('kycagent-fields');
+        const apiInfoContent = document.getElementById('apiInfoContent');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Function type change handler
+        functionTypeSelect.addEventListener('change', () => {
+            const functionType = functionTypeSelect.value;
+            if (functionType === 'qrcode') {
+                qrcodeFields.classList.remove('hidden');
+                filesummaryFields.classList.add('hidden');
+                kycagentFields.classList.add('hidden');
+            } else if (functionType === 'filesummary') {
+                qrcodeFields.classList.add('hidden');
+                filesummaryFields.classList.remove('hidden');
+                kycagentFields.classList.add('hidden');
+            } else if (functionType === 'kycagent') {
+                qrcodeFields.classList.add('hidden');
+                filesummaryFields.classList.add('hidden');
+                kycagentFields.classList.remove('hidden');
+            }
+            updateApiInfo();
+            updateCodeExamples();
+        });
+        
+        // Update API Information
+        function updateApiInfo() {
+            const functionType = functionTypeSelect.value;
+            if (functionType === 'qrcode') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/qrcode/generate</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "qrvalue": "string"
+}</pre>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Success Response</div>
+                        <pre class="bg-cyan-50 p-3 rounded text-xs overflow-x-auto">{
+  "output": "base64_string",
+  "id": 1,
+  "EncryptOutput": null
+}</pre>
+                    </div>
+                    <div class="border-l-4 border-red-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Error Response</div>
+                        <pre class="bg-red-50 p-3 rounded text-xs overflow-x-auto">{
+  "output": null,
+  "id": 0,
+  "EncryptOutput": "error message"
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'filesummary') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/FileSummary/getSummary</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body (multipart/form-data)</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">file: (file upload)
+token: "string"</pre>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Success Response</div>
+                        <pre class="bg-cyan-50 p-3 rounded text-xs overflow-x-auto">{
+  "output": "decrypted_html_string",
+  "id": 1,
+  "EncryptOutput": null
+}</pre>
+                    </div>
+                    <div class="border-l-4 border-red-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Error Response</div>
+                        <pre class="bg-red-50 p-3 rounded text-xs overflow-x-auto">{
+  "output": null,
+  "id": 0,
+  "EncryptOutput": "error message"
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'kycagent') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/KycAgent/process</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body (multipart/form-data)</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">file: (file upload)</pre>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Success Response</div>
+                        <pre class="bg-cyan-50 p-3 rounded text-xs overflow-x-auto">{
+  "output": "decrypted_html_string",
+  "id": 1,
+  "EncryptOutput": null
+}</pre>
+                    </div>
+                    <div class="border-l-4 border-red-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Error Response</div>
+                        <pre class="bg-red-50 p-3 rounded text-xs overflow-x-auto">{
+  "output": null,
+  "id": 0,
+  "EncryptOutput": "error message"
+}</pre>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize API info
+        updateApiInfo();
+        
+        // Add input change listeners to update code examples (only once)
+        // These are added again later, so we'll remove duplicates
+
+        // Tab functionality
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+                
+                // Update buttons
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                });
+                button.classList.add('active', 'bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white');
+                button.classList.remove('bg-gray-200', 'text-gray-700');
+
+                // Update content
+                tabContents.forEach(content => content.classList.add('hidden'));
+                document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+                updateCodeExamples();
+            });
+        });
+
+        // Update code examples
+        function updateCodeExamples() {
+            const functionType = functionTypeSelect.value;
+            
+            if (functionType === 'qrcode') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const qrValue = qrValueInput.value || 'Hello World';
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedQrValue = qrValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                // cURL
+                const curlCode = `curl -X POST "${API_BASE_URL}/api/qrcode/generate" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -d '{"qrvalue": "${escapedQrValue}"}'`;
+                document.getElementById('curl-code').textContent = curlCode;
+
+                // Python
+                const pythonCode = `import requests
+import base64
+
+url = "${API_BASE_URL}/api/qrcode/generate"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+}
+data = {
+    "qrvalue": "${escapedQrValue}"
+}
+
+response = requests.post(url, json=data, headers=headers)
+result = response.json()
+
+if result["id"] == 1:
+    # Decode base64 image
+    image_data = base64.b64decode(result["output"])
+    with open("qrcode.png", "wb") as f:
+        f.write(image_data)
+    print("QR code saved as qrcode.png")
+else:
+    print(f"Error: {result['EncryptOutput']}")`;
+                document.getElementById('python-code').textContent = pythonCode;
+
+                // JavaScript
+                const jsCode = `const response = await fetch("${API_BASE_URL}/api/qrcode/generate", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+  },
+  body: JSON.stringify({
+    qrvalue: "${escapedQrValue}"
+  })
+});
+
+const data = await response.json();
+
+if (data.id === 1) {
+  // Display image
+  const img = document.createElement("img");
+  img.src = \`data:image/png;base64,\${data.output}\`;
+  document.body.appendChild(img);
+} else {
+  console.error("Error:", data.EncryptOutput);
+}`;
+                document.getElementById('javascript-code').textContent = jsCode;
+            } else if (functionType === 'filesummary') {
+                // File Summary examples
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const token = tokenInput ? (tokenInput.value || 'YOUR_TOKEN') : 'YOUR_TOKEN';
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                // cURL
+                const curlCode = `curl -X POST "${API_BASE_URL}/api/FileSummary/getSummary" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -F "file=@yourfile.pdf" \\
+  -F "token=${escapedToken}"`;
+                document.getElementById('curl-code').textContent = curlCode;
+
+                // Python
+                const pythonCode = `import requests
+
+url = "${API_BASE_URL}/api/FileSummary/getSummary"
+headers = {
+    "X-API-Key": "${escapedApiKey}"
+}
+files = {
+    "file": ("yourfile.pdf", open("yourfile.pdf", "rb"), "application/pdf")
+}
+data = {
+    "token": "${escapedToken}"
+}
+
+response = requests.post(url, files=files, data=data, headers=headers)
+result = response.json()
+
+if result["id"] == 1:
+    # result["output"] contains the decrypted HTML
+    html_content = result["output"]
+    print("File summary HTML:")
+    print(html_content)
+else:
+    print(f"Error: {result['EncryptOutput']}")`;
+                document.getElementById('python-code').textContent = pythonCode;
+
+                // JavaScript
+                const fileName = fileInputExample && fileInputExample.files.length > 0 
+                    ? fileInputExample.files[0].name 
+                    : 'yourfile.pdf';
+                const jsCode = `const formData = new FormData();
+const fileInput = document.getElementById('fileInput'); // Your file input element
+formData.append('file', fileInput.files[0]);
+formData.append('token', '${escapedToken}');
+
+const response = await fetch("${API_BASE_URL}/api/FileSummary/getSummary", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "${escapedApiKey}"
+    // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+  },
+  body: formData
+});
+
+const data = await response.json();
+
+if (data.id === 1) {
+  // data.output contains the decrypted HTML
+  console.log("File summary HTML:", data.output);
+  // You can parse and display the HTML
+  document.body.innerHTML = data.output;
+} else {
+  console.error("Error:", data.EncryptOutput);
+}`;
+                document.getElementById('javascript-code').textContent = jsCode;
+            } else if (functionType === 'kycagent') {
+                // KYC Agent examples
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                // cURL
+                const curlCode = `curl -X POST "${API_BASE_URL}/api/KycAgent/process" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -F "file=@yourfile.pdf"`;
+                document.getElementById('curl-code').textContent = curlCode;
+
+                // Python
+                const pythonCode = `import requests
+
+url = "${API_BASE_URL}/api/KycAgent/process"
+headers = {
+    "X-API-Key": "${escapedApiKey}"
+}
+files = {
+    "file": ("yourfile.pdf", open("yourfile.pdf", "rb"), "application/pdf")
+}
+
+response = requests.post(url, files=files, headers=headers)
+result = response.json()
+
+if result["id"] == 1:
+    # result["output"] contains the HTML report with extracted KYC data
+    html_content = result["output"]
+    print("KYC Agent HTML:")
+    print(html_content)
+else:
+    print(f"Error: {result['EncryptOutput']}")`;
+                document.getElementById('python-code').textContent = pythonCode;
+
+                // JavaScript
+                const fileNameKyc = fileInputKyc && fileInputKyc.files.length > 0 
+                    ? fileInputKyc.files[0].name 
+                    : 'yourfile.pdf';
+                const jsCode = `const formData = new FormData();
+const fileInput = document.getElementById('fileInput'); // Your file input element
+formData.append('file', fileInput.files[0]);
+
+const response = await fetch("${API_BASE_URL}/api/KycAgent/process", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "${escapedApiKey}"
+    // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+  },
+  body: formData
+});
+
+const data = await response.json();
+
+if (data.id === 1) {
+  // data.output contains the HTML report with extracted KYC data
+  console.log("KYC Agent HTML:", data.output);
+  // You can parse and display the HTML
+  document.body.innerHTML = data.output;
+} else {
+  console.error("Error:", data.EncryptOutput);
+}`;
+                document.getElementById('javascript-code').textContent = jsCode;
+            }
+        }
+
+        // Update code examples when inputs change
+        apiKeyInput.addEventListener('input', updateCodeExamples);
+        qrValueInput.addEventListener('input', updateCodeExamples);
+        if (tokenInput) {
+            tokenInput.addEventListener('input', updateCodeExamples);
+        }
+        if (fileInputExample) {
+            fileInputExample.addEventListener('change', updateCodeExamples);
+        }
+        if (fileInputKyc) {
+            fileInputKyc.addEventListener('change', updateCodeExamples);
+        }
+
+        // Copy code functionality
+        document.querySelectorAll('.copy-code-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const codeType = btn.getAttribute('data-code');
+                const codeElement = document.getElementById(`${codeType}-code`);
+                copyToClipboard(codeElement.textContent);
+                showToast('Code copied to clipboard!', 'success');
+            });
+        });
+
+        // Copy to clipboard helper
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).catch(err => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            });
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toastContent');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            
+            if (type === 'success') {
+                toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500';
+                toastMessage.className = 'font-medium text-cyan-800 text-sm';
+            } else {
+                toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-red-500';
+                toastMessage.className = 'font-medium text-red-800 text-sm';
+            }
+
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Load data from localStorage or URL parameter
+        function loadFromLocalStorage(apiType) {
+            const data = localStorage.getItem(`${apiType}_data`);
+            return data ? JSON.parse(data) : null;
+        }
+        
+        // Auto-detect function type from URL or localStorage
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const functionParam = urlParams.get('function');
+            const lastApiCall = localStorage.getItem('lastApiCall');
+            
+            let functionType = 'qrcode'; // default
+            
+            if (functionParam === 'qrcode' || functionParam === 'filesummary' || functionParam === 'kycagent') {
+                functionType = functionParam;
+            } else if (lastApiCall) {
+                functionType = lastApiCall;
+            }
+            
+            // Set function type
+            functionTypeSelect.value = functionType;
+            functionTypeSelect.dispatchEvent(new Event('change'));
+            
+            // Load data from localStorage
+            if (functionType === 'qrcode') {
+                const qrcodeData = loadFromLocalStorage('qrcode');
+                if (qrcodeData) {
+                    apiKeyInput.value = qrcodeData.apiKey || '';
+                    qrValueInput.value = qrcodeData.qrValue || '';
+                }
+            } else if (functionType === 'filesummary') {
+                const filesummaryData = loadFromLocalStorage('filesummary');
+                if (filesummaryData) {
+                    apiKeyInput.value = filesummaryData.apiKey || '';
+                    if (tokenInput) {
+                        tokenInput.value = filesummaryData.token || '';
+                    }
+                }
+            } else if (functionType === 'kycagent') {
+                const kycagentData = loadFromLocalStorage('kycagent');
+                if (kycagentData) {
+                    apiKeyInput.value = kycagentData.apiKey || '';
+                }
+            }
+            
+            // Update code examples with loaded data
+            updateCodeExamples();
+            
+            // Add blink animation to code examples section if coming from API call
+            if (functionParam || lastApiCall) {
+                const codeExamplesSection = document.querySelector('.col-span-2');
+                if (codeExamplesSection) {
+                    codeExamplesSection.classList.add('animate-blink');
+                    // Remove blink after 5 seconds
+                    setTimeout(() => {
+                        codeExamplesSection.classList.remove('animate-blink');
+                    }, 5000);
+                }
+            }
+        });
+        
+        // Initialize code examples on load
+        updateCodeExamples();
+
+        // Sidebar API function selection
+        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
+
+        apiFunctionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const functionName = button.getAttribute('data-function');
+                
+                // Update active button
+                apiFunctionButtons.forEach(btn => {
+                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                });
+                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+
+                // Switch function type or navigate
+                if (functionName === 'generate-qrcode') {
+                    // Switch to QR Code examples
+                    functionTypeSelect.value = 'qrcode';
+                    functionTypeSelect.dispatchEvent(new Event('change'));
+                } else if (functionName === 'generate-apikey') {
+                    window.location.href = '/apikey.html';
+                } else if (functionName === 'file-summary') {
+                    // Switch to File Summary examples
+                    functionTypeSelect.value = 'filesummary';
+                    functionTypeSelect.dispatchEvent(new Event('change'));
+                } else if (functionName === 'kyc-agent') {
+                    window.location.href = '/kycagent.html';
+                }
+            });
+        });
+
+        // Smooth reveal animations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate cards
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, index * 100);
+            });
+
+            // Animate inputs on focus
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.classList.add('scale-105');
+                });
+                input.addEventListener('blur', function() {
+                    this.classList.remove('scale-105');
+                });
+            });
+        });
+
+        // Smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>
+

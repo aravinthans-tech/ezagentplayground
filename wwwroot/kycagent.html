@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Agent - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-slideInLeft {
+            animation: slideInLeft 0.6s ease-out forwards;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+        .toast {
+            transition: all 0.3s ease-in-out;
+        }
+        html, body {
+            overflow-x: hidden;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        #sidebar {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+            background-color: white !important;
+            position: relative !important;
+            z-index: 10 !important;
+        }
+        code, pre {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .button-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .button-hover:hover {
+            transform: scale(1.02);
+        }
+        .button-hover:active {
+            transform: scale(0.98);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+        .delay-100 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+        .delay-200 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .delay-300 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+        .animate-blink {
+            animation: blink 1.5s ease-in-out infinite;
+        }
+        @keyframes scan {
+            0% {
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 0.4;
+            }
+            100% {
+                opacity: 0.2;
+            }
+        }
+        @keyframes scanLine {
+            0% {
+                top: 0%;
+                opacity: 1;
+            }
+            100% {
+                top: calc(100% - 6px);
+                opacity: 1;
+            }
+        }
+        .animate-scan {
+            animation: scan 2s ease-in-out infinite;
+        }
+        .animate-scan-line {
+            animation: scanLine 2s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md h-14 flex items-center justify-between px-6 flex-shrink-0 relative">
+        <div class="flex items-center space-x-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+        </div>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+112px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 hidden">
+                Generate QR
+            </a>
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Code Examples
+            </a>
+            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                API Key
+            </a>
+            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                Documentation
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-16 right-4 z-50 toast">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
+            <p id="toastMessage" class="font-medium text-sm"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <!-- API KEY Section -->
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="generate-apikey"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </div>
+                    </button>
+                </div>
+
+                <!-- FUNCTIONS Section -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95 hidden"
+                        data-function="generate-qrcode"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Generate QR Code
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="file-summary"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            File Summary
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition-all duration-300 hover:shadow-lg active"
+                        data-function="kyc-agent"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            KYC Agent
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 pb-8">
+            <div class="max-w-6xl mx-auto">
+                <!-- Page Header -->
+                <div class="text-center mb-8 animate-fadeInUp">
+                    <h2 class="text-4xl font-semibold text-gray-900 mb-2">KYC Agent</h2>
+                    <p class="text-lg text-gray-600">Process KYC documents and get agent information</p>
+                </div>
+
+                <!-- Hidden: Old KYC Agent Request Section (kept for backward compatibility but hidden) -->
+                <div class="hidden">
+                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">KYC Agent Request</h3>
+                        <form id="kycAgentForm" class="space-y-4">
+                            <div>
+                                <label for="apiKeyOld" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    API Key <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="apiKeyOld" 
+                                    name="apiKey"
+                                    class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Enter your API key"
+                                />
+                            </div>
+                            <div>
+                                <label for="fileInput" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    File <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="fileInput" 
+                                    name="file"
+                                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                                    class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                />
+                                <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG</p>
+                            </div>
+                            <button 
+                                type="button"
+                                id="submitBtn"
+                                class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                            >
+                                <span id="btnText">Process KYC Agent</span>
+                                <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                        </form>
+                        <div id="errorSection" class="hidden mt-6">
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded animate-fadeInUp">
+                                <h4 class="text-sm font-semibold text-red-800 mb-2">Error</h4>
+                                <p id="errorMessage" class="text-sm text-red-700"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KYC Verification Section -->
+                <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 card-hover animate-fadeInUp">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">
+                        🔍 Real-time KYC Verification
+                    </h3>
+                    <p class="text-xs text-gray-600 mb-4 text-center">Upload multiple documents, verify address with Google Maps, and match faces between license and selfie.</p>
+                    
+                    <form id="kycVerificationForm" class="space-y-4" onsubmit="return false;">
+                        <!-- API Key Input -->
+                        <div>
+                            <label for="apiKey" class="block text-xs font-semibold text-gray-700 mb-1">
+                                API Key <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="apiKey" 
+                                    name="apiKey"
+                                    class="w-full px-2 py-1.5 pr-8 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Enter your API key"
+                                    required
+                                />
+                                <!-- API Key Validation Checkmark -->
+                                <div id="apiKeyCheckmark" class="hidden absolute right-2 top-1/2 transform -translate-y-1/2">
+                                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 1: Upload Documents -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold mr-1.5">1</span>
+                                Upload Documents (2 or more) <span class="text-red-500">*</span>
+                                <!-- Document Matching Loading Spinner -->
+                                <span id="documentMatchingLoader" class="hidden ml-2 inline-flex items-center">
+                                    <svg class="animate-spin h-4 w-4 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="ml-1 text-xs text-cyan-600 font-medium">Matching Documents...</span>
+                                </span>
+                                <!-- Document Matching Checkmark -->
+                                <span id="documentMatchCheckmark" class="hidden ml-2 inline-flex items-center">
+                                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="ml-1 text-xs text-green-600 font-medium">Documents Matched</span>
+                                </span>
+                            </label>
+                            <input 
+                                type="file" 
+                                id="documentsInput" 
+                                name="documents"
+                                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                                multiple
+                                class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                required
+                            />
+                            <p class="mt-0.5 text-xs text-gray-500">Upload at least 2 documents</p>
+                            <!-- Document Previews -->
+                            <div id="documentsPreview" class="hidden mt-3">
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2" id="documentsPreviewGrid">
+                                    <!-- Previews will be dynamically added here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Expected Address -->
+                        <div>
+                            <label for="expectedAddress" class="block text-xs font-semibold text-gray-700 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold mr-1.5">2</span>
+                                Enter Expected Address <span class="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="expectedAddress" 
+                                name="expectedAddress"
+                                class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                placeholder="e.g., 123 Main St, Toronto, ON, M5V 2N2"
+                                required
+                            />
+                        </div>
+
+                        <!-- Step 3: Consistency Threshold -->
+                        <div>
+                            <label for="consistencyThreshold" class="block text-xs font-semibold text-gray-700 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold mr-1.5">3</span>
+                                Consistency Threshold: <span id="thresholdValue">0.82</span>
+                            </label>
+                            <input 
+                                type="range" 
+                                id="consistencyThreshold" 
+                                name="consistencyThreshold"
+                                min="0.5" 
+                                max="1.0" 
+                                step="0.01" 
+                                value="0.82"
+                                class="w-full"
+                            />
+                            <p class="mt-0.5 text-xs text-gray-500">Adjust threshold for address matching</p>
+                        </div>
+
+                        <!-- Step 4: License Image -->
+                        <div>
+                            <label for="licenseImage" class="block text-xs font-semibold text-gray-700 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold mr-1.5">4</span>
+                                Upload License/ID Image
+                            </label>
+                            <input 
+                                type="file" 
+                                id="licenseImage" 
+                                name="licenseImage"
+                                accept=".jpg,.jpeg,.png"
+                                class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                            />
+                            <!-- License Image Preview -->
+                            <div id="licensePreview" class="hidden mt-2 relative">
+                                <div class="relative border-2 border-cyan-300 rounded-lg overflow-hidden bg-gray-100">
+                                    <img id="licensePreviewImg" src="" alt="License Preview" class="w-full h-auto max-h-48 object-contain" />
+                                    <!-- Scanning Animation (shown during processing) -->
+                                    <div id="licenseScanningOverlay" class="hidden absolute inset-0 bg-gradient-to-b from-transparent via-gray-300 to-transparent opacity-40 animate-scan"></div>
+                                    <div id="licenseScanningLine" class="hidden absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-gray-400 to-transparent animate-scan-line"></div>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    onclick="clearLicensePreview()" 
+                                    class="mt-1 text-xs text-red-600 hover:text-red-700 font-medium"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Selfie Image -->
+                        <div>
+                            <label for="selfieImage" class="block text-xs font-semibold text-gray-700 mb-1">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-xs font-bold mr-1.5">5</span>
+                                Upload Selfie Image
+                            </label>
+                            <div class="flex gap-2 mb-2">
+                                <button 
+                                    type="button" 
+                                    id="takeSelfieBtn"
+                                    class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-xs py-1 px-2 rounded-lg shadow-sm hover:shadow-md button-hover flex items-center justify-center"
+                                >
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <span class="text-xs">Take Photo</span>
+                                </button>
+                                <input 
+                                    type="file" 
+                                    id="selfieImage" 
+                                    name="selfieImage"
+                                    accept=".jpg,.jpeg,.png"
+                                    class="flex-1 px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                />
+                            </div>
+                            <!-- Selfie Image Preview -->
+                            <div id="selfiePreview" class="hidden mt-2 relative">
+                                <div class="relative border-2 border-cyan-300 rounded-lg overflow-hidden bg-gray-100">
+                                    <img id="selfiePreviewImg" src="" alt="Selfie Preview" class="w-full h-auto max-h-48 object-contain rounded-lg" />
+                                    <!-- Scanning Animation (shown during processing) -->
+                                    <div id="selfieScanningOverlay" class="hidden absolute inset-0 bg-gradient-to-b from-transparent via-gray-300 to-transparent opacity-40 animate-scan"></div>
+                                    <div id="selfieScanningLine" class="hidden absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-gray-400 to-transparent animate-scan-line"></div>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    onclick="clearSelfiePreview()" 
+                                    class="mt-1 text-xs text-red-600 hover:text-red-700 font-medium"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+
+                        <button 
+                            type="button"
+                            id="verifyBtn"
+                            class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover text-sm"
+                        >
+                            <span id="verifyBtnText">🔍 Verify Now</span>
+                            <svg id="verifyLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <!-- Verification Results -->
+                    <div id="verificationResults" class="hidden mt-6">
+                        <div id="verificationStatus" class="mb-4"></div>
+                        <div id="verificationTable" class="mb-4"></div>
+                        <div id="faceMatchResult" class="mb-4"></div>
+                        <details class="mt-4">
+                            <summary class="cursor-pointer text-xs font-semibold text-gray-700 mb-2">View Extracted Document Details</summary>
+                            <pre id="extractedFields" class="mt-2 p-3 bg-gray-100 rounded-lg text-xs overflow-auto max-h-60"></pre>
+                        </details>
+                    </div>
+
+                    <!-- Error Display -->
+                    <div id="verificationErrorSection" class="hidden mt-4">
+                        <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded animate-fadeInUp">
+                            <h4 class="text-xs font-semibold text-red-800 mb-1">Error</h4>
+                            <p id="verificationErrorMessage" class="text-xs text-red-700"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Capture Modal -->
+    <div id="cameraModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeInUp">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Take Selfie Photo</h3>
+                <button 
+                    type="button" 
+                    id="closeCameraModal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <video 
+                    id="cameraPreview" 
+                    autoplay 
+                    playsinline
+                    class="w-full bg-gray-900 rounded-lg"
+                    style="max-height: 400px; object-fit: cover;"
+                ></video>
+                <canvas id="cameraCanvas" class="hidden"></canvas>
+            </div>
+            
+            <div id="cameraError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-xs text-red-700"></p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button 
+                    type="button" 
+                    id="capturePhotoBtn"
+                    class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold text-sm py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover"
+                >
+                    📷 Capture Photo
+                </button>
+                <button 
+                    type="button" 
+                    id="cancelCameraBtn"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-sm py-2 px-4 rounded-lg transition-colors"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Old form elements (for backward compatibility, but form is hidden)
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultSection = document.getElementById('resultSection');
+        const kycContent = document.getElementById('kycContent');
+        const emptyState = document.getElementById('emptyState');
+        
+        // Error section for verification form
+        const verificationErrorSection = document.getElementById('verificationErrorSection');
+        const verificationErrorMessage = document.getElementById('verificationErrorMessage');
+
+        // Image Preview Handlers
+        function setupImagePreview(inputId, previewId, imgId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            const img = document.getElementById(imgId);
+            
+            if (input && preview && img) {
+                input.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            img.src = e.target.result;
+                            preview.classList.remove('hidden');
+                            preview.classList.add('animate-fadeInUp');
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        preview.classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        // Make functions globally accessible for onclick handlers
+        window.clearLicensePreview = function() {
+            const input = document.getElementById('licenseImage');
+            const preview = document.getElementById('licensePreview');
+            if (input) input.value = '';
+            if (preview) preview.classList.add('hidden');
+        };
+
+        window.clearSelfiePreview = function() {
+            const input = document.getElementById('selfieImage');
+            const preview = document.getElementById('selfiePreview');
+            if (input) input.value = '';
+            if (preview) preview.classList.add('hidden');
+        };
+
+        // Camera Capture Handlers
+        let cameraStream = null;
+        const cameraModal = document.getElementById('cameraModal');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const cameraError = document.getElementById('cameraError');
+        const takeSelfieBtn = document.getElementById('takeSelfieBtn');
+        const closeCameraModalBtn = document.getElementById('closeCameraModal');
+        const cancelCameraBtn = document.getElementById('cancelCameraBtn');
+        const capturePhotoBtn = document.getElementById('capturePhotoBtn');
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
+        function closeCameraModalFunc() {
+            stopCamera();
+            if (cameraModal) cameraModal.classList.add('hidden');
+            if (cameraError) {
+                cameraError.classList.add('hidden');
+                const errorText = cameraError.querySelector('p');
+                if (errorText) errorText.textContent = '';
+            }
+        }
+
+        async function openCamera() {
+            try {
+                if (cameraError) cameraError.classList.add('hidden');
+                
+                // Request camera access
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user', // Front camera for selfie
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                if (cameraPreview && cameraStream) {
+                    cameraPreview.srcObject = cameraStream;
+                    if (cameraModal) cameraModal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Camera error:', error);
+                if (cameraError) {
+                    let errorMessage = 'Unable to access camera. ';
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMessage += 'Please allow camera access in your browser settings.';
+                    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                        errorMessage += 'No camera found on your device.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMessage += 'Camera is already in use by another application.';
+                    } else {
+                        errorMessage += error.message || 'Unknown error occurred.';
+                    }
+                    const errorText = cameraError.querySelector('p');
+                    if (errorText) errorText.textContent = errorMessage;
+                    cameraError.classList.remove('hidden');
+                }
+            }
+        }
+
+        function capturePhoto() {
+            try {
+                if (!cameraPreview || !cameraCanvas) return;
+                
+                const video = cameraPreview;
+                const canvas = cameraCanvas;
+                const context = canvas.getContext('2d');
+                
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw video frame to canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Convert canvas to blob
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        console.error('Failed to create blob from canvas');
+                        return;
+                    }
+                    
+                    // Create a File object from the blob
+                    const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+                    
+                    // Create a FileList-like object and set it to the input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    const selfieInput = document.getElementById('selfieImage');
+                    if (selfieInput) {
+                        selfieInput.files = dataTransfer.files;
+                        
+                        // Trigger change event to update preview
+                        const event = new Event('change', { bubbles: true });
+                        selfieInput.dispatchEvent(event);
+                    }
+                    
+                    // Close camera modal
+                    closeCameraModalFunc();
+                }, 'image/jpeg', 0.95);
+                
+            } catch (error) {
+                console.error('Capture error:', error);
+                if (cameraError) {
+                    const errorText = cameraError.querySelector('p');
+                    if (errorText) errorText.textContent = 'Failed to capture photo. Please try again.';
+                    cameraError.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Event listeners for camera
+        if (takeSelfieBtn) {
+            takeSelfieBtn.addEventListener('click', openCamera);
+        }
+        
+        if (closeCameraModalBtn) {
+            closeCameraModalBtn.addEventListener('click', closeCameraModalFunc);
+        }
+        
+        if (cancelCameraBtn) {
+            cancelCameraBtn.addEventListener('click', closeCameraModalFunc);
+        }
+        
+        if (capturePhotoBtn) {
+            capturePhotoBtn.addEventListener('click', capturePhoto);
+        }
+
+        // Close modal when clicking outside
+        if (cameraModal) {
+            cameraModal.addEventListener('click', function(e) {
+                if (e.target === cameraModal) {
+                    closeCameraModalFunc();
+                }
+            });
+        }
+
+        // Stop camera when page is unloaded
+        window.addEventListener('beforeunload', stopCamera);
+
+        // PDF.js Worker Configuration
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        // Document Preview Handlers
+        let selectedFiles = [];
+
+        function isImageFile(file) {
+            const imageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            return imageTypes.includes(file.type) || /\.(jpg|jpeg|png)$/i.test(file.name);
+        }
+
+        function isPdfFile(file) {
+            return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        }
+
+        async function renderPdfThumbnail(file, container) {
+            return new Promise((resolve, reject) => {
+                const fileReader = new FileReader();
+                
+                fileReader.onload = async function(e) {
+                    try {
+                        if (typeof pdfjsLib === 'undefined') {
+                            throw new Error('PDF.js library not loaded');
+                        }
+
+                        const typedArray = new Uint8Array(e.target.result);
+                        const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+                        const page = await pdf.getPage(1); // First page
+                        
+                        // Calculate scale to fit container (h-24 = 96px)
+                        const viewport = page.getViewport({ scale: 1.0 });
+                        const scale = 96 / viewport.height; // Scale to fit 96px height
+                        const scaledViewport = page.getViewport({ scale: scale });
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = scaledViewport.width;
+                        canvas.height = scaledViewport.height;
+                        
+                        const context = canvas.getContext('2d');
+                        await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+                        
+                        // Convert canvas to image
+                        const img = document.createElement('img');
+                        img.src = canvas.toDataURL('image/png');
+                        img.className = 'w-full h-full object-contain';
+                        img.alt = file.name;
+                        
+                        resolve(img);
+                    } catch (error) {
+                        console.error('PDF rendering error:', error);
+                        reject(error);
+                    }
+                };
+                
+                fileReader.onerror = function(error) {
+                    console.error('FileReader error:', error);
+                    reject(error);
+                };
+                
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+
+        function getFileIcon(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const iconMap = {
+                'pdf': '📄',
+                'doc': '📝',
+                'docx': '📝',
+                'txt': '📄'
+            };
+            return iconMap[ext] || '📄';
+        }
+
+        function createDocumentPreview(file, index) {
+            console.log('createDocumentPreview called for:', file.name, 'isImage:', isImageFile(file));
+            const previewItem = document.createElement('div');
+            previewItem.className = 'relative bg-gray-50 border-2 border-gray-200 rounded-lg p-2 hover:border-cyan-400 transition-all';
+            previewItem.dataset.index = index;
+            previewItem.dataset.fileName = file.name;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors z-10';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => removeDocumentPreview(index);
+
+            if (isImageFile(file)) {
+                console.log('Creating image preview for:', file.name);
+                // Image preview
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'w-full h-24 bg-gray-100 rounded overflow-hidden mb-1 flex items-center justify-center relative';
+                
+                // Add loading placeholder
+                const loadingPlaceholder = document.createElement('div');
+                loadingPlaceholder.className = 'text-xs text-gray-400 absolute inset-0 flex items-center justify-center';
+                loadingPlaceholder.textContent = 'Loading...';
+                imgContainer.appendChild(loadingPlaceholder);
+                
+                const img = document.createElement('img');
+                img.className = 'w-full h-full object-contain';
+                img.alt = file.name;
+                img.style.display = 'none';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    console.log('FileReader onload for:', file.name);
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    loadingPlaceholder.style.display = 'none';
+                    img.onerror = function() {
+                        console.error('Image load error for:', file.name);
+                        // Fallback if image fails to load
+                        loadingPlaceholder.textContent = 'Failed to load';
+                        loadingPlaceholder.style.display = 'flex';
+                        img.style.display = 'none';
+                    };
+                };
+                reader.onerror = function() {
+                    console.error('FileReader error for:', file.name);
+                    loadingPlaceholder.textContent = 'Error loading';
+                    loadingPlaceholder.style.display = 'flex';
+                    img.style.display = 'none';
+                };
+                console.log('Starting FileReader for:', file.name);
+                reader.readAsDataURL(file);
+                
+                imgContainer.appendChild(img);
+                previewItem.appendChild(imgContainer);
+            } else if (isPdfFile(file)) {
+                console.log('Creating PDF preview for:', file.name);
+                // PDF preview
+                const pdfContainer = document.createElement('div');
+                pdfContainer.className = 'w-full h-24 bg-gray-100 rounded overflow-hidden mb-1 flex items-center justify-center relative';
+                
+                // Add loading placeholder
+                const loadingPlaceholder = document.createElement('div');
+                loadingPlaceholder.className = 'text-xs text-gray-400 absolute inset-0 flex items-center justify-center';
+                loadingPlaceholder.textContent = 'Loading PDF...';
+                pdfContainer.appendChild(loadingPlaceholder);
+                
+                // Render PDF thumbnail asynchronously
+                renderPdfThumbnail(file, pdfContainer)
+                    .then((img) => {
+                        loadingPlaceholder.style.display = 'none';
+                        pdfContainer.appendChild(img);
+                    })
+                    .catch((error) => {
+                        console.error('Failed to render PDF thumbnail:', error);
+                        loadingPlaceholder.textContent = 'Failed to load PDF';
+                        loadingPlaceholder.style.display = 'flex';
+                        // Fallback to icon
+                        const fallbackIcon = document.createElement('div');
+                        fallbackIcon.className = 'text-4xl mb-1';
+                        fallbackIcon.textContent = getFileIcon(file);
+                        pdfContainer.innerHTML = '';
+                        pdfContainer.className = 'w-full h-24 bg-gray-100 rounded flex flex-col items-center justify-center mb-1';
+                        pdfContainer.appendChild(fallbackIcon);
+                    });
+                
+                previewItem.appendChild(pdfContainer);
+            } else {
+                // Non-image, non-PDF file icon
+                const iconContainer = document.createElement('div');
+                iconContainer.className = 'w-full h-24 bg-gray-100 rounded flex flex-col items-center justify-center mb-1';
+                
+                const icon = document.createElement('div');
+                icon.className = 'text-4xl mb-1';
+                icon.textContent = getFileIcon(file);
+                
+                iconContainer.appendChild(icon);
+                previewItem.appendChild(iconContainer);
+            }
+
+            // Filename
+            const fileName = document.createElement('div');
+            fileName.className = 'text-xs text-gray-700 truncate text-center px-1';
+            fileName.textContent = file.name;
+            fileName.title = file.name;
+            previewItem.appendChild(fileName);
+
+            previewItem.appendChild(removeBtn);
+            return previewItem;
+        }
+
+        function updateDocumentPreviews() {
+            const documentsPreview = document.getElementById('documentsPreview');
+            const documentsPreviewGrid = document.getElementById('documentsPreviewGrid');
+            
+            console.log('updateDocumentPreviews called', { 
+                selectedFilesCount: selectedFiles.length,
+                hasPreviewContainer: !!documentsPreview,
+                hasPreviewGrid: !!documentsPreviewGrid
+            });
+            
+            if (!documentsPreviewGrid) {
+                console.error('documentsPreviewGrid not found');
+                return;
+            }
+            
+            documentsPreviewGrid.innerHTML = '';
+            
+            if (selectedFiles.length === 0) {
+                if (documentsPreview) documentsPreview.classList.add('hidden');
+                console.log('No files selected, hiding preview');
+                return;
+            }
+
+            if (documentsPreview) {
+                documentsPreview.classList.remove('hidden');
+                console.log('Showing preview container');
+            }
+            
+            selectedFiles.forEach((file, index) => {
+                console.log('Creating preview for file:', file.name, 'index:', index);
+                const previewItem = createDocumentPreview(file, index);
+                documentsPreviewGrid.appendChild(previewItem);
+            });
+            
+            console.log('Preview update complete, total items:', documentsPreviewGrid.children.length);
+        }
+
+        function removeDocumentPreview(index) {
+            selectedFiles.splice(index, 1);
+            updateFileInput();
+            updateDocumentPreviews();
+        }
+
+        function updateFileInput() {
+            const documentsInput = document.getElementById('documentsInput');
+            if (!documentsInput) return;
+            
+            // Create a new DataTransfer object to update the file input
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+            documentsInput.files = dataTransfer.files;
+        }
+
+        // Setup image previews when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setupImagePreview('licenseImage', 'licensePreview', 'licensePreviewImg');
+            setupImagePreview('selfieImage', 'selfiePreview', 'selfiePreviewImg');
+            
+            // Setup document previews
+            const documentsInput = document.getElementById('documentsInput');
+            if (documentsInput) {
+                console.log('Setting up document preview event listener');
+                documentsInput.addEventListener('change', function(e) {
+                    const files = Array.from(e.target.files);
+                    console.log('Files selected:', files.length, files.map(f => f.name));
+                    selectedFiles = files;
+                    updateDocumentPreviews();
+                });
+                
+                // Initialize document previews if files are already selected
+                if (documentsInput.files.length > 0) {
+                    console.log('Initializing with existing files:', documentsInput.files.length);
+                    selectedFiles = Array.from(documentsInput.files);
+                    updateDocumentPreviews();
+                }
+            } else {
+                console.error('documentsInput not found');
+            }
+        });
+
+        const API_BASE_URL = window.location.origin;
+
+        submitBtn.addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            // Validate inputs
+            if (!apiKey || !file) {
+                errorMessage.textContent = 'API Key and File are required';
+                errorSection.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            btnText.textContent = 'Processing...';
+            loadingSpinner.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            errorSection.classList.add('hidden');
+
+            try {
+                // Create FormData for multipart/form-data
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Call local API endpoint with API key validation
+                const response = await fetch(`${API_BASE_URL}/api/KycAgent/process`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey
+                        // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    let errorMessage = `API error: ${response.status} ${response.statusText}`;
+                    try {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const errorData = await response.json();
+                            errorMessage = errorData.encryptOutput || errorData.message || errorMessage;
+                        } else {
+                            const errorText = await response.text();
+                            errorMessage = errorText || errorMessage;
+                        }
+                    } catch (e) {
+                        // If parsing fails, use default error message
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json();
+
+                if (result.id === 0) {
+                    throw new Error(result.encryptOutput || 'Failed to process KYC Agent');
+                }
+
+                if (!result.output) {
+                    throw new Error('No output received from API');
+                }
+
+                // Parse and display HTML
+                parseAndDisplayHtml(result.output);
+                
+                // Save to localStorage
+                saveToLocalStorage('kycagent', {
+                    apiKey: apiKey,
+                    result: result
+                });
+
+                resultSection.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                document.getElementById('codeExamplesButton').classList.remove('hidden');
+                showToast('KYC Agent processed successfully!', 'success');
+
+            } catch (error) {
+                errorMessage.textContent = error.message || 'An error occurred while processing the request';
+                errorSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                showToast('Failed to process KYC Agent', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = 'Process KYC Agent';
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        function parseAndDisplayHtml(htmlString) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlString, 'text/html');
+
+            // Extract summary
+            const summaryBox = doc.querySelector('.summary-box');
+            const summaryText = summaryBox ? summaryBox.textContent.trim() : '';
+
+            // Extract key points table
+            const keyPointsTable = doc.querySelector('table');
+            const keyPoints = [];
+            if (keyPointsTable) {
+                const rows = keyPointsTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const key = row.querySelector('.kp-key')?.textContent.trim() || '';
+                    const desc = row.querySelector('.kp-desc')?.textContent.trim() || '';
+                    if (key && desc) {
+                        keyPoints.push({ key, desc });
+                    }
+                });
+            }
+
+            // Extract footer pills (Seal/Signature)
+            const pills = doc.querySelectorAll('.pill');
+            const sealSignature = [];
+            pills.forEach(pill => {
+                const text = pill.textContent.trim();
+                const isYes = pill.classList.contains('pill-yes');
+                sealSignature.push({ text, isYes });
+            });
+
+            // Build display HTML
+            let displayHtml = '';
+
+            // Summary section
+            if (summaryText) {
+                displayHtml += `
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border-2 border-purple-200 mb-4">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-3">Summary</h4>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">${escapeHtml(summaryText)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Key Points section
+            if (keyPoints.length > 0) {
+                displayHtml += `
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-200 mb-4">
+                        <h4 class="text-base font-semibold text-gray-900 mb-2">Key Points</h4>
+                        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Key Point</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${keyPoints.map(kp => `
+                                        <tr class="border-t border-gray-200 hover:bg-gray-50">
+                                            <td class="px-3 py-2 text-xs font-semibold text-gray-900">${escapeHtml(kp.key)}</td>
+                                            <td class="px-3 py-2 text-xs text-gray-700 whitespace-pre-wrap">${escapeHtml(kp.desc)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Seal/Signature section
+            if (sealSignature.length > 0) {
+                displayHtml += `
+                    <div class="flex flex-wrap gap-2">
+                        ${sealSignature.map(item => `
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                                item.isYes 
+                                    ? 'bg-green-100 text-green-800 border border-green-300' 
+                                    : 'bg-red-100 text-red-800 border border-red-300'
+                            }">
+                                ${escapeHtml(item.text)}
+                            </span>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // If no structured content, display raw HTML
+            if (!summaryText && keyPoints.length === 0 && sealSignature.length === 0) {
+                displayHtml = `<div class="bg-white rounded-lg p-4 border border-gray-200">${htmlString}</div>`;
+            }
+
+            kycContent.innerHTML = displayHtml || '<p class="text-gray-500">No content to display</p>';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toastContent');
+            const toastMessage = document.getElementById('toastMessage');
+
+            if (toast && toastContent && toastMessage) {
+                toastMessage.textContent = message;
+                
+                if (type === 'success') {
+                    toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500';
+                    toastMessage.className = 'font-medium text-cyan-800 text-sm';
+                } else {
+                    toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 border-red-500';
+                    toastMessage.className = 'font-medium text-red-800 text-sm';
+                }
+
+                toast.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // View Code Examples button
+        const viewCodeExamplesBtn = document.getElementById('viewCodeExamplesBtn');
+        if (viewCodeExamplesBtn) {
+            viewCodeExamplesBtn.addEventListener('click', () => {
+                window.location.href = '/examples.html?function=kycagent';
+            });
+        }
+        
+        // localStorage functions
+        function saveToLocalStorage(apiType, data) {
+            localStorage.setItem('lastApiCall', apiType);
+            localStorage.setItem(`${apiType}_data`, JSON.stringify(data));
+        }
+        
+        function loadFromLocalStorage(apiType) {
+            const data = localStorage.getItem(`${apiType}_data`);
+            return data ? JSON.parse(data) : null;
+        }
+        
+        // Load data on page load (only if not refreshed)
+        window.addEventListener('load', () => {
+            // Check if this is a refresh (F5, Ctrl+R, or browser refresh button)
+            const navigationEntries = performance.getEntriesByType('navigation');
+            const isRefresh = navigationEntries.length > 0 && navigationEntries[0].type === 'reload';
+            
+            if (!isRefresh) {
+                // Restore KYC Agent verification form data if exists
+                const kycagentData = loadFromLocalStorage('kycagent');
+                if (kycagentData) {
+                    // Restore form fields
+                    const apiKeyInput = document.getElementById('apiKey');
+                    const expectedAddressInput = document.getElementById('expectedAddress');
+                    const consistencyThresholdInput = document.getElementById('consistencyThreshold');
+                    const thresholdValueDisplay = document.getElementById('thresholdValue');
+                    
+                    if (apiKeyInput && kycagentData.apiKey) {
+                        apiKeyInput.value = kycagentData.apiKey;
+                    }
+                    
+                    if (expectedAddressInput && kycagentData.expectedAddress) {
+                        expectedAddressInput.value = kycagentData.expectedAddress;
+                    }
+                    
+                    if (consistencyThresholdInput && kycagentData.consistencyThreshold !== undefined) {
+                        consistencyThresholdInput.value = kycagentData.consistencyThreshold;
+                        if (thresholdValueDisplay) {
+                            thresholdValueDisplay.textContent = parseFloat(kycagentData.consistencyThreshold).toFixed(2);
+                        }
+                    }
+                    
+                    // Restore verification results if they exist
+                    if (kycagentData.verificationResult) {
+                        const result = kycagentData.verificationResult;
+                        
+                        if (verificationStatus) verificationStatus.innerHTML = result.statusHtml || '';
+                        if (verificationTable) verificationTable.innerHTML = result.verificationTableHtml || '';
+                        
+                        if (result.faceMatch) {
+                            if (faceMatchResult) {
+                                const matchColor = result.faceMatch.match ? "text-green-600" : "text-red-600";
+                                faceMatchResult.innerHTML = `
+                                    <div class="bg-white rounded-xl shadow-lg p-4 border-2 border-cyan-200 animate-fadeInUp">
+                                        <h4 class="text-sm font-semibold text-gray-900 mb-2">Face Match Result</h4>
+                                        <div class="mb-2 text-xs ${matchColor} font-medium">${result.faceMatch.message || 'Face matching completed'}</div>
+                                        <div class="text-xs text-gray-600">Match Score: <span class="font-bold">${result.faceMatch.matchScore || 0}/5</span></div>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            if (faceMatchResult) {
+                                faceMatchResult.innerHTML = '<div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">No face matching performed (license and selfie images not provided)</div>';
+                            }
+                        }
+                        
+                        if (extractedFields && result.extractedFields) {
+                            extractedFields.textContent = JSON.stringify(result.extractedFields, null, 2);
+                        }
+                        
+                        if (verificationResults) verificationResults.classList.remove('hidden');
+                        
+                        // Show document match checkmark if documents were consistent
+                        if (result.documentsConsistent !== undefined) {
+                            const documentMatchCheckmark = document.getElementById('documentMatchCheckmark');
+                            if (documentMatchCheckmark) {
+                                documentMatchCheckmark.classList.remove('hidden');
+                            }
+                        }
+                    }
+                    
+                    // Restore old KYC Agent result format (for backward compatibility)
+                    if (kycagentData.result && kycagentData.result.id === 1 && kycagentData.result.output) {
+                        parseAndDisplayHtml(kycagentData.result.output);
+                        if (resultSection) resultSection.classList.remove('hidden');
+                        if (emptyState) emptyState.classList.add('hidden');
+                        const codeExamplesButton = document.getElementById('codeExamplesButton');
+                        if (codeExamplesButton) codeExamplesButton.classList.remove('hidden');
+                    }
+                }
+            } else {
+                // Clear on refresh (F5, Ctrl+R, or browser refresh button)
+                localStorage.removeItem('lastApiCall');
+                localStorage.removeItem('qrcode_data');
+                localStorage.removeItem('filesummary_data');
+                localStorage.removeItem('kycagent_data');
+            }
+        });
+
+        // KYC Verification Form Handler
+        const verifyBtn = document.getElementById('verifyBtn');
+        const verifyBtnText = document.getElementById('verifyBtnText');
+        const verifyLoadingSpinner = document.getElementById('verifyLoadingSpinner');
+        const verificationResults = document.getElementById('verificationResults');
+        const verificationStatus = document.getElementById('verificationStatus');
+        const verificationTable = document.getElementById('verificationTable');
+        const faceMatchResult = document.getElementById('faceMatchResult');
+        const extractedFields = document.getElementById('extractedFields');
+        const thresholdSlider = document.getElementById('consistencyThreshold');
+        const thresholdValue = document.getElementById('thresholdValue');
+
+        // Update threshold display
+        if (thresholdSlider && thresholdValue) {
+            thresholdSlider.addEventListener('input', (e) => {
+                thresholdValue.textContent = parseFloat(e.target.value).toFixed(2);
+            });
+        }
+
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', async (e) => {
+                e.preventDefault(); // Prevent form submission
+                e.stopPropagation();
+                
+                console.log('Verify button clicked');
+                
+                const apiKey = document.getElementById('apiKey')?.value.trim() || '';
+                const documentsInput = document.getElementById('documentsInput');
+                const expectedAddress = document.getElementById('expectedAddress')?.value.trim() || '';
+                const modelChoice = 'Mistral'; // Default to Mistral
+                const consistencyThreshold = parseFloat(document.getElementById('consistencyThreshold')?.value || '0.82');
+                const licenseImage = document.getElementById('licenseImage')?.files[0];
+                const selfieImage = document.getElementById('selfieImage')?.files[0];
+
+                console.log('Form values:', { apiKey: apiKey ? '***' : 'empty', documentsCount: documentsInput?.files?.length, expectedAddress });
+
+                // Get progress indicator elements
+                const apiKeyCheckmark = document.getElementById('apiKeyCheckmark');
+                const documentMatchCheckmark = document.getElementById('documentMatchCheckmark');
+                const documentMatchingLoader = document.getElementById('documentMatchingLoader');
+                const licenseScanningOverlay = document.getElementById('licenseScanningOverlay');
+                const licenseScanningLine = document.getElementById('licenseScanningLine');
+                const selfieScanningOverlay = document.getElementById('selfieScanningOverlay');
+                const selfieScanningLine = document.getElementById('selfieScanningLine');
+
+                // Reset all progress indicators
+                if (apiKeyCheckmark) apiKeyCheckmark.classList.add('hidden');
+                if (documentMatchCheckmark) documentMatchCheckmark.classList.add('hidden');
+                if (documentMatchingLoader) documentMatchingLoader.classList.add('hidden');
+                if (licenseScanningOverlay) licenseScanningOverlay.classList.add('hidden');
+                if (licenseScanningLine) licenseScanningLine.classList.add('hidden');
+                if (selfieScanningOverlay) selfieScanningOverlay.classList.add('hidden');
+                if (selfieScanningLine) selfieScanningLine.classList.add('hidden');
+
+                // Validate inputs
+                if (!apiKey) {
+                    if (verificationErrorMessage) verificationErrorMessage.textContent = 'API Key is required';
+                    if (verificationErrorSection) verificationErrorSection.classList.remove('hidden');
+                    return;
+                }
+
+                // Step 1: Validate API Key and show checkmark
+                try {
+                    // Quick validation - check if API key format looks valid (basic check)
+                    if (apiKey.length > 10) {
+                        // Show API key checkmark
+                        if (apiKeyCheckmark) {
+                            apiKeyCheckmark.classList.remove('hidden');
+                            apiKeyCheckmark.classList.add('animate-checkmark');
+                        }
+                        // Small delay for visual feedback
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                } catch (e) {
+                    console.log('API key validation check:', e);
+                }
+
+                if (!documentsInput || !documentsInput.files || documentsInput.files.length < 2) {
+                    if (verificationErrorMessage) verificationErrorMessage.textContent = 'Please upload at least 2 documents';
+                    if (verificationErrorSection) verificationErrorSection.classList.remove('hidden');
+                    return;
+                }
+
+                if (!expectedAddress) {
+                    if (verificationErrorMessage) verificationErrorMessage.textContent = 'Expected address is required';
+                    if (verificationErrorSection) verificationErrorSection.classList.remove('hidden');
+                    return;
+                }
+
+                verifyBtn.disabled = true;
+                if (verifyBtnText) verifyBtnText.textContent = 'Verifying...';
+                if (verifyLoadingSpinner) verifyLoadingSpinner.classList.remove('hidden');
+                if (verificationResults) verificationResults.classList.add('hidden');
+                if (verificationErrorSection) verificationErrorSection.classList.add('hidden');
+
+                // Step 2: Show document matching loader
+                if (documentMatchingLoader) {
+                    documentMatchingLoader.classList.remove('hidden');
+                }
+
+                // Step 3: Show scanning animations on images for face validation if they exist
+                const licensePreview = document.getElementById('licensePreview');
+                const selfiePreview = document.getElementById('selfiePreview');
+                
+                // Show scanning animation on license image if provided (for face validation)
+                if (licenseImage) {
+                    // Ensure preview is visible
+                    if (licensePreview) licensePreview.classList.remove('hidden');
+                    if (licenseScanningOverlay) licenseScanningOverlay.classList.remove('hidden');
+                    if (licenseScanningLine) licenseScanningLine.classList.remove('hidden');
+                }
+                
+                // Show scanning animation on selfie image if provided (for face validation)
+                if (selfieImage) {
+                    // Ensure preview is visible
+                    if (selfiePreview) selfiePreview.classList.remove('hidden');
+                    if (selfieScanningOverlay) selfieScanningOverlay.classList.remove('hidden');
+                    if (selfieScanningLine) selfieScanningLine.classList.remove('hidden');
+                }
+
+                try {
+                    const formData = new FormData();
+                    
+                    // Add all documents
+                    for (let i = 0; i < documentsInput.files.length; i++) {
+                        formData.append('documents', documentsInput.files[i]);
+                    }
+                    
+                    formData.append('expectedAddress', expectedAddress);
+                    formData.append('modelChoice', modelChoice);
+                    formData.append('consistencyThreshold', consistencyThreshold.toString());
+                    
+                    if (licenseImage) {
+                        formData.append('licenseImage', licenseImage);
+                    }
+                    if (selfieImage) {
+                        formData.append('selfieImage', selfieImage);
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/api/KycAgent/verify`, {
+                        method: 'POST',
+                        headers: {
+                            'X-API-Key': apiKey
+                        },
+                        body: formData
+                    });
+
+                    // Check content type before parsing
+                    const contentType = response.headers.get('content-type') || '';
+                    const isJson = contentType.includes('application/json');
+
+                    if (!response.ok) {
+                        let errorMsg = `API error: ${response.status}`;
+                        try {
+                            if (isJson) {
+                                const errorData = await response.json();
+                                errorMsg = errorData.statusHtml || errorData.message || errorData.encryptOutput || errorMsg;
+                            } else {
+                                // Try to parse as JSON anyway (in case Content-Type is missing)
+                                const textResponse = await response.text();
+                                try {
+                                    const errorData = JSON.parse(textResponse);
+                                    errorMsg = errorData.statusHtml || errorData.message || errorData.encryptOutput || errorMsg;
+                                } catch (parseError) {
+                                    // If it's not JSON, use the text as error message
+                                    errorMsg = textResponse || errorMsg;
+                                }
+                            }
+                        } catch (e) {
+                            // Fallback: try to get text response
+                            try {
+                                errorMsg = await response.text() || errorMsg;
+                            } catch (textError) {
+                                // If all else fails, use status code
+                                errorMsg = `API error: ${response.status} ${response.statusText}`;
+                            }
+                        }
+                        throw new Error(errorMsg);
+                    }
+
+                    // Parse response - should be JSON for successful responses
+                    let result;
+                    try {
+                        if (isJson) {
+                            result = await response.json();
+                        } else {
+                            // Try to parse as JSON anyway (in case Content-Type is missing)
+                            const textResponse = await response.text();
+                            try {
+                                result = JSON.parse(textResponse);
+                            } catch (parseError) {
+                                throw new Error(`Invalid response format. Expected JSON but got: ${textResponse.substring(0, 100)}`);
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing response:', parseError);
+                        throw new Error(`Failed to parse response: ${parseError.message}`);
+                    }
+
+                    // Step 4: Hide loader and show document matching checkmark when comparison is complete
+                    const documentMatchingLoader = document.getElementById('documentMatchingLoader');
+                    const documentMatchCheckmark = document.getElementById('documentMatchCheckmark');
+                    
+                    // Hide loading spinner
+                    if (documentMatchingLoader) {
+                        documentMatchingLoader.classList.add('hidden');
+                    }
+                    
+                    // Show checkmark when matching is complete
+                    if (documentMatchCheckmark && result.documentsConsistent !== undefined) {
+                        documentMatchCheckmark.classList.remove('hidden');
+                        documentMatchCheckmark.classList.add('animate-checkmark');
+                    }
+
+                    // Display results first
+                    if (verificationStatus) verificationStatus.innerHTML = result.statusHtml || '';
+                    if (verificationTable) verificationTable.innerHTML = result.verificationTableHtml || '';
+                    
+                    // Step 5: Hide scanning animations after face validation results are displayed
+                    const licenseScanningOverlay = document.getElementById('licenseScanningOverlay');
+                    const licenseScanningLine = document.getElementById('licenseScanningLine');
+                    const selfieScanningOverlay = document.getElementById('selfieScanningOverlay');
+                    const selfieScanningLine = document.getElementById('selfieScanningLine');
+                    
+                    // Hide scanning animations after displaying face validation results
+                    // Keep them visible during face validation, then hide when results are shown
+                    if (result.faceMatch) {
+                        // Face validation was performed - hide animations after showing results
+                        setTimeout(() => {
+                            if (licenseScanningOverlay) licenseScanningOverlay.classList.add('hidden');
+                            if (licenseScanningLine) licenseScanningLine.classList.add('hidden');
+                            if (selfieScanningOverlay) selfieScanningOverlay.classList.add('hidden');
+                            if (selfieScanningLine) selfieScanningLine.classList.add('hidden');
+                        }, 500); // Small delay to show completion
+                    } else {
+                        // No face matching - hide animations immediately
+                        if (licenseScanningOverlay) licenseScanningOverlay.classList.add('hidden');
+                        if (licenseScanningLine) licenseScanningLine.classList.add('hidden');
+                        if (selfieScanningOverlay) selfieScanningOverlay.classList.add('hidden');
+                        if (selfieScanningLine) selfieScanningLine.classList.add('hidden');
+                    }
+                    
+                    if (result.faceMatch) {
+                        if (faceMatchResult) {
+                            const matchColor = result.faceMatch.isMatch ? "text-green-600" : "text-red-600";
+                            faceMatchResult.innerHTML = `
+                                <div class="bg-white rounded-xl shadow-lg p-4 border-2 border-cyan-200 animate-fadeInUp">
+                                    <h4 class="text-sm font-semibold text-gray-900 mb-2">Face Match Result</h4>
+                                    <div class="mb-2 text-xs ${matchColor} font-medium">${result.faceMatch.message || 'Face matching completed'}</div>
+                                    <div class="text-xs text-gray-600">Match Score: <span class="font-bold">${result.faceMatch.matchScore || 0}/5</span></div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        if (faceMatchResult) {
+                            faceMatchResult.innerHTML = '<div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">No face matching performed (license and selfie images not provided)</div>';
+                        }
+                    }
+
+                    if (extractedFields) {
+                        extractedFields.textContent = JSON.stringify(result.extractedFields, null, 2);
+                    }
+                    if (verificationResults) verificationResults.classList.remove('hidden');
+
+                    // Save to localStorage (including form data and results)
+                    saveToLocalStorage('kycagent', {
+                        apiKey: apiKey,
+                        expectedAddress: expectedAddress,
+                        consistencyThreshold: consistencyThreshold,
+                        modelChoice: modelChoice,
+                        documentsCount: documentsInput.files.length,
+                        hasLicenseImage: !!licenseImage,
+                        hasSelfieImage: !!selfieImage,
+                        verificationResult: result
+                    });
+
+                } catch (error) {
+                    console.error('Verification error:', error);
+                    if (verificationErrorMessage) verificationErrorMessage.textContent = error.message || 'An error occurred during verification';
+                    if (verificationErrorSection) verificationErrorSection.classList.remove('hidden');
+                    
+                    // Hide all progress indicators on error
+                    const documentMatchingLoader = document.getElementById('documentMatchingLoader');
+                    const licenseScanningOverlay = document.getElementById('licenseScanningOverlay');
+                    const licenseScanningLine = document.getElementById('licenseScanningLine');
+                    const selfieScanningOverlay = document.getElementById('selfieScanningOverlay');
+                    const selfieScanningLine = document.getElementById('selfieScanningLine');
+                    if (documentMatchingLoader) documentMatchingLoader.classList.add('hidden');
+                    if (licenseScanningOverlay) licenseScanningOverlay.classList.add('hidden');
+                    if (licenseScanningLine) licenseScanningLine.classList.add('hidden');
+                    if (selfieScanningOverlay) selfieScanningOverlay.classList.add('hidden');
+                    if (selfieScanningLine) selfieScanningLine.classList.add('hidden');
+                } finally {
+                    verifyBtn.disabled = false;
+                    if (verifyBtnText) verifyBtnText.textContent = '🔍 Verify Now';
+                    if (verifyLoadingSpinner) verifyLoadingSpinner.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Sidebar navigation
+        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
+        apiFunctionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const functionName = button.getAttribute('data-function');
+                
+                apiFunctionButtons.forEach(btn => {
+                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                });
+                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
+                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+
+                if (functionName === 'generate-qrcode') {
+                    window.location.href = '/index.html';
+                } else if (functionName === 'generate-apikey') {
+                    window.location.href = '/apikey.html';
+                } else if (functionName === 'file-summary') {
+                    window.location.href = '/filesummary.html';
+                } else if (functionName === 'kyc-agent') {
+                    window.location.href = '/kycagent.html';
+                }
+            });
+        });
+
+        // Smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+</body>
+</html>
+
