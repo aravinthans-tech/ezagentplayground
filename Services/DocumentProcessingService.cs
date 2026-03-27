@@ -15,6 +15,12 @@ public class DocumentProcessingService
     private readonly string _unstractBaseUrl;
     private readonly string _openRouterApiKey;
     private readonly string _openRouterBaseUrl;
+    private readonly string _mistralModelName;
+    private readonly string _openAiModelName;
+    private readonly string _azureOpenAiEndpoint4oMini;
+    private readonly string _azureOpenAiDeployment4oMini;
+    private readonly string _azureOpenAiApiVersion4oMini;
+    private readonly string _azureOpenAiApiKey;
 
     public DocumentProcessingService(
         IHttpClientFactory httpClientFactory,
@@ -28,6 +34,12 @@ public class DocumentProcessingService
         _unstractBaseUrl = _configuration["ExternalApis:Unstract:BaseUrl"] ?? "https://llmwhisperer-api.us-central.unstract.com/api/v2";
         _openRouterApiKey = _configuration["ExternalApis:OpenRouter:ApiKey"] ?? string.Empty;
         _openRouterBaseUrl = _configuration["ExternalApis:OpenRouter:BaseUrl"] ?? "https://openrouter.ai/api/v1";
+        _mistralModelName = _configuration["ExternalApis:OpenRouter:MistralModel"] ?? "mistralai/mistral-7b-instruct:free";
+        _openAiModelName = _configuration["ExternalApis:OpenRouter:OpenAiModel"] ?? "openai/gpt-4o";
+        _azureOpenAiEndpoint4oMini = _configuration["ExternalApis:AzureOpenAI:Endpoint4oMini"] ?? string.Empty;
+        _azureOpenAiDeployment4oMini = _configuration["ExternalApis:AzureOpenAI:Deployment4oMini"] ?? string.Empty;
+        _azureOpenAiApiVersion4oMini = _configuration["ExternalApis:AzureOpenAI:ApiVersion4oMini"] ?? "2024-08-01-preview";
+        _azureOpenAiApiKey = _configuration["ExternalApis:AzureOpenAI:ApiKey"] ?? string.Empty;
     }
 
     public async Task<string> ExtractTextFromFile(IFormFile file)
@@ -226,11 +238,11 @@ public class DocumentProcessingService
             _logger.LogInformation("Starting address extraction with LLM (Model: {Model})", modelChoice);
             var modelMap = new Dictionary<string, string>
             {
-                { "Mistral", "mistralai/Mistral-7B-Instruct-v0.2" },
-                { "OpenAI", "openai/gpt-4o" }
+                { "Mistral", _mistralModelName },
+                { "OpenAI", _openAiModelName }
             };
 
-            var modelName = modelMap.GetValueOrDefault(modelChoice, "mistralai/Mistral-7B-Instruct-v0.2");
+            var modelName = modelMap.GetValueOrDefault(modelChoice, _mistralModelName);
 
             string template;
             if (modelChoice == "Mistral")
@@ -274,39 +286,9 @@ Address:";
 
             var prompt = template.Replace("{document_text}", text);
 
-            var requestBody = new
-            {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                },
-                temperature = 0.2,
-                max_tokens = 2000
-            };
-
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_openRouterBaseUrl}/chat/completions");
-            request.Headers.Add("Authorization", $"Bearer {_openRouterApiKey}");
-            request.Headers.Add("HTTP-Referer", "https://ezofis.com");
-            request.Headers.Add("X-Title", "EZOFIS KYC Agent");
-            request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-
-            var response = await httpClient.SendAsync(request);
+            var responseJson = await SendLlmChatCompletion(httpClient, prompt, modelName, startTime);
             var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("OpenRouter API request failed after {ElapsedSeconds:F2} seconds. Status: {StatusCode}, Error: {Error}", elapsedTime, response.StatusCode, errorContent);
-                if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
-                {
-                    throw new Exception($"OpenRouter API service temporarily unavailable (503). Please try again in a few moments. Error: {errorContent}");
-                }
-                throw new Exception($"OpenRouter API request failed ({response.StatusCode}): {errorContent}");
-            }
-
             _logger.LogInformation("Address extraction completed in {ElapsedSeconds:F2} seconds", elapsedTime);
-            var responseJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             var extractedAddress = responseJson.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
 
             // Clean and validate the extracted address
@@ -378,11 +360,11 @@ Address:";
             _logger.LogInformation("Starting KYC fields extraction with LLM (Model: {Model})", modelChoice);
             var modelMap = new Dictionary<string, string>
             {
-                { "Mistral", "mistralai/Mistral-7B-Instruct-v0.2" },
-                { "OpenAI", "openai/gpt-4o" }
+                { "Mistral", _mistralModelName },
+                { "OpenAI", _openAiModelName }
             };
 
-            var modelName = modelMap.GetValueOrDefault(modelChoice, "mistralai/Mistral-7B-Instruct-v0.2");
+            var modelName = modelMap.GetValueOrDefault(modelChoice, _mistralModelName);
 
             var template = @"
 You are an expert KYC document parser. Extract only factual data from the document.
@@ -424,39 +406,9 @@ Text:
 
             var prompt = template.Replace("{text}", text);
 
-            var requestBody = new
-            {
-                model = modelName,
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                },
-                temperature = 0.2,
-                max_tokens = 2000
-            };
-
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_openRouterBaseUrl}/chat/completions");
-            request.Headers.Add("Authorization", $"Bearer {_openRouterApiKey}");
-            request.Headers.Add("HTTP-Referer", "https://ezofis.com");
-            request.Headers.Add("X-Title", "EZOFIS KYC Agent");
-            request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-
-            var response = await httpClient.SendAsync(request);
+            var responseJson = await SendLlmChatCompletion(httpClient, prompt, modelName, startTime);
             var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("OpenRouter API request failed after {ElapsedSeconds:F2} seconds. Status: {StatusCode}, Error: {Error}", elapsedTime, response.StatusCode, errorContent);
-                if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
-                {
-                    throw new Exception($"OpenRouter API service temporarily unavailable (503). Please try again in a few moments. Error: {errorContent}");
-                }
-                throw new Exception($"OpenRouter API request failed ({response.StatusCode}): {errorContent}");
-            }
-
             _logger.LogInformation("KYC fields extraction completed in {ElapsedSeconds:F2} seconds", elapsedTime);
-            var responseJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             var rawOutput = responseJson.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
 
             try
@@ -566,6 +518,109 @@ Text:
             kvp.Value.ToString() != "None" && 
             kvp.Value.ToString() != "Not provided")
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    }
+
+    private bool IsAzureOpenAiConfigured()
+    {
+        return !string.IsNullOrWhiteSpace(_azureOpenAiEndpoint4oMini)
+            && !string.IsNullOrWhiteSpace(_azureOpenAiDeployment4oMini)
+            && !string.IsNullOrWhiteSpace(_azureOpenAiApiVersion4oMini)
+            && !string.IsNullOrWhiteSpace(_azureOpenAiApiKey);
+    }
+
+    private async Task<JsonElement> SendLlmChatCompletion(HttpClient httpClient, string prompt, string modelName, DateTime startTime)
+    {
+        if (IsAzureOpenAiConfigured())
+        {
+            var azureRequestBody = new
+            {
+                messages = new[]
+                {
+                    new { role = "user", content = prompt }
+                },
+                temperature = 0.2,
+                max_tokens = 2000
+            };
+
+            var endpoint = _azureOpenAiEndpoint4oMini.TrimEnd('/');
+            var azureUrl = $"{endpoint}/openai/deployments/{_azureOpenAiDeployment4oMini}/chat/completions?api-version={_azureOpenAiApiVersion4oMini}";
+            var azureRequest = new HttpRequestMessage(HttpMethod.Post, azureUrl);
+            azureRequest.Headers.Add("api-key", _azureOpenAiApiKey);
+            azureRequest.Content = new StringContent(JsonSerializer.Serialize(azureRequestBody), Encoding.UTF8, "application/json");
+
+            var azureResponse = await httpClient.SendAsync(azureRequest);
+            if (!azureResponse.IsSuccessStatusCode)
+            {
+                var azureError = await azureResponse.Content.ReadAsStringAsync();
+                throw new Exception($"Azure OpenAI request failed ({azureResponse.StatusCode}): {azureError}");
+            }
+
+            return await azureResponse.Content.ReadFromJsonAsync<JsonElement>();
+        }
+
+        var requestBody = new
+        {
+            model = modelName,
+            messages = new[]
+            {
+                new { role = "user", content = prompt }
+            },
+            temperature = 0.2,
+            max_tokens = 2000
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_openRouterBaseUrl}/chat/completions");
+        request.Headers.Add("Authorization", $"Bearer {_openRouterApiKey}");
+        request.Headers.Add("HTTP-Referer", "https://ezofis.com");
+        request.Headers.Add("X-Title", "EZOFIS KYC Agent");
+        request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+
+        var response = await httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            var elapsedTime = (DateTime.UtcNow - startTime).TotalSeconds;
+            _logger.LogWarning("OpenRouter API request failed after {ElapsedSeconds:F2} seconds. Status: {StatusCode}, Error: {Error}", elapsedTime, response.StatusCode, errorContent);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound &&
+                modelName == _mistralModelName &&
+                errorContent.Contains("No endpoints found", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Primary Mistral model {Model} is unavailable. Retrying with fallback model {FallbackModel}.", _mistralModelName, _openAiModelName);
+                var fallbackRequestBody = new
+                {
+                    model = _openAiModelName,
+                    messages = new[]
+                    {
+                        new { role = "user", content = prompt }
+                    },
+                    temperature = 0.2,
+                    max_tokens = 2000
+                };
+
+                var fallbackRequest = new HttpRequestMessage(HttpMethod.Post, $"{_openRouterBaseUrl}/chat/completions");
+                fallbackRequest.Headers.Add("Authorization", $"Bearer {_openRouterApiKey}");
+                fallbackRequest.Headers.Add("HTTP-Referer", "https://ezofis.com");
+                fallbackRequest.Headers.Add("X-Title", "EZOFIS KYC Agent");
+                fallbackRequest.Content = new StringContent(JsonSerializer.Serialize(fallbackRequestBody), Encoding.UTF8, "application/json");
+
+                response = await httpClient.SendAsync(fallbackRequest);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var fallbackErrorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"OpenRouter API request failed on fallback model ({response.StatusCode}): {fallbackErrorContent}");
+                }
+            }
+            else
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                {
+                    throw new Exception($"OpenRouter API service temporarily unavailable (503). Please try again in a few moments. Error: {errorContent}");
+                }
+                throw new Exception($"OpenRouter API request failed ({response.StatusCode}): {errorContent}");
+            }
+        }
+
+        return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
 }
 
