@@ -188,6 +188,20 @@ QRCodeAPI/
 └── QRCodeAPI.csproj             # Project file
 ```
 
+## FormDetails (Ezofis)
+
+**POST** `/api/FormDetails`
+
+Proxies `https://eztapi.ezofis.com/api/form/all` with optional AES wrapping via `encryptAES`.
+
+- **Headers:** `X-API-Key` (your playground key), plus **`Authorization: Bearer <ezofis-jwt>`** or **`Ezofis-Token: <ezofis-jwt>`**
+- **Body:** `{ "query": { ... }, "useEncryptedRequest": true, "useEncryptedResponse": true }`  
+  Set `useEncryptedRequest` / `useEncryptedResponse` to `false` to send or receive raw JSON.
+
+Optional config: `ExternalApis:Ezofis:BaseUrl` (default `https://eztapi.ezofis.com`).
+
+Browser playground: open [`wwwroot/formdetails.html`](wwwroot/formdetails.html) at `/formdetails.html` (no API key required to load the page; the form sends `X-API-Key` when you submit).
+
 ## Configuration
 
 ### API Keys

@@ -27,6 +27,11 @@ public class ApiKeyMiddleware
             path.StartsWith("/apikey.html") ||
             path.StartsWith("/examples.html") ||
             path.StartsWith("/filesummary.html") ||
+            path.StartsWith("/formdetails.html") ||
+            path.StartsWith("/subformdetails.html") ||
+            path.StartsWith("/subformfields.html") ||
+            path.StartsWith("/subformsubmitarchive.html") ||
+            path.StartsWith("/getdatafromsalesforce.html") ||
             path.StartsWith("/kycagent.html") ||
             (path.StartsWith("/") && !path.StartsWith("/api")))
         {

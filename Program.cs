@@ -26,6 +26,8 @@ builder.Services.AddScoped<QrCodeService>();
 // Register FileSummaryService
 builder.Services.AddScoped<FileSummaryService>();
 
+builder.Services.AddScoped<FormDetailsService>();
+
 // Register KycAgentService
 builder.Services.AddScoped<KycAgentService>();
 

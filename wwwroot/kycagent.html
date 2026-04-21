@@ -184,16 +184,10 @@
                 <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
             </div>
         </div>
-        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+112px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
         <div class="flex space-x-4 flex-1 justify-end">
-            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 hidden">
-                Generate QR
-            </a>
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Code Examples
-            </a>
-            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                API Key
             </a>
             <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Documentation
@@ -255,6 +249,61 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             File Summary
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="form-details"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
+                            </svg>
+                            Form Details
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="subform-details"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
+                            </svg>
+                            SubForm Details
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="subform-fields"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
+                            </svg>
+                            SubForm Fields
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="generate-pdf"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
+                            </svg>
+                            Generate PDF
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="getdata-salesforce"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
+                            </svg>
+                            Get Data From Salesforce
                         </div>
                     </button>
                     <button 
@@ -1708,6 +1757,16 @@
                     window.location.href = '/apikey.html';
                 } else if (functionName === 'file-summary') {
                     window.location.href = '/filesummary.html';
+                } else if (functionName === 'form-details') {
+                    window.location.href = '/formdetails.html';
+                } else if (functionName === 'subform-details') {
+                    window.location.href = '/subformdetails.html';
+                } else if (functionName === 'subform-fields') {
+                    window.location.href = '/subformfields.html';
+                } else if (functionName === 'generate-pdf') {
+                    window.location.href = '/subformsubmitarchive.html';
+                } else if (functionName === 'getdata-salesforce') {
+                    window.location.href = '/getdatafromsalesforce.html';
                 } else if (functionName === 'kyc-agent') {
                     window.location.href = '/kycagent.html';
                 }

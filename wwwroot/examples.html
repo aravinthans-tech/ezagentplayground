@@ -171,16 +171,10 @@
                 <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
             </div>
         </div>
-        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-[calc(50%+128px)] transform -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
         <div class="flex space-x-4 flex-1 justify-end">
-            <a href="/index.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100 hidden">
-                Generate QR
-            </a>
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">
                 Code Examples
-            </a>
-            <a href="/apikey.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                API Key
             </a>
             <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Documentation
@@ -198,7 +192,7 @@
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]" style="display: flex !important; visibility: visible !important;">
             <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
                 <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
             </div>
@@ -246,6 +240,39 @@
                     </button>
                     <button 
                         class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="form-details"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
+                            </svg>
+                            Form Details
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="subform-details"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
+                            </svg>
+                            SubForm Details
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="subform-fields"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
+                            </svg>
+                            SubForm Fields
+                        </div>
+                    </button>
+                    <button 
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
                         data-function="kyc-agent"
                     >
                         <div class="flex items-center">
@@ -278,6 +305,9 @@
                                 <option value="qrcode">Generate QR Code</option>
                                 <option value="filesummary">File Summary</option>
                                 <option value="kycagent">KYC Agent</option>
+                                <option value="formdetails">Form Details</option>
+                                <option value="subformdetails">SubForm Details</option>
+                                <option value="subformfields">SubForm Fields</option>
                             </select>
                         </div>
                         <div>
@@ -353,6 +383,93 @@
                                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
                                 />
                                 <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Details Fields -->
+                        <div id="formdetails-fields" class="hidden space-y-3">
+                            <div>
+                                <label for="ezofisTokenExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Ezofis Token
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="ezofisTokenExample" 
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Bearer YOUR_EZOFIS_TOKEN"
+                                />
+                            </div>
+                            <div>
+                                <label for="formdetailsQuery" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Query JSON
+                                </label>
+                                <textarea
+                                    id="formdetailsQuery"
+                                    rows="5"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none input-focus code-block text-xs"
+                                ></textarea>
+                            </div>
+                        </div>
+                        <div id="subformdetails-fields" class="hidden space-y-3">
+                            <div>
+                                <label for="subEzofisTokenExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Ezofis Token
+                                </label>
+                                <input
+                                    type="text"
+                                    id="subEzofisTokenExample"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Bearer YOUR_EZOFIS_TOKEN"
+                                />
+                            </div>
+                            <div>
+                                <label for="subFormIdExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Form ID
+                                </label>
+                                <input
+                                    type="number"
+                                    id="subFormIdExample"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    value="1"
+                                    min="1"
+                                />
+                            </div>
+                        </div>
+                        <div id="subformfields-fields" class="hidden space-y-3">
+                            <div>
+                                <label for="subFieldsEzofisTokenExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Ezofis Token
+                                </label>
+                                <input
+                                    type="text"
+                                    id="subFieldsEzofisTokenExample"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Bearer YOUR_EZOFIS_TOKEN"
+                                />
+                            </div>
+                            <div>
+                                <label for="subFieldsFormIdExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Form ID
+                                </label>
+                                <input
+                                    type="number"
+                                    id="subFieldsFormIdExample"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    value="1"
+                                    min="1"
+                                />
+                            </div>
+                            <div>
+                                <label for="subFormsTitlesExample" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    SubForm titles JSON
+                                </label>
+                                <textarea
+                                    id="subFormsTitlesExample"
+                                    rows="4"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none input-focus code-block text-xs"
+                                >[
+  "009 - Account Details"
+]</textarea>
                             </div>
                         </div>
                         
@@ -439,9 +556,19 @@
         const tokenInput = document.getElementById('token');
         const fileInputExample = document.getElementById('fileInputExample');
         const fileInputKyc = document.getElementById('fileInputKyc');
+        const ezofisTokenExample = document.getElementById('ezofisTokenExample');
+        const formdetailsQuery = document.getElementById('formdetailsQuery');
+        const subEzofisTokenExample = document.getElementById('subEzofisTokenExample');
+        const subFormIdExample = document.getElementById('subFormIdExample');
+        const subFieldsEzofisTokenExample = document.getElementById('subFieldsEzofisTokenExample');
+        const subFieldsFormIdExample = document.getElementById('subFieldsFormIdExample');
+        const subFormsTitlesExample = document.getElementById('subFormsTitlesExample');
         const qrcodeFields = document.getElementById('qrcode-fields');
         const filesummaryFields = document.getElementById('filesummary-fields');
         const kycagentFields = document.getElementById('kycagent-fields');
+        const formdetailsFields = document.getElementById('formdetails-fields');
+        const subformdetailsFields = document.getElementById('subformdetails-fields');
+        const subformfieldsFields = document.getElementById('subformfields-fields');
         const apiInfoContent = document.getElementById('apiInfoContent');
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -453,14 +580,44 @@
                 qrcodeFields.classList.remove('hidden');
                 filesummaryFields.classList.add('hidden');
                 kycagentFields.classList.add('hidden');
+                formdetailsFields.classList.add('hidden');
+                subformdetailsFields.classList.add('hidden');
+                subformfieldsFields.classList.add('hidden');
             } else if (functionType === 'filesummary') {
                 qrcodeFields.classList.add('hidden');
                 filesummaryFields.classList.remove('hidden');
                 kycagentFields.classList.add('hidden');
+                formdetailsFields.classList.add('hidden');
+                subformdetailsFields.classList.add('hidden');
+                subformfieldsFields.classList.add('hidden');
             } else if (functionType === 'kycagent') {
                 qrcodeFields.classList.add('hidden');
                 filesummaryFields.classList.add('hidden');
                 kycagentFields.classList.remove('hidden');
+                formdetailsFields.classList.add('hidden');
+                subformdetailsFields.classList.add('hidden');
+                subformfieldsFields.classList.add('hidden');
+            } else if (functionType === 'formdetails') {
+                qrcodeFields.classList.add('hidden');
+                filesummaryFields.classList.add('hidden');
+                kycagentFields.classList.add('hidden');
+                formdetailsFields.classList.remove('hidden');
+                subformdetailsFields.classList.add('hidden');
+                subformfieldsFields.classList.add('hidden');
+            } else if (functionType === 'subformdetails') {
+                qrcodeFields.classList.add('hidden');
+                filesummaryFields.classList.add('hidden');
+                kycagentFields.classList.add('hidden');
+                formdetailsFields.classList.add('hidden');
+                subformdetailsFields.classList.remove('hidden');
+                subformfieldsFields.classList.add('hidden');
+            } else if (functionType === 'subformfields') {
+                qrcodeFields.classList.add('hidden');
+                filesummaryFields.classList.add('hidden');
+                kycagentFields.classList.add('hidden');
+                formdetailsFields.classList.add('hidden');
+                subformdetailsFields.classList.add('hidden');
+                subformfieldsFields.classList.remove('hidden');
             }
             updateApiInfo();
             updateCodeExamples();
@@ -562,6 +719,60 @@ token: "string"</pre>
   "output": null,
   "id": 0,
   "EncryptOutput": "error message"
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'formdetails') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/FormDetails</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key + Ezofis-Token headers required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "query": { ... },
+  "useEncryptedRequest": true,
+  "useEncryptedResponse": true
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'subformdetails') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/SubFormDetails</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key + Ezofis-Token headers required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "formId": 123
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'subformfields') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/SubFormFields</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key + Ezofis-Token headers required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "formId": 123,
+  "subforms": ["009 - Account Details"]
 }</pre>
                     </div>
                 `;
@@ -792,6 +1003,139 @@ if (data.id === 1) {
   console.error("Error:", data.EncryptOutput);
 }`;
                 document.getElementById('javascript-code').textContent = jsCode;
+            } else if (functionType === 'formdetails') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const token = (ezofisTokenExample?.value || 'Bearer YOUR_EZOFIS_TOKEN');
+                const queryText = (formdetailsQuery?.value || '{"sortBy":{"criteria":"","order":"DESC"},"groupBy":"","filterBy":[{"groupCondition":"","filters":[{"criteria":"type","condition":"IS_EQUALS_TO","value":"MASTER"}]}],"currentPage":1,"itemsPerPage":500,"mode":"BROWSE"}');
+                let queryObject;
+                try { queryObject = JSON.parse(queryText); } catch { queryObject = { sortBy: { criteria: "", order: "DESC" }, groupBy: "", filterBy: [], currentPage: 1, itemsPerPage: 500, mode: "BROWSE" }; }
+                const payload = {
+                    query: queryObject,
+                    useEncryptedRequest: true,
+                    useEncryptedResponse: true
+                };
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
+                const payloadPretty = JSON.stringify(payload, null, 2);
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/FormDetails" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -H "Ezofis-Token: ${escapedToken}" \\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+import json
+
+url = "${API_BASE_URL}/api/FormDetails"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/FormDetails", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
+            } else if (functionType === 'subformdetails') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const token = (subEzofisTokenExample?.value || 'Bearer YOUR_EZOFIS_TOKEN');
+                const formIdValue = Number.parseInt(subFormIdExample?.value || '1', 10);
+                const formId = Number.isFinite(formIdValue) && formIdValue > 0 ? formIdValue : 1;
+                const payload = { formId };
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
+                const payloadPretty = JSON.stringify(payload, null, 2);
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/SubFormDetails" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -H "Ezofis-Token: ${escapedToken}" \\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+import json
+
+url = "${API_BASE_URL}/api/SubFormDetails"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/SubFormDetails", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
+            } else if (functionType === 'subformfields') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const token = (subFieldsEzofisTokenExample?.value || 'Bearer YOUR_EZOFIS_TOKEN');
+                const formIdValue = Number.parseInt(subFieldsFormIdExample?.value || '1', 10);
+                const formId = Number.isFinite(formIdValue) && formIdValue > 0 ? formIdValue : 1;
+                let subforms;
+                try { subforms = JSON.parse(subFormsTitlesExample?.value || '[\"009 - Account Details\"]'); } catch { subforms = ['009 - Account Details']; }
+                const payload = { formId, subforms };
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, \"'\\\\''\");
+                const payloadPretty = JSON.stringify(payload, null, 2);
+                const escapedApiKey = apiKey.replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"').replace(/'/g, \"\\\\'\");
+                const escapedToken = token.replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"').replace(/'/g, \"\\\\'\");
+
+                document.getElementById('curl-code').textContent = `curl -X POST \"${API_BASE_URL}/api/SubFormFields\" \\\\
+  -H \"Content-Type: application/json\" \\\\
+  -H \"X-API-Key: ${escapedApiKey}\" \\\\
+  -H \"Ezofis-Token: ${escapedToken}\" \\\\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+import json
+
+url = \"${API_BASE_URL}/api/SubFormFields\"
+headers = {
+    \"Content-Type\": \"application/json\",
+    \"X-API-Key\": \"${escapedApiKey}\",
+    \"Ezofis-Token\": \"${escapedToken}\"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch(\"${API_BASE_URL}/api/SubFormFields\", {
+  method: \"POST\",
+  headers: {
+    \"Content-Type\": \"application/json\",
+    \"X-API-Key\": \"${escapedApiKey}\",
+    \"Ezofis-Token\": \"${escapedToken}\"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
             }
         }
 
@@ -800,6 +1144,27 @@ if (data.id === 1) {
         qrValueInput.addEventListener('input', updateCodeExamples);
         if (tokenInput) {
             tokenInput.addEventListener('input', updateCodeExamples);
+        }
+        if (ezofisTokenExample) {
+            ezofisTokenExample.addEventListener('input', updateCodeExamples);
+        }
+        if (formdetailsQuery) {
+            formdetailsQuery.addEventListener('input', updateCodeExamples);
+        }
+        if (subEzofisTokenExample) {
+            subEzofisTokenExample.addEventListener('input', updateCodeExamples);
+        }
+        if (subFormIdExample) {
+            subFormIdExample.addEventListener('input', updateCodeExamples);
+        }
+        if (subFieldsEzofisTokenExample) {
+            subFieldsEzofisTokenExample.addEventListener('input', updateCodeExamples);
+        }
+        if (subFieldsFormIdExample) {
+            subFieldsFormIdExample.addEventListener('input', updateCodeExamples);
+        }
+        if (subFormsTitlesExample) {
+            subFormsTitlesExample.addEventListener('input', updateCodeExamples);
         }
         if (fileInputExample) {
             fileInputExample.addEventListener('change', updateCodeExamples);
@@ -867,7 +1232,7 @@ if (data.id === 1) {
             
             let functionType = 'qrcode'; // default
             
-            if (functionParam === 'qrcode' || functionParam === 'filesummary' || functionParam === 'kycagent') {
+            if (functionParam === 'qrcode' || functionParam === 'filesummary' || functionParam === 'kycagent' || functionParam === 'formdetails' || functionParam === 'subformdetails' || functionParam === 'subformfields') {
                 functionType = functionParam;
             } else if (lastApiCall) {
                 functionType = lastApiCall;
@@ -896,6 +1261,28 @@ if (data.id === 1) {
                 const kycagentData = loadFromLocalStorage('kycagent');
                 if (kycagentData) {
                     apiKeyInput.value = kycagentData.apiKey || '';
+                }
+            } else if (functionType === 'formdetails') {
+                const formdetailsData = loadFromLocalStorage('formdetails_data');
+                if (formdetailsData) {
+                    apiKeyInput.value = formdetailsData.apiKey || '';
+                    if (ezofisTokenExample) ezofisTokenExample.value = formdetailsData.ezofisToken || '';
+                    if (formdetailsQuery && formdetailsData.queryText) formdetailsQuery.value = formdetailsData.queryText;
+                }
+            } else if (functionType === 'subformdetails') {
+                const subformData = loadFromLocalStorage('subformdetails_data');
+                if (subformData) {
+                    apiKeyInput.value = subformData.apiKey || '';
+                    if (subEzofisTokenExample) subEzofisTokenExample.value = subformData.ezofisToken || '';
+                    if (subFormIdExample && subformData.formId) subFormIdExample.value = subformData.formId;
+                }
+            } else if (functionType === 'subformfields') {
+                const subFieldsData = loadFromLocalStorage('subformfields_data');
+                if (subFieldsData) {
+                    apiKeyInput.value = subFieldsData.apiKey || '';
+                    if (subFieldsEzofisTokenExample) subFieldsEzofisTokenExample.value = subFieldsData.ezofisToken || '';
+                    if (subFieldsFormIdExample && subFieldsData.formId) subFieldsFormIdExample.value = subFieldsData.formId;
+                    if (subFormsTitlesExample && subFieldsData.subformsText) subFormsTitlesExample.value = subFieldsData.subformsText;
                 }
             }
             
@@ -943,6 +1330,16 @@ if (data.id === 1) {
                 } else if (functionName === 'file-summary') {
                     // Switch to File Summary examples
                     functionTypeSelect.value = 'filesummary';
+                    functionTypeSelect.dispatchEvent(new Event('change'));
+                } else if (functionName === 'form-details') {
+                    // Switch to Form Details examples
+                    functionTypeSelect.value = 'formdetails';
+                    functionTypeSelect.dispatchEvent(new Event('change'));
+                } else if (functionName === 'subform-details') {
+                    functionTypeSelect.value = 'subformdetails';
+                    functionTypeSelect.dispatchEvent(new Event('change'));
+                } else if (functionName === 'subform-fields') {
+                    functionTypeSelect.value = 'subformfields';
                     functionTypeSelect.dispatchEvent(new Event('change'));
                 } else if (functionName === 'kyc-agent') {
                     window.location.href = '/kycagent.html';
