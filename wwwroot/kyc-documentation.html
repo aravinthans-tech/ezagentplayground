@@ -8,19 +8,66 @@
         body {
             font-family: 'Calibri', 'Arial', sans-serif;
             line-height: 1.6;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 0;
             color: #333;
+            background: #f8fafc;
         }
         nav {
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 12px 24px;
-            margin: -20px -20px 20px -20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 56px);
+        }
+        #sidebar {
+            width: 256px;
+            min-width: 256px;
+            max-width: 256px;
+            background: #fff;
+            border-right: 1px solid #e5e7eb;
+            position: sticky;
+            top: 56px;
+            height: calc(100vh - 56px);
+            overflow-y: auto;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #sidebar h3 {
+            margin: 6px 8px;
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: 700;
+        }
+        .side-link {
+            display: block;
+            text-decoration: none;
+            color: #374151;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .side-link:hover {
+            background: #e5e7eb;
+        }
+        .content {
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .nav-logo {
             display: flex;
@@ -119,11 +166,22 @@
         <div class="nav-links">
             <a href="/index.html">Home</a>
             <a href="/apikey.html">API Key</a>
-            <a href="/kycagent.html">KYC Agent</a>
             <a href="/examples.html">Examples</a>
         </div>
     </nav>
-    
+    <div class="layout">
+    <aside id="sidebar">
+        <h3>API Key</h3>
+        <a class="side-link" href="/apikey.html">Generate API Key</a>
+        <h3>Functions</h3>
+        <a class="side-link" href="/formdetails.html">Form Details</a>
+        <a class="side-link" href="/subformdetails.html">SubForm Details</a>
+        <a class="side-link" href="/subformfields.html">SubForm Fields</a>
+        <a class="side-link" href="/subformsubmitarchive.html">Generate PDF</a>
+        <a class="side-link" href="/getdatafromsalesforce.html">Get Data From Salesforce</a>
+        <a class="side-link" href="/kycagent.html">KYC Agent</a>
+    </aside>
+    <main class="content">
     <h1>KYC Agent API Documentation</h1>
     
     <h2>Overview</h2>
@@ -293,7 +351,7 @@
   "faceMatch": {
     "match": true,
     "matchScore": 4,
-    "message": "✅ Photo Verification Passed<br>Match Score: 4/5",
+    "message": "âœ… Photo Verification Passed<br>Match Score: 4/5",
     "licenseFaceImage": "base64_encoded_image",
     "selfieFaceImage": "base64_encoded_image"
   },
@@ -471,7 +529,7 @@
     <h3>Step 2: Address Consistency Check</h3>
     <ol>
         <li>Compare addresses from all documents</li>
-        <li>Normalize addresses (expand abbreviations: TN → Tamil Nadu)</li>
+        <li>Normalize addresses (expand abbreviations: TN â†’ Tamil Nadu)</li>
         <li>Calculate similarity score using Jaccard similarity</li>
         <li><strong>If addresses match:</strong> Proceed to Google Maps verification</li>
         <li><strong>If addresses don't match:</strong> Skip Google Maps, mark as not verified</li>
@@ -567,12 +625,12 @@ data = {
 response = requests.post(url, headers=headers, files=files, data=data)
 result = response.json()
 
-print(f"Verification: {'✅ Passed' if result['finalResult'] else '❌ Failed'}")
+print(f"Verification: {'âœ… Passed' if result['finalResult'] else 'âŒ Failed'}")
 print(f"Address Consistency: {result['addressConsistencyScore']:.2%}")
 print(f"Name Consistency: {result['nameConsistencyScore']:.2%}")
 
 if result.get('faceMatch'):
-    print(f"Face Match: {'✅ Passed' if result['faceMatch']['match'] else '❌ Failed'}")
+    print(f"Face Match: {'âœ… Passed' if result['faceMatch']['match'] else 'âŒ Failed'}")
     print(f"Face Score: {result['faceMatch']['matchScore']}/5")</pre>
     
     <h3>JavaScript (Browser) - Verify Documents</h3>
@@ -644,7 +702,7 @@ var result = JsonSerializer.Deserialize&lt;KycVerificationResult&gt;(await respo
     <ol>
         <li><strong>Address Consistency Check First:</strong> Documents are checked for address consistency before Google Maps verification</li>
         <li><strong>Conditional Google Maps Verification:</strong> Google Maps API is only called if addresses from documents match</li>
-        <li><strong>Address Normalization:</strong> State/province abbreviations are automatically expanded (TN → Tamil Nadu, ON → Ontario)</li>
+        <li><strong>Address Normalization:</strong> State/province abbreviations are automatically expanded (TN â†’ Tamil Nadu, ON â†’ Ontario)</li>
         <li><strong>Similarity Calculation:</strong> Uses Jaccard similarity with normalized addresses</li>
     </ol>
     
@@ -653,7 +711,7 @@ var result = JsonSerializer.Deserialize&lt;KycVerificationResult&gt;(await respo
         <li><strong>Technology:</strong> Azure Face API (cloud-based face recognition service)</li>
         <li><strong>Preprocessing:</strong> CLAHE (Contrast Limited Adaptive Histogram Equalization)</li>
         <li><strong>Threshold:</strong> Minimum score of 4/5 required to pass (configurable)</li>
-        <li><strong>Rotation Handling:</strong> Automatically handles rotated images (0°, 90°, 180°, 270°)</li>
+        <li><strong>Rotation Handling:</strong> Automatically handles rotated images (0Â°, 90Â°, 180Â°, 270Â°)</li>
     </ul>
     
     <h3>Performance Optimizations</h3>
@@ -725,7 +783,7 @@ var result = JsonSerializer.Deserialize&lt;KycVerificationResult&gt;(await respo
     
     <p>or for verify endpoint:</p>
     <pre>{
-  "statusHtml": "❌ &lt;b style='color:red;'&gt;Error message&lt;/b&gt;",
+  "statusHtml": "âŒ &lt;b style='color:red;'&gt;Error message&lt;/b&gt;",
   "finalResult": false
 }</pre>
     
@@ -755,7 +813,9 @@ var result = JsonSerializer.Deserialize&lt;KycVerificationResult&gt;(await respo
     
     <h2>Support</h2>
     <p>For issues or questions, check application logs for detailed error messages.</p>
-    
+    </main>
+    </div>
 </body>
 </html>
+
 

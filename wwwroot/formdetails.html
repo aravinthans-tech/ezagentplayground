@@ -12,23 +12,39 @@
         * { font-family: 'Inter', system-ui, sans-serif; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }\n        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }\n        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }\n        @keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
-        .gradient-animate { animation: gradient 12s ease infinite; }\n        .animate-fadeInUp { animation: fadeInUp .55s ease-out forwards; }\n        .animate-slideInLeft { animation: slideInLeft .55s ease-out forwards; }\n        .animate-slideInRight { animation: slideInRight .55s ease-out forwards; }\n        .delay-100 { animation-delay: .10s; opacity: 0; }\n        .delay-200 { animation-delay: .20s; opacity: 0; }\n        .delay-300 { animation-delay: .30s; opacity: 0; }
+        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+        .gradient-animate { background-size: 200% 200%; animation: gradient 3s ease infinite; }
+        .animate-fadeInUp { animation: fadeInUp .55s ease-out forwards; }
+        .animate-slideInLeft { animation: slideInLeft .55s ease-out forwards; }
+        .animate-slideInRight { animation: slideInRight .55s ease-out forwards; }
+        .delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-300 { animation-delay: 0.3s; opacity: 0; }
+        .delay-400 { animation-delay: 0.4s; opacity: 0; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 14px 24px -8px rgba(0,0,0,.15); }
+        .button-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .button-hover:hover { transform: scale(1.02); }
+        .button-hover:active { transform: scale(0.98); }
+        .input-focus { transition: all 0.3s ease; }
+        .input-focus:focus { transform: scale(1.01); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); }
         pre { white-space: pre-wrap; word-break: break-word; font-size: 0.66rem; line-height: 1.25; }
         code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
     </style>
 </head>
-<body class="m-0 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 min-h-screen flex flex-col gradient-animate" style="background-size: 400% 400%;">
-    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
         <div class="flex items-center space-x-3">
             <img src="/logo.png" alt="Logo" class="h-8 w-auto max-w-[120px]" onerror="this.style.display='none'">
         </div>
         <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
         <div class="flex space-x-4 flex-1 justify-end text-sm">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
-            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Documentation</a>
+            <a href="/playground-documentation.html#form-details" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Documentation</a>
         </div>
     </nav>
 
@@ -37,14 +53,14 @@
     </div>
 
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
-        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]">
             <div class="p-4 border-b bg-gradient-to-r from-purple-50 to-blue-50">
                 <h2 class="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">API Functions</h2>
             </div>
             <div class="p-2">
                 <div class="mb-4">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/apikey.html">
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/apikey.html">
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
@@ -55,15 +71,7 @@
                 </div>
                 <div class="space-y-2">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/filesummary.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            File Summary
-                        </div>
-                    </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-600 text-white" data-go="/formdetails.html">
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-600 text-white button-hover" data-go="/formdetails.html">
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
@@ -71,7 +79,7 @@
                             Form Details
                         </div>
                     </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/subformdetails.html">
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/subformdetails.html">
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
@@ -79,7 +87,7 @@
                             SubForm Details
                         </div>
                     </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/subformfields.html">
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/subformfields.html">
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
@@ -87,7 +95,7 @@
                             SubForm Fields
                         </div>
                     </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/subformsubmitarchive.html">
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/subformsubmitarchive.html">
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
@@ -95,7 +103,7 @@
                             Generate PDF
                         </div>
                     </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/getdatafromsalesforce.html">
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/getdatafromsalesforce.html">
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
@@ -103,21 +111,13 @@
                             Get Data From Salesforce
                         </div>
                     </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200" data-go="/kycagent.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
-                            KYC Agent
-                        </div>
-                    </button>
-                </div>
+                    </div>
             </div>
         </aside>
 
         <main class="flex-1 overflow-y-auto p-4">
             <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-6 animate-fadeInUp sticky top-0 z-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-2">
+                <div class="text-center mb-6 animate-fadeInUp py-2">
                     <h2 class="text-3xl font-semibold text-gray-900">Form Details</h2>
                     <p class="text-gray-600 mt-1">Call <code class="bg-gray-100 px-1 rounded">POST /api/FormDetails</code> (Ezofis <code class="bg-gray-100 px-1 rounded">form/all</code> + encryptAES)</p>
                 </div>
@@ -127,17 +127,17 @@
                         <h3 class="text-lg font-semibold text-gray-900">Request</h3>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
-                            <input type="text" id="apiKey" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="X-API-Key value" autocomplete="off">
+                            <input type="text" id="apiKey" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm input-focus" placeholder="X-API-Key value" autocomplete="off">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Ezofis JWT <span class="text-red-500">*</span></label>
-                            <input type="password" id="ezofisToken" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm font-mono" placeholder="Paste JWT (sent as Ezofis-Token header)" autocomplete="off">
+                            <input type="password" id="ezofisToken" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm font-mono input-focus" placeholder="Paste JWT (sent as Ezofis-Token header)" autocomplete="off">
                             <p class="text-xs text-gray-500 mt-1">Sent as <code>Ezofis-Token</code> so it does not clash with other auth headers.</p>
                         </div>
                         <div class="flex flex-wrap gap-4">
                             <label class="inline-flex items-center gap-2 text-sm">
                                 <input type="checkbox" id="encReq" checked class="rounded border-gray-300">
-                                Encrypt request (encryptAES → encryptedPayload)
+                                Encrypt request (encryptAES â†’ encryptedPayload)
                             </label>
                             <label class="inline-flex items-center gap-2 text-sm">
                                 <input type="checkbox" id="encResp" checked class="rounded border-gray-300">
@@ -146,10 +146,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Query JSON <span class="text-red-500">*</span></label>
-                            <textarea id="queryJson" rows="14" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-xs font-mono" spellcheck="false"></textarea>
+                            <textarea id="queryJson" rows="14" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-xs font-mono input-focus" spellcheck="false"></textarea>
                             <p class="text-xs text-gray-500 mt-1">This object is sent as the <code>query</code> field in the API body.</p>
                         </div>
-                        <button type="button" id="submitBtn" class="w-full py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 flex items-center justify-center gap-2">
+                        <button type="button" id="submitBtn" class="w-full py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 flex items-center justify-center gap-2 button-hover">
                             <span id="btnLabel">Get form details</span>
                             <svg id="spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                         </button>
@@ -164,20 +164,15 @@
                             <div id="wrapOutput" class="hidden"><span class="text-xs font-semibold text-gray-500">output (plaintext)</span><pre id="outPlain" class="mt-1 bg-gray-50 border rounded p-2 max-h-96 overflow-auto"></pre></div>
                             <div id="wrapEnc" class="hidden"><span class="text-xs font-semibold text-gray-500">encryptOutput</span><pre id="outEnc" class="mt-1 bg-gray-50 border rounded p-2 max-h-96 overflow-auto"></pre></div>
                         </div>
-                        <div id="codeExamplesButton" class="hidden mt-6 text-center">
-                            <button 
-                                id="viewCodeExamplesBtn"
-                                class="w-full lg:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl"
-                            >
-                                View Code Examples
-                            </button>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-end">
+                            <button type="button" id="viewCodeExamplesBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-purple-600 hover:bg-purple-700 border border-purple-800/20 shadow-sm">Code examples</button>
+                            <button type="button" id="viewDocumentationBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm">Docs</button>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-
     <script>
         const DEFAULT_QUERY = {
             sortBy: { criteria: "", order: "DESC" },
@@ -241,16 +236,19 @@
             } catch (e) {
                 document.getElementById('errBox').textContent = 'Invalid JSON in query: ' + e.message;
                 document.getElementById('errBox').classList.remove('hidden');
+                document.getElementById('postOutputActions').classList.add('hidden');
                 return;
             }
 
             if (!apiKey || !ezTok) {
                 document.getElementById('errBox').textContent = 'API key and Ezofis JWT are required.';
                 document.getElementById('errBox').classList.remove('hidden');
+                document.getElementById('postOutputActions').classList.add('hidden');
                 return;
             }
 
             document.getElementById('errBox').classList.add('hidden');
+            document.getElementById('postOutputActions').classList.add('hidden');
             const btn = document.getElementById('submitBtn');
             const spin = document.getElementById('spinner');
             btn.disabled = true;
@@ -307,12 +305,12 @@
                     useEncryptedRequest: encReq,
                     useEncryptedResponse: encResp
                 }));
-                document.getElementById('codeExamplesButton').classList.remove('hidden');
+                document.getElementById('postOutputActions').classList.remove('hidden');
                 toast('Success', true);
             } catch (e) {
                 document.getElementById('errBox').textContent = e.message || String(e);
                 document.getElementById('errBox').classList.remove('hidden');
-                document.getElementById('codeExamplesButton').classList.add('hidden');
+                document.getElementById('postOutputActions').classList.add('hidden');
                 toast('Failed', false);
             } finally {
                 btn.disabled = false;
@@ -320,12 +318,12 @@
             }
         });
 
-        const viewCodeExamplesBtn = document.getElementById('viewCodeExamplesBtn');
-        if (viewCodeExamplesBtn) {
-            viewCodeExamplesBtn.addEventListener('click', () => {
-                window.location.href = '/examples.html?function=formdetails';
-            });
-        }
+        document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => {
+            window.location.href = '/examples.html?function=formdetails';
+        });
+        document.getElementById('viewDocumentationBtn').addEventListener('click', () => {
+            window.location.href = '/playground-documentation.html#form-details';
+        });
 
         window.addEventListener('load', () => {
             try {
@@ -340,3 +338,4 @@
     </script>
 </body>
 </html>
+

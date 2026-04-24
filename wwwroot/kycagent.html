@@ -173,9 +173,9 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md h-14 flex items-center justify-between px-6 flex-shrink-0 relative">
+    <nav class="bg-white shadow-md h-14 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
         <div class="flex items-center space-x-3 flex-shrink-0">
             <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
@@ -205,7 +205,7 @@
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3.5rem)]" style="display: flex !important; visibility: visible !important;">
             <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
                 <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
             </div>
@@ -238,17 +238,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                             Generate QR Code
-                        </div>
-                    </button>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="file-summary"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            File Summary
                         </div>
                     </button>
                     <button 
@@ -306,18 +295,7 @@
                             Get Data From Salesforce
                         </div>
                     </button>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition-all duration-300 hover:shadow-lg active"
-                        data-function="kyc-agent"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
-                            KYC Agent
-                        </div>
-                    </button>
-                </div>
+                    </div>
             </div>
         </div>
 
@@ -384,7 +362,7 @@
                 <!-- KYC Verification Section -->
                 <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 card-hover animate-fadeInUp">
                     <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">
-                        🔍 Real-time KYC Verification
+                        ðŸ” Real-time KYC Verification
                     </h3>
                     <p class="text-xs text-gray-600 mb-4 text-center">Upload multiple documents, verify address with Google Maps, and match faces between license and selfie.</p>
                     
@@ -566,7 +544,7 @@
                             id="verifyBtn"
                             class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover text-sm"
                         >
-                            <span id="verifyBtnText">🔍 Verify Now</span>
+                            <span id="verifyBtnText">ðŸ” Verify Now</span>
                             <svg id="verifyLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -634,7 +612,7 @@
                     id="capturePhotoBtn"
                     class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold text-sm py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover"
                 >
-                    📷 Capture Photo
+                    ðŸ“· Capture Photo
                 </button>
                 <button 
                     type="button" 
@@ -646,7 +624,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // Old form elements (for backward compatibility, but form is hidden)
         const submitBtn = document.getElementById('submitBtn');
@@ -912,12 +889,12 @@
         function getFileIcon(file) {
             const ext = file.name.split('.').pop().toLowerCase();
             const iconMap = {
-                'pdf': '📄',
-                'doc': '📝',
-                'docx': '📝',
-                'txt': '📄'
+                'pdf': 'ðŸ“„',
+                'doc': 'ðŸ“',
+                'docx': 'ðŸ“',
+                'txt': 'ðŸ“„'
             };
-            return iconMap[ext] || '📄';
+            return iconMap[ext] || 'ðŸ“„';
         }
 
         function createDocumentPreview(file, index) {
@@ -930,7 +907,7 @@
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors z-10';
-            removeBtn.innerHTML = '×';
+            removeBtn.innerHTML = 'Ã—';
             removeBtn.onclick = () => removeDocumentPreview(index);
 
             if (isImageFile(file)) {
@@ -1732,7 +1709,7 @@
                     if (selfieScanningLine) selfieScanningLine.classList.add('hidden');
                 } finally {
                     verifyBtn.disabled = false;
-                    if (verifyBtnText) verifyBtnText.textContent = '🔍 Verify Now';
+                    if (verifyBtnText) verifyBtnText.textContent = 'ðŸ” Verify Now';
                     if (verifyLoadingSpinner) verifyLoadingSpinner.classList.add('hidden');
                 }
             });
@@ -1778,4 +1755,5 @@
     </script>
 </body>
 </html>
+
 

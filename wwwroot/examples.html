@@ -160,9 +160,9 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
         <div class="flex items-center space-x-3 flex-shrink-0">
             <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
@@ -176,7 +176,7 @@
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">
                 Code Examples
             </a>
-            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <a href="/playground-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Documentation
             </a>
         </div>
@@ -229,17 +229,6 @@
                     </button>
                     <button 
                         class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="file-summary"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            File Summary
-                        </div>
-                    </button>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
                         data-function="form-details"
                     >
                         <div class="flex items-center">
@@ -271,15 +260,26 @@
                             SubForm Fields
                         </div>
                     </button>
-                    <button 
+                    <button
                         class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="kyc-agent"
+                        data-function="generate-pdf"
                     >
                         <div class="flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
                             </svg>
-                            KYC Agent
+                            Generate PDF
+                        </div>
+                    </button>
+                    <button
+                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
+                        data-function="getdata-salesforce"
+                    >
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
+                            </svg>
+                            Get Data From Salesforce
                         </div>
                     </button>
                 </div>
@@ -303,11 +303,12 @@
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
                             >
                                 <option value="qrcode">Generate QR Code</option>
-                                <option value="filesummary">File Summary</option>
-                                <option value="kycagent">KYC Agent</option>
                                 <option value="formdetails">Form Details</option>
                                 <option value="subformdetails">SubForm Details</option>
                                 <option value="subformfields">SubForm Fields</option>
+                                <option value="generatepdf">Generate PDF</option>
+                                <option value="getdatafromsalesforce">Get Data From Salesforce</option>
+                                <option value="apikey">Generate API Key</option>
                             </select>
                         </div>
                         <div>
@@ -472,6 +473,72 @@
 ]</textarea>
                             </div>
                         </div>
+
+                        <div id="generatepdf-fields" class="hidden space-y-3">
+                            <p class="text-xs text-gray-600">Uses <strong>X-API-Key</strong> from Configuration and the Ezofis JWT below.</p>
+                            <div>
+                                <label for="gpEzofisToken" class="block text-sm font-semibold text-gray-700 mb-2">Ezofis JWT</label>
+                                <input type="text" id="gpEzofisToken" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus" placeholder="Bearer YOUR_EZOFIS_TOKEN" />
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="gpFormId" class="block text-sm font-semibold text-gray-700 mb-2">Form ID</label>
+                                    <input type="number" id="gpFormId" min="1" value="139" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" />
+                                </div>
+                                <div>
+                                    <label for="gpTemplateId" class="block text-sm font-semibold text-gray-700 mb-2">Template ID</label>
+                                    <input type="number" id="gpTemplateId" min="1" value="132" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" />
+                                </div>
+                                <div>
+                                    <label for="gpEntryIdForFormEntry" class="block text-sm font-semibold text-gray-700 mb-2">entryIdForFormEntry</label>
+                                    <input type="number" id="gpEntryIdForFormEntry" value="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" />
+                                </div>
+                                <div>
+                                    <label for="gpEntryId" class="block text-sm font-semibold text-gray-700 mb-2">entryId</label>
+                                    <input type="number" id="gpEntryId" value="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" />
+                                </div>
+                            </div>
+                            <div>
+                                <label for="gpPanelName" class="block text-sm font-semibold text-gray-700 mb-2">Panel name</label>
+                                <input type="text" id="gpPanelName" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" value="009 - Account Details" />
+                            </div>
+                            <label class="inline-flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="gpIsMultiple" class="rounded border-gray-300" />
+                                isMultiple
+                            </label>
+                            <div>
+                                <label for="gpFieldsJson" class="block text-sm font-semibold text-gray-700 mb-2">Fields JSON</label>
+                                <textarea id="gpFieldsJson" rows="6" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg resize-none input-focus code-block text-xs" spellcheck="false">{
+  "ed3dZq8mL_6QgGV26PAJj": "123456"
+}</textarea>
+                            </div>
+                        </div>
+
+                        <div id="getdatafromsalesforce-fields" class="hidden space-y-3">
+                            <p class="text-xs text-gray-600">Uses <strong>X-API-Key</strong> from Configuration and the Ezofis JWT below.</p>
+                            <div>
+                                <label for="sfEzofisToken" class="block text-sm font-semibold text-gray-700 mb-2">Ezofis JWT</label>
+                                <input type="text" id="sfEzofisToken" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus" placeholder="Bearer YOUR_EZOFIS_TOKEN" />
+                            </div>
+                            <div>
+                                <label for="sfPayloadJson" class="block text-sm font-semibold text-gray-700 mb-2">Payload JSON</label>
+                                <textarea id="sfPayloadJson" rows="6" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg resize-none input-focus code-block text-xs" spellcheck="false">{
+  "searchText": "ACC001"
+}</textarea>
+                            </div>
+                        </div>
+
+                        <div id="apikey-fields" class="hidden space-y-3">
+                            <p class="text-xs text-gray-600">API key generation does not use the <code class="bg-gray-100 px-1 rounded">X-API-Key</code> field above.</p>
+                            <div>
+                                <label for="akUserEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <input type="email" id="akUserEmail" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" placeholder="admin@ezofis.com" />
+                            </div>
+                            <div>
+                                <label for="akUserPassword" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                                <input type="password" id="akUserPassword" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus" placeholder="Your password" />
+                            </div>
+                        </div>
                         
                         <p class="text-xs text-gray-500">Code examples will update automatically based on your inputs above.</p>
                     </div>
@@ -545,7 +612,6 @@
             </div>
         </div>
     </div>
-
     <script>
         const API_BASE_URL = window.location.origin;
         
@@ -569,6 +635,9 @@
         const formdetailsFields = document.getElementById('formdetails-fields');
         const subformdetailsFields = document.getElementById('subformdetails-fields');
         const subformfieldsFields = document.getElementById('subformfields-fields');
+        const generatepdfFields = document.getElementById('generatepdf-fields');
+        const getdatafromsalesforceFields = document.getElementById('getdatafromsalesforce-fields');
+        const apikeyFields = document.getElementById('apikey-fields');
         const apiInfoContent = document.getElementById('apiInfoContent');
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -576,48 +645,26 @@
         // Function type change handler
         functionTypeSelect.addEventListener('change', () => {
             const functionType = functionTypeSelect.value;
+            const allFieldGroups = [qrcodeFields, filesummaryFields, kycagentFields, formdetailsFields, subformdetailsFields, subformfieldsFields, generatepdfFields, getdatafromsalesforceFields, apikeyFields];
+            allFieldGroups.forEach((el) => { if (el) el.classList.add('hidden'); });
             if (functionType === 'qrcode') {
-                qrcodeFields.classList.remove('hidden');
-                filesummaryFields.classList.add('hidden');
-                kycagentFields.classList.add('hidden');
-                formdetailsFields.classList.add('hidden');
-                subformdetailsFields.classList.add('hidden');
-                subformfieldsFields.classList.add('hidden');
+                qrcodeFields?.classList.remove('hidden');
             } else if (functionType === 'filesummary') {
-                qrcodeFields.classList.add('hidden');
-                filesummaryFields.classList.remove('hidden');
-                kycagentFields.classList.add('hidden');
-                formdetailsFields.classList.add('hidden');
-                subformdetailsFields.classList.add('hidden');
-                subformfieldsFields.classList.add('hidden');
+                filesummaryFields?.classList.remove('hidden');
             } else if (functionType === 'kycagent') {
-                qrcodeFields.classList.add('hidden');
-                filesummaryFields.classList.add('hidden');
-                kycagentFields.classList.remove('hidden');
-                formdetailsFields.classList.add('hidden');
-                subformdetailsFields.classList.add('hidden');
-                subformfieldsFields.classList.add('hidden');
+                kycagentFields?.classList.remove('hidden');
             } else if (functionType === 'formdetails') {
-                qrcodeFields.classList.add('hidden');
-                filesummaryFields.classList.add('hidden');
-                kycagentFields.classList.add('hidden');
-                formdetailsFields.classList.remove('hidden');
-                subformdetailsFields.classList.add('hidden');
-                subformfieldsFields.classList.add('hidden');
+                formdetailsFields?.classList.remove('hidden');
             } else if (functionType === 'subformdetails') {
-                qrcodeFields.classList.add('hidden');
-                filesummaryFields.classList.add('hidden');
-                kycagentFields.classList.add('hidden');
-                formdetailsFields.classList.add('hidden');
-                subformdetailsFields.classList.remove('hidden');
-                subformfieldsFields.classList.add('hidden');
+                subformdetailsFields?.classList.remove('hidden');
             } else if (functionType === 'subformfields') {
-                qrcodeFields.classList.add('hidden');
-                filesummaryFields.classList.add('hidden');
-                kycagentFields.classList.add('hidden');
-                formdetailsFields.classList.add('hidden');
-                subformdetailsFields.classList.add('hidden');
-                subformfieldsFields.classList.remove('hidden');
+                subformfieldsFields?.classList.remove('hidden');
+            } else if (functionType === 'generatepdf') {
+                generatepdfFields?.classList.remove('hidden');
+            } else if (functionType === 'getdatafromsalesforce') {
+                getdatafromsalesforceFields?.classList.remove('hidden');
+            } else if (functionType === 'apikey') {
+                apikeyFields?.classList.remove('hidden');
             }
             updateApiInfo();
             updateCodeExamples();
@@ -776,6 +823,60 @@ token: "string"</pre>
 }</pre>
                     </div>
                 `;
+            } else if (functionType === 'generatepdf') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/SubFormSubmitAndArchive</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key + Ezofis-Token headers required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "formId": 139,
+  "templateId": 132,
+  "entryIdForFormEntry": 0,
+  "entryId": 0,
+  "isMultiple": false,
+  "panelName": "009 - Account Details",
+  "fields": { "fieldId": "value" }
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'getdatafromsalesforce') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/GetDataFromSalesforce</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key + Ezofis-Token headers required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "payload": { "searchText": "ACC001" }
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'apikey') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoints</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Client/apiKey</code>
+                        <div class="text-gray-600 text-xs mt-1">or <code class="bg-gray-100 px-1 rounded">GET /api/Client/apiKey</code> with the same query parameters</div>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">No X-API-Key. Credentials are passed as query parameters <code class="bg-gray-100 px-1 rounded">userName</code> and <code class="bg-gray-100 px-1 rounded">password</code>.</div>
+                    </div>
+                `;
+            } else {
+                apiInfoContent.innerHTML = '<p class="text-gray-600 text-sm">Select a function to see endpoint details.</p>';
             }
         }
         
@@ -1098,44 +1199,157 @@ console.log(data);`;
                 const formIdValue = Number.parseInt(subFieldsFormIdExample?.value || '1', 10);
                 const formId = Number.isFinite(formIdValue) && formIdValue > 0 ? formIdValue : 1;
                 let subforms;
-                try { subforms = JSON.parse(subFormsTitlesExample?.value || '[\"009 - Account Details\"]'); } catch { subforms = ['009 - Account Details']; }
+                try { subforms = JSON.parse(subFormsTitlesExample?.value || '["009 - Account Details"]'); } catch { subforms = ['009 - Account Details']; }
                 const payload = { formId, subforms };
-                const payloadOneLine = JSON.stringify(payload).replace(/'/g, \"'\\\\''\");
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
                 const payloadPretty = JSON.stringify(payload, null, 2);
-                const escapedApiKey = apiKey.replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"').replace(/'/g, \"\\\\'\");
-                const escapedToken = token.replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"').replace(/'/g, \"\\\\'\");
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
 
-                document.getElementById('curl-code').textContent = `curl -X POST \"${API_BASE_URL}/api/SubFormFields\" \\\\
-  -H \"Content-Type: application/json\" \\\\
-  -H \"X-API-Key: ${escapedApiKey}\" \\\\
-  -H \"Ezofis-Token: ${escapedToken}\" \\\\
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/SubFormFields" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -H "Ezofis-Token: ${escapedToken}" \\
   -d '${payloadOneLine}'`;
 
                 document.getElementById('python-code').textContent = `import requests
 import json
 
-url = \"${API_BASE_URL}/api/SubFormFields\"
+url = "${API_BASE_URL}/api/SubFormFields"
 headers = {
-    \"Content-Type\": \"application/json\",
-    \"X-API-Key\": \"${escapedApiKey}\",
-    \"Ezofis-Token\": \"${escapedToken}\"
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
 }
 payload = ${payloadPretty}
 
 response = requests.post(url, headers=headers, json=payload)
 print(response.json())`;
 
-                document.getElementById('javascript-code').textContent = `const response = await fetch(\"${API_BASE_URL}/api/SubFormFields\", {
-  method: \"POST\",
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/SubFormFields", {
+  method: "POST",
   headers: {
-    \"Content-Type\": \"application/json\",
-    \"X-API-Key\": \"${escapedApiKey}\",
-    \"Ezofis-Token\": \"${escapedToken}\"
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
   },
   body: JSON.stringify(${payloadPretty})
 });
 const data = await response.json();
 console.log(data);`;
+            } else if (functionType === 'generatepdf') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const token = (document.getElementById('gpEzofisToken')?.value || 'Bearer YOUR_EZOFIS_TOKEN').trim();
+                const formId = Number.parseInt(document.getElementById('gpFormId')?.value || '139', 10) || 139;
+                const templateId = Number.parseInt(document.getElementById('gpTemplateId')?.value || '132', 10) || 132;
+                const entryIdForFormEntry = Number.parseInt(document.getElementById('gpEntryIdForFormEntry')?.value || '0', 10) || 0;
+                const entryId = Number.parseInt(document.getElementById('gpEntryId')?.value || '0', 10) || 0;
+                const panelName = (document.getElementById('gpPanelName')?.value || '009 - Account Details').trim();
+                const isMultiple = !!document.getElementById('gpIsMultiple')?.checked;
+                let fields = {};
+                try { fields = JSON.parse(document.getElementById('gpFieldsJson')?.value || '{}'); } catch { fields = {}; }
+                const payload = { formId, templateId, entryIdForFormEntry, entryId, isMultiple, panelName, fields };
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
+                const payloadPretty = JSON.stringify(payload, null, 2);
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/SubFormSubmitAndArchive" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -H "Ezofis-Token: ${escapedToken}" \\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+import json
+
+url = "${API_BASE_URL}/api/SubFormSubmitAndArchive"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/SubFormSubmitAndArchive", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
+            } else if (functionType === 'getdatafromsalesforce') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const token = (document.getElementById('sfEzofisToken')?.value || 'Bearer YOUR_EZOFIS_TOKEN').trim();
+                let innerPayload;
+                try { innerPayload = JSON.parse(document.getElementById('sfPayloadJson')?.value || '{}'); } catch { innerPayload = { searchText: 'ACC001' }; }
+                const bodyObj = { payload: innerPayload };
+                const payloadOneLine = JSON.stringify(bodyObj).replace(/'/g, "'\\''");
+                const payloadPretty = JSON.stringify(bodyObj, null, 2);
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/GetDataFromSalesforce" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -H "Ezofis-Token: ${escapedToken}" \\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+import json
+
+url = "${API_BASE_URL}/api/GetDataFromSalesforce"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/GetDataFromSalesforce", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}",
+    "Ezofis-Token": "${escapedToken}"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
+            } else if (functionType === 'apikey') {
+                const userName = document.getElementById('akUserEmail')?.value || 'admin@ezofis.com';
+                const password = document.getElementById('akUserPassword')?.value || 'YOUR_PASSWORD';
+                const qUser = encodeURIComponent(userName);
+                const qPass = encodeURIComponent(password);
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Client/apiKey?userName=${qUser}&password=${qPass}"`;
+
+                document.getElementById('python-code').textContent = `import requests
+
+url = "${API_BASE_URL}/api/Client/apiKey"
+params = {"userName": ${JSON.stringify(userName)}, "password": ${JSON.stringify(password)}}
+
+response = requests.post(url, params=params)
+print(response.text)`;
+
+                document.getElementById('javascript-code').textContent = `const params = new URLSearchParams({
+  userName: ${JSON.stringify(userName)},
+  password: ${JSON.stringify(password)}
+});
+const response = await fetch("${API_BASE_URL}/api/Client/apiKey?" + params.toString(), { method: "POST" });
+const text = await response.text();
+console.log(text);`;
             }
         }
 
@@ -1172,6 +1386,20 @@ console.log(data);`;
         if (fileInputKyc) {
             fileInputKyc.addEventListener('change', updateCodeExamples);
         }
+        ['gpEzofisToken', 'gpFormId', 'gpTemplateId', 'gpEntryIdForFormEntry', 'gpEntryId', 'gpPanelName', 'gpFieldsJson'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateCodeExamples);
+        });
+        const gpIsMultiple = document.getElementById('gpIsMultiple');
+        if (gpIsMultiple) gpIsMultiple.addEventListener('change', updateCodeExamples);
+        ['sfEzofisToken', 'sfPayloadJson'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateCodeExamples);
+        });
+        ['akUserEmail', 'akUserPassword'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateCodeExamples);
+        });
 
         // Copy code functionality
         document.querySelectorAll('.copy-code-btn').forEach(btn => {
@@ -1230,11 +1458,12 @@ console.log(data);`;
             const functionParam = urlParams.get('function');
             const lastApiCall = localStorage.getItem('lastApiCall');
             
+            const validFunctions = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'apikey']);
             let functionType = 'qrcode'; // default
             
-            if (functionParam === 'qrcode' || functionParam === 'filesummary' || functionParam === 'kycagent' || functionParam === 'formdetails' || functionParam === 'subformdetails' || functionParam === 'subformfields') {
+            if (functionParam && validFunctions.has(functionParam)) {
                 functionType = functionParam;
-            } else if (lastApiCall) {
+            } else if (lastApiCall && validFunctions.has(lastApiCall)) {
                 functionType = lastApiCall;
             }
             
@@ -1284,6 +1513,31 @@ console.log(data);`;
                     if (subFieldsFormIdExample && subFieldsData.formId) subFieldsFormIdExample.value = subFieldsData.formId;
                     if (subFormsTitlesExample && subFieldsData.subformsText) subFormsTitlesExample.value = subFieldsData.subformsText;
                 }
+            } else if (functionType === 'generatepdf') {
+                const gp = loadFromLocalStorage('subformsubmitarchive');
+                if (gp) {
+                    apiKeyInput.value = gp.apiKey || '';
+                    const gpTok = document.getElementById('gpEzofisToken');
+                    if (gpTok && gp.ezofisToken) gpTok.value = gp.ezofisToken;
+                    if (gp.formId != null) { const el = document.getElementById('gpFormId'); if (el) el.value = String(gp.formId); }
+                    if (gp.templateId != null) { const el = document.getElementById('gpTemplateId'); if (el) el.value = String(gp.templateId); }
+                    if (gp.entryIdForFormEntry != null) { const el = document.getElementById('gpEntryIdForFormEntry'); if (el) el.value = String(gp.entryIdForFormEntry); }
+                    if (gp.entryId != null) { const el = document.getElementById('gpEntryId'); if (el) el.value = String(gp.entryId); }
+                    if (gp.panelName) { const el = document.getElementById('gpPanelName'); if (el) el.value = gp.panelName; }
+                    const cb = document.getElementById('gpIsMultiple');
+                    if (cb && gp.isMultiple) cb.checked = true;
+                    const fj = document.getElementById('gpFieldsJson');
+                    if (fj && gp.fieldsText) fj.value = gp.fieldsText;
+                }
+            } else if (functionType === 'getdatafromsalesforce') {
+                const sf = loadFromLocalStorage('getdatafromsalesforce');
+                if (sf) {
+                    apiKeyInput.value = sf.apiKey || '';
+                    const sft = document.getElementById('sfEzofisToken');
+                    if (sft && sf.ezofisToken) sft.value = sf.ezofisToken;
+                    const pj = document.getElementById('sfPayloadJson');
+                    if (pj && sf.payloadText) pj.value = sf.payloadText;
+                }
             }
             
             // Update code examples with loaded data
@@ -1320,29 +1574,21 @@ console.log(data);`;
                 button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
                 button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
 
-                // Switch function type or navigate
-                if (functionName === 'generate-qrcode') {
-                    // Switch to QR Code examples
-                    functionTypeSelect.value = 'qrcode';
-                    functionTypeSelect.dispatchEvent(new Event('change'));
-                } else if (functionName === 'generate-apikey') {
-                    window.location.href = '/apikey.html';
-                } else if (functionName === 'file-summary') {
-                    // Switch to File Summary examples
-                    functionTypeSelect.value = 'filesummary';
-                    functionTypeSelect.dispatchEvent(new Event('change'));
-                } else if (functionName === 'form-details') {
-                    // Switch to Form Details examples
-                    functionTypeSelect.value = 'formdetails';
-                    functionTypeSelect.dispatchEvent(new Event('change'));
-                } else if (functionName === 'subform-details') {
-                    functionTypeSelect.value = 'subformdetails';
-                    functionTypeSelect.dispatchEvent(new Event('change'));
-                } else if (functionName === 'subform-fields') {
-                    functionTypeSelect.value = 'subformfields';
-                    functionTypeSelect.dispatchEvent(new Event('change'));
-                } else if (functionName === 'kyc-agent') {
-                    window.location.href = '/kycagent.html';
+                // Navigate to dedicated function pages from sidebar
+                const functionPageMap = {
+                    'generate-qrcode': '/index.html',
+                    'generate-apikey': '/apikey.html',
+                    'file-summary': '/filesummary.html',
+                    'form-details': '/formdetails.html',
+                    'subform-details': '/subformdetails.html',
+                    'subform-fields': '/subformfields.html',
+                    'generate-pdf': '/subformsubmitarchive.html',
+                    'getdata-salesforce': '/getdatafromsalesforce.html',
+                    'kyc-agent': '/kycagent.html'
+                };
+                const targetPage = functionPageMap[functionName];
+                if (targetPage) {
+                    window.location.href = targetPage;
                 }
             });
         });

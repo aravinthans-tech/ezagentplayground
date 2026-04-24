@@ -160,9 +160,9 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; background-size: 400% 400%;">
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
         <div class="flex items-center space-x-3 flex-shrink-0">
             <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
@@ -176,7 +176,7 @@
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Code Examples
             </a>
-            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <a href="/playground-documentation.html#generate-qr" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Documentation
             </a>
         </div>
@@ -192,7 +192,7 @@
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0" style="display: flex !important; visibility: visible !important;">
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]" style="display: flex !important; visibility: visible !important;">
             <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
                 <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
             </div>
@@ -225,17 +225,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                             Generate QR Code
-                        </div>
-                    </button>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="file-summary"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            File Summary
                         </div>
                     </button>
                     <button 
@@ -293,18 +282,7 @@
                             Get Data From Salesforce
                         </div>
                     </button>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="kyc-agent"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                            </svg>
-                            KYC Agent
-                        </div>
-                    </button>
-                </div>
+                    </div>
             </div>
         </div>
 
@@ -411,19 +389,9 @@
                                 <span id="responseTime" class="ml-2 text-gray-900 font-medium"></span>
                             </div>
                         </div>
-                        <!-- Code Examples Button -->
-                        <div id="codeExamplesButton" class="hidden mt-4 w-full">
-                            <button 
-                                id="viewCodeExamplesBtn"
-                                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl button-hover animate-blink"
-                            >
-                                <div class="flex items-center justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                                    </svg>
-                                    View Code Examples
-                                </div>
-                            </button>
+                        <div id="postOutputActions" class="hidden mt-3 w-full flex flex-wrap gap-2 justify-end">
+                            <button type="button" id="viewCodeExamplesBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-purple-600 hover:bg-purple-700 border border-purple-800/20 shadow-sm">Code examples</button>
+                            <button type="button" id="viewDocumentationBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm">Docs</button>
                         </div>
                     </div>
                 </div>
@@ -454,7 +422,6 @@
             </div>
         </div>
     </div>
-
     <script>
         const API_BASE_URL = window.location.origin;
         
@@ -500,6 +467,7 @@
             loadingSpinner.classList.remove('hidden');
             resultSection.classList.add('hidden');
             errorSection.classList.add('hidden');
+            document.getElementById('postOutputActions').classList.add('hidden');
             jsonResponse.textContent = '';
 
             const startTime = performance.now();
@@ -538,7 +506,7 @@
                     
                     resultSection.classList.remove('hidden');
                     errorSection.classList.add('hidden');
-                    document.getElementById('codeExamplesButton').classList.remove('hidden');
+                    document.getElementById('postOutputActions').classList.remove('hidden');
                     showToast('QR code generated successfully!', 'success');
                 } else {
                     // Error in response
@@ -642,7 +610,7 @@
         clearBtn.addEventListener('click', () => {
             resultSection.classList.add('hidden');
             errorSection.classList.add('hidden');
-            document.getElementById('codeExamplesButton').classList.add('hidden');
+            document.getElementById('postOutputActions').classList.add('hidden');
             jsonResponse.textContent = '';
             qrValueInput.value = '';
             // Clear localStorage on explicit clear
@@ -651,9 +619,11 @@
         });
         
         // View Code Examples button
-        const viewCodeExamplesBtn = document.getElementById('viewCodeExamplesBtn');
-        viewCodeExamplesBtn.addEventListener('click', () => {
+        document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => {
             window.location.href = '/examples.html?function=qrcode';
+        });
+        document.getElementById('viewDocumentationBtn').addEventListener('click', () => {
+            window.location.href = '/playground-documentation.html#generate-qr';
         });
         
         // localStorage functions
@@ -691,7 +661,7 @@
                         qrImage.src = `data:image/png;base64,${qrcodeData.result.output}`;
                         jsonResponse.textContent = JSON.stringify(qrcodeData.result, null, 2);
                         resultSection.classList.remove('hidden');
-                        document.getElementById('codeExamplesButton').classList.remove('hidden');
+                        document.getElementById('postOutputActions').classList.remove('hidden');
                     }
                 }
             } else {
@@ -765,3 +735,4 @@
     </script>
 </body>
 </html>
+

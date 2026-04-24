@@ -446,16 +446,16 @@ public class FormDetailsService
                 return result;
             }
 
-            var (decOk, decTextOrErr) = await DecryptAesAsync(ezofisBearerToken, text.Trim());
-            if (!decOk || string.IsNullOrWhiteSpace(decTextOrErr))
-            {
-                result.id = 0;
-                result.EncryptOutput = decTextOrErr ?? "decryptAES failed";
-                return result;
-            }
+            //var (decOk, decTextOrErr) = await DecryptAesAsync(ezofisBearerToken, text.Trim());
+            //if (!decOk || string.IsNullOrWhiteSpace(decTextOrErr))
+            //{
+            //    result.id = 0;
+            //    result.EncryptOutput = decTextOrErr ?? "decryptAES failed";
+            //    return result;
+            //}
 
             result.id = 1;
-            result.output = prettyJsonIfPossible(NormalizeJsonDocumentText(decTextOrErr));
+            result.output = prettyJsonIfPossible(NormalizeJsonDocumentText(text));
             result.EncryptOutput = null;
             return result;
         }

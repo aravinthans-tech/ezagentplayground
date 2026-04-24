@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Playground — Docs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        html { scroll-behavior: smooth; }
+        pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .anchor { scroll-margin-top: 4rem; }
+        .gradient-animate { background-size: 400% 400%; }
+        .card-hover { transition: all 0.25s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 14px 24px -10px rgba(0, 0, 0, 0.18); }
+        .button-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .button-hover:hover { transform: scale(1.02); }
+        .button-hover:active { transform: scale(0.98); }
+        .input-focus { transition: all 0.3s ease; }
+        .input-focus:focus { transform: scale(1.01); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); }
+        #sidebar {
+            width: 256px;
+            min-width: 256px;
+            max-width: 256px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 text-gray-800 text-sm flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+            <button type="button" id="docPrevBtn" class="text-xs px-2.5 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 font-medium text-gray-700">← Previous</button>
+            <a href="/index.html" class="text-xs text-gray-500 hover:text-purple-700 font-medium">Home</a>
+        </div>
+        <span class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none truncate max-w-[40%]">API Playground</span>
+        <div class="flex items-center gap-2">
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="/playground-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">Documentation</a>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden" style="min-height:0;">
+        <aside id="sidebar" class="bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 button-hover" data-go="/apikey.html">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </div>
+                    </button>
+                </div>
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 button-hover" data-go="/formdetails.html">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
+                            </svg>
+                            Form Details
+                        </div>
+                    </button>
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 button-hover" data-go="/subformdetails.html">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
+                            </svg>
+                            SubForm Details
+                        </div>
+                    </button>
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 button-hover" data-go="/subformfields.html">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
+                            </svg>
+                            SubForm Fields
+                        </div>
+                    </button>
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 button-hover" data-go="/subformsubmitarchive.html">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
+                            </svg>
+                            Generate PDF
+                        </div>
+                    </button>
+                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 button-hover" data-go="/getdatafromsalesforce.html">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
+                            </svg>
+                            Get Data From Salesforce
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    <main class="flex-1 overflow-y-auto p-4 pt-6 pb-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Playground APIs</h1>
+        <p class="text-sm text-gray-600 mb-4">Quick reference. <a class="text-purple-700 underline font-medium" href="/examples.html">Code examples</a> · <a class="text-purple-700 underline font-medium" href="/kyc-documentation.html">KYC docs</a></p>
+
+        <nav class="bg-white rounded-lg border border-gray-200 p-4 mb-4 text-sm card-hover">
+            <p class="font-semibold text-gray-500 uppercase tracking-wide mb-2">Function documentation</p>
+            <div class="mb-3">
+                <label for="docFunctionSelect" class="block text-sm font-semibold text-gray-700 mb-1">Function Type</label>
+                <select id="docFunctionSelect" class="w-full sm:w-80 border border-gray-300 rounded px-3 py-2 text-sm bg-white input-focus">
+                    <option value="all">All functions</option>
+                    <option value="api-key">API key</option>
+                    <option value="generate-qr">Generate QR Code</option>
+                    <option value="form-details">Form Details</option>
+                    <option value="subform-details">SubForm Details</option>
+                    <option value="subform-fields">SubForm Fields</option>
+                    <option value="generate-pdf">Generate PDF</option>
+                    <option value="getdata-from-salesforce">Get Data From Salesforce</option>
+                </select>
+            </div>
+            <p class="font-semibold text-gray-500 uppercase tracking-wide mb-2">Quick jump</p>
+            <div class="flex flex-wrap gap-x-3 gap-y-1">
+                <a class="text-purple-700 hover:underline" href="#api-key">API key</a>
+                <a class="text-purple-700 hover:underline" href="#generate-qr">QR</a>
+                <a class="text-purple-700 hover:underline" href="#form-details">Form</a>
+                <a class="text-purple-700 hover:underline" href="#subform-details">SubForm</a>
+                <a class="text-purple-700 hover:underline" href="#subform-fields">Fields</a>
+                <a class="text-purple-700 hover:underline" href="#generate-pdf">PDF</a>
+                <a class="text-purple-700 hover:underline" href="#getdata-from-salesforce">Salesforce</a>
+            </div>
+        </nav>
+
+        <section id="api-key" data-doc-function="api-key" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">API key</h2>
+            <p class="text-sm text-gray-600 mb-2">Use this first to get a reusable playground API key and Ezofis token for the rest of the APIs.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoints:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/Client/apiKey</code> and <code class="bg-gray-100 px-0.5 rounded">GET /api/Client/apiKey</code></p>
+                <p><span class="font-semibold text-gray-700">Query params:</span> <code class="bg-gray-100 px-0.5 rounded">userName</code>, <code class="bg-gray-100 px-0.5 rounded">password</code></p>
+                <p><span class="font-semibold text-gray-700">Auth:</span> no <code class="bg-gray-100 px-0.5 rounded">X-API-Key</code> header for this route.</p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">POST /api/Client/apiKey?userName=admin@ezofis.com&amp;password=your_password</pre>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "tenantId": "123",
+  "token": "eyJhbGciOi...",
+  "apiKey": "x4iDIG6..."
+}</pre>
+            </div>
+        </section>
+
+        <section id="generate-qr" data-doc-function="generate-qr" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">QR code</h2>
+            <p class="text-sm text-gray-600 mb-2">Generates a QR code image from text and returns Base64 content in <code class="bg-gray-100 px-0.5 rounded">output</code>.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoint:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/qrcode/generate</code></p>
+                <p><span class="font-semibold text-gray-700">Headers:</span> <code class="bg-gray-100 px-0.5 rounded">Content-Type: application/json</code>, <code class="bg-gray-100 px-0.5 rounded">X-API-Key: &lt;apiKey&gt;</code></p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "qrvalue": "INV-100245"
+}</pre>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "output": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "id": 1,
+  "EncryptOutput": null
+}</pre>
+            </div>
+        </section>
+
+        <section id="form-details" data-doc-function="form-details" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Form details</h2>
+            <p class="text-sm text-gray-600 mb-2">Fetches forms from Ezofis using query filters, pagination, and optional encryption modes.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoint:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/FormDetails</code></p>
+                <p><span class="font-semibold text-gray-700">Headers:</span> <code class="bg-gray-100 px-0.5 rounded">X-API-Key</code>, <code class="bg-gray-100 px-0.5 rounded">Ezofis-Token</code></p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "query": {
+    "filterBy": "",
+    "sortBy": "formId desc",
+    "pageNo": 1,
+    "pageSize": 10
+  },
+  "useEncryptedRequest": true,
+  "useEncryptedResponse": true
+}</pre>
+                <p class="text-gray-600">When successful, the API returns <code class="bg-gray-100 px-0.5 rounded">id: 1</code> and either plain JSON in <code class="bg-gray-100 px-0.5 rounded">output</code> or encrypted content depending on flags.</p>
+            </div>
+        </section>
+
+        <section id="subform-details" data-doc-function="subform-details" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">SubForm details</h2>
+            <p class="text-sm text-gray-600 mb-2">Returns available subform/panel titles for a form. Use these titles in the SubForm Fields API.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoint:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/SubFormDetails</code></p>
+                <p><span class="font-semibold text-gray-700">Headers:</span> <code class="bg-gray-100 px-0.5 rounded">X-API-Key</code>, <code class="bg-gray-100 px-0.5 rounded">Ezofis-Token</code></p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "formId": 139
+}</pre>
+                <p class="text-gray-600">Use the returned subform title strings exactly as-is when calling <code class="bg-gray-100 px-0.5 rounded">/api/SubFormFields</code>.</p>
+            </div>
+        </section>
+
+        <section id="subform-fields" data-doc-function="subform-fields" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">SubForm fields</h2>
+            <p class="text-sm text-gray-600 mb-2">Gets field metadata for one or more selected subform titles.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoint:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/SubFormFields</code></p>
+                <p><span class="font-semibold text-gray-700">Headers:</span> <code class="bg-gray-100 px-0.5 rounded">X-API-Key</code>, <code class="bg-gray-100 px-0.5 rounded">Ezofis-Token</code></p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "formId": 139,
+  "subforms": [
+    "009 - Account Details"
+  ]
+}</pre>
+                <p class="text-gray-600">If no fields are found or the title does not match, you may receive an empty result in <code class="bg-gray-100 px-0.5 rounded">output</code>.</p>
+            </div>
+        </section>
+
+        <section id="generate-pdf" data-doc-function="generate-pdf" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Generate PDF</h2>
+            <p class="text-sm text-gray-600 mb-2">Submits subform values and triggers archive/PDF generation in one API call.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoint:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/SubFormSubmitAndArchive</code></p>
+                <p><span class="font-semibold text-gray-700">Headers:</span> <code class="bg-gray-100 px-0.5 rounded">X-API-Key</code>, <code class="bg-gray-100 px-0.5 rounded">Ezofis-Token</code></p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "formId": 139,
+  "templateId": 132,
+  "entryIdForFormEntry": 0,
+  "entryId": 0,
+  "isMultiple": false,
+  "panelName": "009 - Account Details",
+  "fields": {
+    "ed3dZq8mL_6QgGV26PAJj": "123456"
+  }
+}</pre>
+                <p class="text-gray-600">Required fields: <code class="bg-gray-100 px-0.5 rounded">formId</code>, <code class="bg-gray-100 px-0.5 rounded">templateId</code>, <code class="bg-gray-100 px-0.5 rounded">panelName</code>, and object <code class="bg-gray-100 px-0.5 rounded">fields</code>.</p>
+            </div>
+        </section>
+
+        <section id="getdata-from-salesforce" data-doc-function="getdata-from-salesforce" class="doc-section anchor bg-white rounded-lg border border-gray-200 p-4 mb-3 card-hover">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Salesforce data</h2>
+            <p class="text-sm text-gray-600 mb-2">Sends a payload to Salesforce integration flow and returns normalized/decrypted output.</p>
+            <div class="text-sm space-y-2">
+                <p><span class="font-semibold text-gray-700">Endpoint:</span> <code class="bg-gray-100 px-0.5 rounded">POST /api/GetDataFromSalesforce</code></p>
+                <p><span class="font-semibold text-gray-700">Headers:</span> <code class="bg-gray-100 px-0.5 rounded">X-API-Key</code>, <code class="bg-gray-100 px-0.5 rounded">Ezofis-Token</code></p>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "payload": {
+    "searchText": "ACC001"
+  }
+}</pre>
+                <pre class="bg-gray-900 text-green-400 p-2 rounded text-[11px] overflow-x-auto">{
+  "output": "{ ... salesforce response ... }",
+  "id": 1,
+  "EncryptOutput": null
+}</pre>
+                <p class="text-gray-600">Validation error example: <code class="bg-gray-100 px-0.5 rounded">payload is required</code>.</p>
+            </div>
+        </section>
+    </div>
+    </main>
+    </div>
+    <script>
+        document.querySelectorAll('.api-nav').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const url = btn.getAttribute('data-go');
+                if (url) window.location.href = url;
+            });
+        });
+
+        document.getElementById('docPrevBtn').addEventListener('click', function () {
+            try {
+                var ref = document.referrer;
+                if (ref && ref.indexOf(window.location.origin) === 0) {
+                    window.history.back();
+                    return;
+                }
+            } catch (e) {}
+            window.location.href = '/index.html';
+        });
+
+        (function () {
+            const select = document.getElementById('docFunctionSelect');
+            const sections = Array.from(document.querySelectorAll('.doc-section'));
+            const valid = new Set(['all', 'api-key', 'generate-qr', 'form-details', 'subform-details', 'subform-fields', 'generate-pdf', 'getdata-from-salesforce']);
+            const functionAlias = {
+                qrcode: 'generate-qr',
+                formdetails: 'form-details',
+                subformdetails: 'subform-details',
+                subformfields: 'subform-fields',
+                generatepdf: 'generate-pdf',
+                getdatafromsalesforce: 'getdata-from-salesforce',
+                apikey: 'api-key'
+            };
+
+            function applyFilter(value, updateUrl) {
+                const selected = valid.has(value) ? value : 'all';
+                select.value = selected;
+                sections.forEach((section) => {
+                    const key = section.getAttribute('data-doc-function');
+                    section.classList.toggle('hidden', selected !== 'all' && key !== selected);
+                });
+                if (updateUrl) {
+                    if (selected === 'all') {
+                        history.replaceState(null, '', '/playground-documentation.html');
+                    } else {
+                        history.replaceState(null, '', `/playground-documentation.html?function=${selected}`);
+                    }
+                }
+            }
+
+            select.addEventListener('change', function () {
+                applyFilter(this.value, true);
+            });
+
+            const params = new URLSearchParams(window.location.search);
+            const fromQuery = params.get('function');
+            const fromHash = window.location.hash ? window.location.hash.slice(1) : '';
+            const mappedQuery = functionAlias[fromQuery] || fromQuery;
+            const initial = valid.has(fromHash) ? fromHash : (valid.has(mappedQuery) ? mappedQuery : 'all');
+            applyFilter(initial, false);
+
+            // Normalize URL without hash-jump and keep top content visible.
+            if (initial === 'all') {
+                history.replaceState(null, '', '/playground-documentation.html');
+            } else {
+                history.replaceState(null, '', `/playground-documentation.html?function=${initial}`);
+            }
+            window.scrollTo(0, 0);
+            const mainScroller = document.querySelector('main.flex-1');
+            if (mainScroller) {
+                mainScroller.scrollTop = 0;
+            }
+        })();
+    </script>
+</body>
+</html>
