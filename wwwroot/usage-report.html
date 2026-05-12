@@ -45,6 +45,12 @@
         .bar { transform-origin: bottom; animation: growBar .8s cubic-bezier(.2,.7,.2,1) forwards; }
         .status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
         .row-hover:hover { background-color: #f9fafb; }
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            animation: fadeIn .2s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
@@ -280,6 +286,45 @@
                     </div>
                 </div>
 
+                <!-- Inputs Modal -->
+                <div id="inputsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-[85vh] flex flex-col">
+                        <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-lg px-4 py-3 border-b border-purple-200">
+                            <div class="min-w-0">
+                                <h4 id="inputsModalTitle" class="text-base font-semibold text-gray-900 truncate">Request Inputs</h4>
+                                <p id="inputsModalMeta" class="text-[11px] text-gray-600 mt-0.5 truncate"></p>
+                            </div>
+                        </div>
+                        <div class="p-4 overflow-auto flex-1">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                                <div>
+                                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Time</p>
+                                    <p id="inputsModalTime" class="text-xs text-gray-800 mt-0.5">—</p>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</p>
+                                    <p id="inputsModalStatus" class="text-xs mt-0.5">—</p>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Latency</p>
+                                    <p id="inputsModalLatency" class="text-xs text-gray-800 mt-0.5">—</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Request body</p>
+                                <button id="copyInputsBtn" type="button" title="Copy JSON" aria-label="Copy JSON" class="text-[11px] text-gray-600 hover:text-gray-900 inline-flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span id="copyInputsLabel">Copy</span>
+                                </button>
+                            </div>
+                            <pre id="inputsModalBody" class="bg-gray-900 text-green-300 text-xs font-mono rounded-md p-3 overflow-auto max-h-72 whitespace-pre-wrap"></pre>
+                        </div>
+                        <div class="bg-gray-50 rounded-b-lg px-4 py-3 flex justify-end">
+                            <button id="inputsModalCloseFooter" type="button" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">Close</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Table -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden animate-fadeInUp delay-400">
                     <div class="overflow-x-auto">
@@ -349,6 +394,76 @@
         // KPI cards can compute meaningful period-over-period trends.
         // The current 7-day window is biased to have a bit more traffic than
         // the previous one so the "vs last period" line shows realistic deltas.
+        // Per-function sample request body factory. Each call returns a fresh
+        // randomised payload that mimics what the user would have sent to the
+        // endpoint, so the inputs popup feels like real history.
+        const SAMPLE_EMAILS = ['admin@ezofis.com', 'support@ezofis.com', 'demo@ezofis.com', 'qa@ezofis.com'];
+        const SAMPLE_PANELS = ['009 - Account Details', '010 - Dealer Credit Details', '012 - KYC Verification', '015 - Document Upload'];
+        const SAMPLE_SEARCH = ['ACC001', 'ACC042', 'ACC128', 'DLR_993', 'CUST-7821'];
+        function maskedKey() {
+            return 'WAP3' + Math.random().toString(36).slice(2, 10).toUpperCase() + '••••••••';
+        }
+        function maskedJwt() {
+            return 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOi••••••••';
+        }
+        function sampleInputs(fnName) {
+            switch (fnName) {
+                case 'Generate API Key':
+                    return {
+                        userName: pick(SAMPLE_EMAILS),
+                        password: '••••••••'
+                    };
+                case 'Form Details':
+                    return {
+                        apiKey: maskedKey(),
+                        ezofisToken: maskedJwt(),
+                        query: {
+                            sortBy: { criteria: '', order: 'DESC' },
+                            groupBy: '',
+                            filterBy: [
+                                { groupCondition: '', filters: [ { criteria: 'type', condition: 'IS_EQUALS_TO', value: 'MASTER' } ] }
+                            ],
+                            currentPage: 0,
+                            itemsPerPage: pick([10, 20, 50]),
+                            mode: 'BROWSE'
+                        }
+                    };
+                case 'SubForm Details':
+                    return {
+                        apiKey: maskedKey(),
+                        ezofisToken: maskedJwt(),
+                        formId: pick([1, 12, 24, 51, 139])
+                    };
+                case 'SubForm Fields':
+                    return {
+                        apiKey: maskedKey(),
+                        ezofisToken: maskedJwt(),
+                        formId: pick([1, 12, 24, 51, 139]),
+                        subFormTitles: [ pick(SAMPLE_PANELS) ]
+                    };
+                case 'Generate PDF':
+                    return {
+                        apiKey: maskedKey(),
+                        ezofisToken: maskedJwt(),
+                        formId: pick([139, 142, 158]),
+                        templateId: pick([132, 144, 161]),
+                        entryIdForFormEntry: 0,
+                        entryId: pick([0, 8821, 9013]),
+                        isMultiple: Math.random() < 0.3,
+                        panelName: pick(SAMPLE_PANELS),
+                        fields: { 'ed3dZq8mL_6QgGV26PAJj': String(Math.floor(100000 + Math.random()*900000)) }
+                    };
+                case 'Get Data From Salesforce':
+                    return {
+                        apiKey: maskedKey(),
+                        ezofisToken: maskedJwt(),
+                        payload: { searchText: pick(SAMPLE_SEARCH) }
+                    };
+                default:
+                    return {};
+            }
+        }
+
         function buildSample() {
             const out = [];
             const now = Date.now();
@@ -362,6 +477,7 @@
                 const t = new Date(now - offset - Math.floor(Math.random() * span));
                 const code = randStatus();
                 out.push({
+                    id: i,
                     time: t,
                     name: fn.name,
                     endpoint: fn.endpoint,
@@ -369,7 +485,8 @@
                     status: code,
                     latency: Math.floor(40 + Math.random()*420 + (code >= 500 ? 600 : 0)),
                     client: pick(CLIENTS),
-                    ip: randIp()
+                    ip: randIp(),
+                    inputs: sampleInputs(fn.name)
                 });
             }
             return out.sort((a,b) => b.time - a.time);
@@ -533,7 +650,9 @@
             body.innerHTML = slice.map(d => `
                 <tr class="row-hover">
                     <td class="px-4 py-2 text-gray-700 whitespace-nowrap">${fmtTime(d.time)}</td>
-                    <td class="px-4 py-2 text-gray-900 font-medium whitespace-nowrap">${d.name}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <button type="button" data-inputs-id="${d.id}" title="View request inputs" class="text-purple-700 hover:text-purple-900 font-medium hover:underline focus:outline-none">${d.name}</button>
+                    </td>
                     <td class="px-4 py-2 text-gray-600"><code class="text-xs">${d.endpoint}</code></td>
                     <td class="px-4 py-2"><span class="status-pill bg-blue-100 text-blue-700">${d.method}</span></td>
                     <td class="px-4 py-2"><span class="status-pill ${statusClass(d.status)}">${statusLabel(d.status)}</span></td>
@@ -593,6 +712,38 @@
             URL.revokeObjectURL(a.href);
             showToast('CSV exported');
         }
+
+        // ---------- Inputs modal ----------
+        const inputsModal = document.getElementById('inputsModal');
+        function openInputsModal(rec) {
+            if (!rec) return;
+            document.getElementById('inputsModalTitle').textContent = 'Request Inputs — ' + rec.name;
+            document.getElementById('inputsModalMeta').textContent = rec.method + '  ' + rec.endpoint;
+            document.getElementById('inputsModalTime').textContent = fmtTime(rec.time);
+            const statusEl = document.getElementById('inputsModalStatus');
+            statusEl.innerHTML = `<span class="status-pill ${statusClass(rec.status)}">${statusLabel(rec.status)}</span>`;
+            document.getElementById('inputsModalLatency').textContent = rec.latency + ' ms';
+            document.getElementById('inputsModalBody').textContent = JSON.stringify(rec.inputs || {}, null, 2);
+            document.getElementById('copyInputsLabel').textContent = 'Copy';
+            inputsModal.classList.remove('hidden');
+        }
+        function closeInputsModal() { inputsModal.classList.add('hidden'); }
+        document.getElementById('inputsModalCloseFooter').addEventListener('click', closeInputsModal);
+        inputsModal.addEventListener('click', (e) => { if (e.target === inputsModal) closeInputsModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !inputsModal.classList.contains('hidden')) closeInputsModal(); });
+        document.getElementById('copyInputsBtn').addEventListener('click', async () => {
+            const text = document.getElementById('inputsModalBody').textContent;
+            try { await navigator.clipboard.writeText(text); } catch (_) {}
+            document.getElementById('copyInputsLabel').textContent = 'Copied';
+            setTimeout(() => { document.getElementById('copyInputsLabel').textContent = 'Copy'; }, 1500);
+        });
+        document.getElementById('tableBody').addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-inputs-id]');
+            if (!btn) return;
+            const id = parseInt(btn.getAttribute('data-inputs-id'), 10);
+            const rec = ALL.find(r => r.id === id);
+            openInputsModal(rec);
+        });
 
         // ---------- Wire up ----------
         ['filterFunction','filterStatus','filterDate'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
