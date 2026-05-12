@@ -44,7 +44,8 @@
         <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
         <div class="flex space-x-4 flex-1 justify-end text-sm">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
-            <a href="/playground-documentation.html#form-details" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Documentation</a>
+            <a href="/playground-documentation.html#form-details" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
         </div>
     </nav>
 
@@ -57,7 +58,7 @@
             <div class="p-4 border-b bg-gradient-to-r from-purple-50 to-blue-50">
                 <h2 class="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">API Functions</h2>
             </div>
-            <div class="p-2">
+            <div class="flex-1 overflow-y-auto p-2">
                 <div class="mb-4">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
                     <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/apikey.html">
@@ -112,53 +113,50 @@
                         </div>
                     </button>
                     </div>
+
+                <div class="space-y-2 mt-3">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
+                    <a href="/usage-report.html" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover">
+                        <div class="flex items-center"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path></svg>API Usage</div>
+                    </a>
+                </div>
             </div>
         </aside>
 
         <main class="flex-1 overflow-y-auto p-4">
             <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-6 animate-fadeInUp py-2">
-                    <h2 class="text-3xl font-semibold text-gray-900">Form Details</h2>
-                    <p class="text-gray-600 mt-1">Call <code class="bg-gray-100 px-1 rounded">POST /api/FormDetails</code> (Ezofis <code class="bg-gray-100 px-1 rounded">form/all</code> + encryptAES)</p>
+                <div class="text-center mb-4 animate-fadeInUp py-1">
+                    <h2 class="text-xl font-semibold text-gray-900">Form Details</h2>
+                    <p class="text-xs text-gray-600 mt-1">Call <code class="bg-gray-100 px-1 rounded">POST /api/FormDetails</code> (Ezofis <code class="bg-gray-100 px-1 rounded">form/all</code> + encryptAES)</p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-xl shadow-lg p-6 space-y-4 card-hover animate-slideInLeft delay-100">
-                        <h3 class="text-lg font-semibold text-gray-900">Request</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 space-y-3 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-base font-semibold text-gray-900">Request</h3>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
-                            <input type="text" id="apiKey" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm input-focus" placeholder="X-API-Key value" autocomplete="off">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Ezofis JWT <span class="text-red-500">*</span></label>
-                            <input type="password" id="ezofisToken" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm font-mono input-focus" placeholder="Paste JWT (sent as Ezofis-Token header)" autocomplete="off">
-                            <p class="text-xs text-gray-500 mt-1">Sent as <code>Ezofis-Token</code> so it does not clash with other auth headers.</p>
-                        </div>
-                        <div class="flex flex-wrap gap-4">
-                            <label class="inline-flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="encReq" checked class="rounded border-gray-300">
-                                Encrypt request (encryptAES â†’ encryptedPayload)
-                            </label>
-                            <label class="inline-flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="encResp" checked class="rounded border-gray-300">
-                                Encrypt response
-                            </label>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
+                            <input type="text" id="apiKey" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm input-focus" placeholder="X-API-Key value" autocomplete="off">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Query JSON <span class="text-red-500">*</span></label>
-                            <textarea id="queryJson" rows="14" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-xs font-mono input-focus" spellcheck="false"></textarea>
-                            <p class="text-xs text-gray-500 mt-1">This object is sent as the <code>query</code> field in the API body.</p>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Ezofis JWT <span class="text-red-500">*</span></label>
+                            <input type="password" id="ezofisToken" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono input-focus" placeholder="Paste JWT (sent as Ezofis-Token header)" autocomplete="off">
+                            <p class="text-[11px] text-gray-500 mt-1">Sent as <code>Ezofis-Token</code> so it does not clash with other auth headers.</p>
                         </div>
-                        <button type="button" id="submitBtn" class="w-full py-2.5 rounded-lg text-white font-medium bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 flex items-center justify-center gap-2 button-hover">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Query JSON <span class="text-red-500">*</span></label>
+                            <textarea id="queryJson" rows="12" class="w-full border border-gray-300 rounded-md px-3 py-2 text-xs font-mono input-focus" spellcheck="false"></textarea>
+                            <p class="text-[11px] text-gray-500 mt-1">This object is sent as the <code>query</code> field in the API body.</p>
+                        </div>
+                        <button type="button" id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 flex items-center justify-center gap-2 button-hover">
                             <span id="btnLabel">Get form details</span>
                             <svg id="spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                         </button>
-                        <div id="errBox" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3"></div>
+                        <div id="errBox" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-md p-2.5"></div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover animate-slideInRight delay-200">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Response</h3>
-                        <div id="emptyHint" class="text-gray-500 text-sm text-center py-12">Submit to see <code>id</code>, <code>output</code>, and <code>encryptOutput</code>.</div>
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-base font-semibold text-gray-900 mb-2">Response</h3>
+                        <div id="emptyHint" class="text-gray-500 text-xs text-center py-10">Submit to see <code>id</code>, <code>output</code>, and <code>encryptOutput</code>.</div>
                         <div id="outBox" class="hidden space-y-3">
                             <div><span class="text-xs font-semibold text-gray-500">id</span><pre id="outId" class="mt-1 bg-gray-50 border rounded p-2"></pre></div>
                             <div id="wrapOutput" class="hidden"><span class="text-xs font-semibold text-gray-500">output (plaintext)</span><pre id="outPlain" class="mt-1 bg-gray-50 border rounded p-2 max-h-96 overflow-auto"></pre></div>
@@ -228,8 +226,8 @@
         document.getElementById('submitBtn').addEventListener('click', async () => {
             const apiKey = document.getElementById('apiKey').value.trim();
             const ezTok = document.getElementById('ezofisToken').value.trim();
-            const encReq = document.getElementById('encReq').checked;
-            const encResp = document.getElementById('encResp').checked;
+            const encReq = true;
+            const encResp = true;
             let queryObj;
             try {
                 queryObj = JSON.parse(document.getElementById('queryJson').value);

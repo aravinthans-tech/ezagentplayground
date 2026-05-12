@@ -210,13 +210,16 @@
                 Code Examples
             </a>
             <a href="/playground-documentation.html#api-key" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                Documentation
+                Developer Docs
+            </a>
+            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                API Usage
             </a>
         </div>
     </nav>
 
     <!-- Toast Notification -->
-    <div id="toast" class="hidden fixed top-16 right-4 z-50 toast">
+    <div id="toast" class="hidden fixed top-16 right-4 z-[60] toast">
         <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
             <p id="toastMessage" class="font-medium text-sm"></p>
         </div>
@@ -316,6 +319,19 @@
                         </div>
                     </button>
                     </div>
+
+                <!-- REPORTS Section -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
+                    <a href="/usage-report.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>
+                            </svg>
+                            API Usage
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -323,54 +339,72 @@
         <div class="flex-1 overflow-y-auto p-4 pb-8">
             <div class="max-w-4xl mx-auto">
                 <!-- Page Header -->
-                <div class="text-center mb-8 animate-fadeInUp">
-                    <h2 class="text-4xl font-semibold text-gray-900 mb-2">Generate API Key</h2>
-                    <p class="text-lg text-gray-600">Generate a secure API key for accessing the API</p>
+                <div class="text-center mb-4 animate-fadeInUp">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-1">Generate API Key</h2>
+                    <p class="text-xs text-gray-600">Generate a secure API key for accessing the API</p>
                 </div>
 
                 <!-- Grid Layout for Cards -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <!-- API Key Generation Card -->
-                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInLeft delay-100">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">User Credentials</h3>
-                    <form id="apiKeyForm" class="space-y-6">
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInLeft delay-100">
+                    <h3 class="text-base font-semibold text-gray-900 mb-3">User Credentials</h3>
+                    <form id="apiKeyForm" class="space-y-4">
                         <div>
-                            <label for="userEmail" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <label for="userEmail" class="block text-xs font-semibold text-gray-700 mb-1">
                                 Email <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="email" 
                                 id="userEmail" 
                                 name="userEmail"
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
                                 placeholder="admin@ezofis.com"
                                 required
                             />
-                            <p id="emailError" class="hidden text-xs text-red-600 mt-1"></p>
-                            <p class="text-xs text-gray-500 mt-1">Enter a valid email address (e.g., admin@ezofis.com)</p>
+                            <p id="emailError" class="hidden text-[11px] text-red-600 mt-1"></p>
+                            <p class="text-[11px] text-gray-500 mt-1">Enter a valid email address (e.g., admin@ezofis.com)</p>
                         </div>
 
                         <div>
-                            <label for="userPassword" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <label for="userPassword" class="block text-xs font-semibold text-gray-700 mb-1">
                                 Password <span class="text-red-500">*</span>
                             </label>
-                            <input 
-                                type="password" 
-                                id="userPassword" 
-                                name="userPassword"
-                                class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
-                                placeholder="Enter password"
-                                required
-                            />
-                            <p id="passwordError" class="hidden text-xs text-red-600 mt-1"></p>
-                            <p class="text-xs text-gray-500 mt-1">Must be at least 8 characters with 1 capital letter and 1 special character</p>
+                            <div class="relative">
+                                <input
+                                    type="password"
+                                    id="userPassword"
+                                    name="userPassword"
+                                    class="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    placeholder="Enter password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    id="togglePasswordBtn"
+                                    title="Show password"
+                                    aria-label="Show password"
+                                    aria-pressed="false"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                                >
+                                    <svg id="eyeIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <svg id="eyeOffIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908A3 3 0 1115 12m-7.5-2.121a9.97 9.97 0 014.121-4.121m4.243 4.243a9.97 9.97 0 014.121 4.121M3 3l18 18"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p id="passwordError" class="hidden text-[11px] text-red-600 mt-1"></p>
+                            <p class="text-[11px] text-gray-500 mt-1">Must be at least 8 characters with 1 capital letter and 1 special character</p>
                         </div>
 
-                        <div class="flex space-x-3">
+                        <div class="flex space-x-2">
                             <button 
                                 type="button"
                                 id="generateApiKeyBtn"
-                                class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                                class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover"
                             >
                                 <span id="btnText">Generate API Key</span>
                                 <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -381,7 +415,7 @@
                             <button 
                                 type="button"
                                 id="viewApiKeyBtn"
-                                class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg button-hover"
+                                class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover"
                             >
                                 <span id="viewBtnText">View API Key</span>
                                 <svg id="viewLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -407,45 +441,99 @@
                     </div>
 
                     <!-- API Key Modal Popup -->
+                    <!-- Expiry Selection Modal (only opens before Generate) -->
+                    <div id="expiryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                        <div class="modal-content bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4">
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-lg px-4 py-3 border-b border-purple-200">
+                                <h4 class="text-base font-semibold text-gray-900">Set API Key Expiry</h4>
+                                <p class="text-[11px] text-gray-600 mt-0.5">Choose how long this API key should remain valid.</p>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <div>
+                                    <label for="apiKeyExpiry" class="block text-xs font-semibold text-gray-700 mb-1">Expires after</label>
+                                    <select
+                                        id="apiKeyExpiry"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    >
+                                        <option value="1">1 day</option>
+                                        <option value="2" selected>2 days</option>
+                                        <option value="7">7 days</option>
+                                        <option value="30">30 days</option>
+                                        <option value="90">90 days</option>
+                                        <option value="0">Never expires</option>
+                                        <option value="custom">Custom...</option>
+                                    </select>
+                                </div>
+                                <div id="apiKeyExpiryCustomWrap" class="hidden">
+                                    <label for="apiKeyExpiryCustom" class="block text-xs font-semibold text-gray-700 mb-1">Custom (days)</label>
+                                    <input
+                                        type="number"
+                                        id="apiKeyExpiryCustom"
+                                        min="1"
+                                        max="3650"
+                                        placeholder="e.g. 14"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    />
+                                    <p id="apiKeyExpiryCustomError" class="hidden text-[11px] text-red-600 mt-1">Enter a number of days between 1 and 3650.</p>
+                                </div>
+                                <p class="text-[11px] text-gray-500">After this duration the key will be marked as expired in the playground.</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-b-lg px-4 py-3 flex justify-end items-center space-x-2">
+                                <button
+                                    id="expiryCancelBtn"
+                                    type="button"
+                                    class="text-xs px-3 py-1.5 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 button-hover"
+                                >Cancel</button>
+                                <button
+                                    id="expiryConfirmBtn"
+                                    type="button"
+                                    class="text-xs px-3 py-1.5 rounded-md text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 button-hover"
+                                >Generate</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="apiKeyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-                        <div class="modal-content bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 relative">
-                            <!-- Close Button -->
-                            <button 
-                                id="closeModalBtn"
-                                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                            
+                        <div class="modal-content bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 relative">
                             <!-- Modal Content -->
-                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-xl p-6 border-b-2 border-purple-200">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h4 class="text-xl font-semibold text-gray-900">Your API Key Details</h4>
-                                    <div id="apiKeyStatus" class="px-3 py-1 rounded-full text-xs font-semibold"></div>
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-lg px-4 py-3 border-b border-purple-200">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h4 class="text-base font-semibold text-gray-900">Your API Key Details</h4>
+                                    <div id="apiKeyStatus" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap"></div>
                                 </div>
                             </div>
                             
-                            <div class="p-6 space-y-4">
+                            <div class="p-4 space-y-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1">Tenant ID</label>
                                     <input 
                                         type="text" 
                                         id="tenantId" 
                                         readonly
-                                        class="w-full px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg font-mono"
+                                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md font-mono"
                                     />
                                 </div>
                                 
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1">Token</label>
-                                    <input 
-                                        type="text" 
-                                        id="token" 
-                                        readonly
-                                        class="w-full px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg font-mono"
-                                    />
+                                    <div class="flex items-center space-x-2">
+                                        <input 
+                                            type="text" 
+                                            id="token" 
+                                            readonly
+                                            class="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md font-mono"
+                                        />
+                                        <button 
+                                            id="copyTokenBtn"
+                                            title="Copy token"
+                                            aria-label="Copy token"
+                                            class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-xs p-1.5 rounded-md button-hover flex items-center justify-center"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <div>
@@ -455,36 +543,49 @@
                                             type="text" 
                                             id="generatedApiKey" 
                                             readonly
-                                            class="flex-1 px-3 py-2 text-sm bg-white border-2 border-gray-300 rounded-lg font-mono"
+                                            class="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md font-mono"
                                         />
                                         <button 
                                             id="copyApiKeyBtn"
-                                            class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-4 rounded-lg button-hover"
+                                            title="Copy API key"
+                                            aria-label="Copy API key"
+                                            class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-xs p-1.5 rounded-md button-hover flex items-center justify-center"
                                         >
-                                            Copy
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
                                         </button>
                                     </div>
                                 </div>
-                                
-                                <p class="text-xs text-gray-500 mt-4 text-center">
-                                    <span class="font-semibold text-red-600">Important:</span> Save this API key securely. You won't be able to see it again.
-                                </p>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Expires</label>
+                                    <input
+                                        type="text"
+                                        id="apiKeyExpiresAt"
+                                        readonly
+                                        class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md"
+                                    />
+                                    <p id="apiKeyExpiryHint" class="text-[11px] text-gray-500 mt-1"></p>
+                                </div>
+
+                                <div id="expiredBanner" class="hidden bg-red-50 border-l-4 border-red-500 p-2.5 rounded">
+                                    <p class="text-xs font-semibold text-red-700">This API key has expired</p>
+                                    <p class="text-[11px] text-red-600 mt-0.5">Generate a new key to continue using the API.</p>
+                                </div>
                             </div>
                             
                             <!-- Modal Footer -->
-                            <div class="bg-gray-50 rounded-b-xl px-6 py-4 flex justify-between items-center">
+                            <div class="bg-gray-50 rounded-b-lg px-4 py-3 flex justify-end items-center">
                                 <button 
                                     id="downloadApiKeyBtn"
-                                    class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-sm py-2 px-6 rounded-lg button-hover flex items-center space-x-2"
+                                    class="hidden bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs py-1.5 px-4 rounded-md button-hover"
                                 >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                    </svg>
-                                    <span>Download</span>
+                                    Download
                                 </button>
                                 <button 
                                     id="closeModalBtnFooter"
-                                    class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-sm py-2 px-6 rounded-lg button-hover"
+                                    class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-xs py-1.5 px-4 rounded-md button-hover"
                                 >
                                     Close
                                 </button>
@@ -493,9 +594,9 @@
                     </div>
 
                     <!-- Information Card -->
-                    <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInRight delay-200">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">API Key Information</h3>
-                    <div class="space-y-4 text-sm">
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                    <h3 class="text-base font-semibold text-gray-900 mb-3">API Key Information</h3>
+                    <div class="space-y-3 text-xs">
                         <div class="border-l-4 border-purple-500 pl-3">
                             <div class="font-semibold text-gray-700 mb-1 text-xs">Generate API Key</div>
                             <code class="text-xs font-mono text-gray-800">POST /api/Client/apiKey</code>
@@ -512,7 +613,7 @@
                         </div>
                         <div class="border-l-4 border-purple-500 pl-3">
                             <div class="font-semibold text-gray-700 mb-1 text-xs">Response Format</div>
-                            <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{<br>  "tenantId": "string",<br>  "token": "string",<br>  "apiKey": "string"<br>}</pre>
+                            <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{<br>  "tenantId": "string",<br>  "token": "string",<br>  "apiKey": "string",<br>  "expiresAt": "2026-05-14T11:11:00Z"<br>}</pre>
                         </div>
                         <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
                             <div class="flex">
@@ -552,12 +653,177 @@
         const tenantIdInput = document.getElementById('tenantId');
         const tokenInput = document.getElementById('token');
         const copyApiKeyBtn = document.getElementById('copyApiKeyBtn');
+        const copyTokenBtn = document.getElementById('copyTokenBtn');
         const downloadApiKeyBtn = document.getElementById('downloadApiKeyBtn');
         const userEmail = document.getElementById('userEmail');
         const userPassword = document.getElementById('userPassword');
         const emailError = document.getElementById('emailError');
         const passwordError = document.getElementById('passwordError');
         const apiKeyStatus = document.getElementById('apiKeyStatus');
+        const apiKeyExpiry = document.getElementById('apiKeyExpiry');
+        const apiKeyExpiryCustom = document.getElementById('apiKeyExpiryCustom');
+        const apiKeyExpiryCustomWrap = document.getElementById('apiKeyExpiryCustomWrap');
+        const apiKeyExpiryCustomError = document.getElementById('apiKeyExpiryCustomError');
+        const apiKeyExpiresAt = document.getElementById('apiKeyExpiresAt');
+        const apiKeyExpiryHint = document.getElementById('apiKeyExpiryHint');
+        const expiredBanner = document.getElementById('expiredBanner');
+        const expiryModal = document.getElementById('expiryModal');
+        const expiryCancelBtn = document.getElementById('expiryCancelBtn');
+        const expiryConfirmBtn = document.getElementById('expiryConfirmBtn');
+
+        // ---------- Expiry helpers (dummy / localStorage only) ----------
+        const EXPIRY_STORAGE_KEY = 'apiKeyExpiryRecords';
+        function loadExpiryRecords() {
+            try { return JSON.parse(localStorage.getItem(EXPIRY_STORAGE_KEY) || '{}'); }
+            catch { return {}; }
+        }
+        function saveExpiryRecord(userName, days) {
+            const records = loadExpiryRecords();
+            const now = Date.now();
+            records[userName.toLowerCase()] = {
+                days: Number(days) || 0,
+                createdAt: now,
+                expiresAt: (Number(days) > 0) ? now + Number(days) * 24 * 3600 * 1000 : null
+            };
+            try { localStorage.setItem(EXPIRY_STORAGE_KEY, JSON.stringify(records)); } catch {}
+            return records[userName.toLowerCase()];
+        }
+        function getExpiryRecord(userName) {
+            if (!userName) return null;
+            const records = loadExpiryRecords();
+            return records[userName.toLowerCase()] || null;
+        }
+        function fmtDateTime(ts) {
+            const d = new Date(ts);
+            const pad = n => String(n).padStart(2, '0');
+            return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+                + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+        function selectedExpiryDays() {
+            const v = apiKeyExpiry.value;
+            if (v === 'custom') {
+                const n = parseInt(apiKeyExpiryCustom.value, 10);
+                return (Number.isFinite(n) && n > 0) ? n : 0;
+            }
+            return parseInt(v, 10) || 0;
+        }
+        function applyExpiryToModal(record, opts) {
+            opts = opts || {};
+            const expiresAt = record && record.expiresAt;
+            const isExpired = !!(expiresAt && expiresAt < Date.now());
+
+            if (!record) {
+                apiKeyExpiresAt.value = 'Not tracked';
+                apiKeyExpiryHint.textContent = '';
+                expiredBanner.classList.add('hidden');
+                return;
+            }
+            if (!expiresAt) {
+                apiKeyExpiresAt.value = 'Never expires';
+                apiKeyExpiryHint.textContent = 'No expiry was set when this key was generated.';
+                expiredBanner.classList.add('hidden');
+                return;
+            }
+            apiKeyExpiresAt.value = fmtDateTime(expiresAt);
+            const msLeft = expiresAt - Date.now();
+            if (msLeft <= 0) {
+                expiredBanner.classList.remove('hidden');
+                apiKeyExpiryHint.textContent = 'Expired ' + humanizeDuration(-msLeft) + ' ago.';
+                apiKeyStatus.textContent = 'EXPIRED';
+                apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700 whitespace-nowrap';
+            } else {
+                expiredBanner.classList.add('hidden');
+                apiKeyExpiryHint.textContent = 'Expires in ' + humanizeDuration(msLeft) + '.';
+            }
+        }
+        function humanizeDuration(ms) {
+            const sec = Math.floor(ms / 1000);
+            const days = Math.floor(sec / 86400);
+            const hrs  = Math.floor((sec % 86400) / 3600);
+            const mins = Math.floor((sec % 3600) / 60);
+            if (days > 0) return days + 'd ' + hrs + 'h';
+            if (hrs  > 0) return hrs + 'h ' + mins + 'm';
+            if (mins > 0) return mins + 'm';
+            return sec + 's';
+        }
+
+        apiKeyExpiry.addEventListener('change', () => {
+            if (apiKeyExpiry.value === 'custom') {
+                apiKeyExpiryCustomWrap.classList.remove('hidden');
+                apiKeyExpiryCustom.focus();
+            } else {
+                apiKeyExpiryCustomWrap.classList.add('hidden');
+                apiKeyExpiryCustomError.classList.add('hidden');
+            }
+        });
+
+        // ---------- Expiry modal control ----------
+        let _proceedWithGeneration = null; // continuation set by the Generate click handler
+
+        function openExpiryModal(onConfirm) {
+            _proceedWithGeneration = onConfirm;
+            apiKeyExpiryCustomError.classList.add('hidden');
+            // reset custom field visibility based on the current select value
+            if (apiKeyExpiry.value === 'custom') {
+                apiKeyExpiryCustomWrap.classList.remove('hidden');
+            } else {
+                apiKeyExpiryCustomWrap.classList.add('hidden');
+            }
+            expiryModal.classList.remove('hidden');
+        }
+        function closeExpiryModal() {
+            expiryModal.classList.add('hidden');
+            _proceedWithGeneration = null;
+        }
+        expiryCancelBtn.addEventListener('click', closeExpiryModal);
+        expiryModal.addEventListener('click', (e) => {
+            if (e.target === expiryModal) closeExpiryModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !expiryModal.classList.contains('hidden')) {
+                closeExpiryModal();
+            }
+        });
+        expiryConfirmBtn.addEventListener('click', async () => {
+            if (apiKeyExpiry.value === 'custom') {
+                const n = parseInt(apiKeyExpiryCustom.value, 10);
+                if (!Number.isFinite(n) || n < 1 || n > 3650) {
+                    apiKeyExpiryCustomError.classList.remove('hidden');
+                    apiKeyExpiryCustom.focus();
+                    return;
+                }
+            }
+            apiKeyExpiryCustomError.classList.add('hidden');
+
+            const cont = _proceedWithGeneration;
+            if (typeof cont !== 'function') {
+                expiryModal.classList.add('hidden');
+                _proceedWithGeneration = null;
+                return;
+            }
+
+            // Show loading state inside the popup — do NOT close it yet.
+            // The popup only closes once the API call resolves; then the
+            // API-key result popup is opened by performApiKeyGeneration().
+            const originalBtnHtml = expiryConfirmBtn.innerHTML;
+            expiryConfirmBtn.disabled = true;
+            expiryCancelBtn.disabled = true;
+            apiKeyExpiry.disabled = true;
+            apiKeyExpiryCustom.disabled = true;
+            expiryConfirmBtn.innerHTML = '<svg class="animate-spin h-4 w-4 inline-block mr-2 -mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...';
+
+            try {
+                await cont();
+            } finally {
+                expiryConfirmBtn.disabled = false;
+                expiryCancelBtn.disabled = false;
+                apiKeyExpiry.disabled = false;
+                apiKeyExpiryCustom.disabled = false;
+                expiryConfirmBtn.innerHTML = originalBtnHtml;
+                expiryModal.classList.add('hidden');
+                _proceedWithGeneration = null;
+            }
+        });
 
         // Validation functions
         function validateEmail(email) {
@@ -613,13 +879,28 @@
             }
         });
 
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const eyeIcon = document.getElementById('eyeIcon');
+        const eyeOffIcon = document.getElementById('eyeOffIcon');
+        if (togglePasswordBtn) {
+            togglePasswordBtn.addEventListener('click', () => {
+                const willShow = userPassword.type === 'password';
+                userPassword.type = willShow ? 'text' : 'password';
+                eyeIcon.classList.toggle('hidden', !willShow);
+                eyeOffIcon.classList.toggle('hidden', willShow);
+                togglePasswordBtn.setAttribute('aria-pressed', String(willShow));
+                togglePasswordBtn.setAttribute('aria-label', willShow ? 'Hide password' : 'Show password');
+                togglePasswordBtn.setAttribute('title', willShow ? 'Hide password' : 'Show password');
+            });
+        }
+
         // Close Modal
         function closeModal() {
             apiKeyModal.classList.add('hidden');
         }
         
-        closeModalBtn.addEventListener('click', closeModal);
-        closeModalBtnFooter.addEventListener('click', closeModal);
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+        if (closeModalBtnFooter) closeModalBtnFooter.addEventListener('click', closeModal);
         
         // Close modal when clicking outside
         apiKeyModal.addEventListener('click', (e) => {
@@ -643,17 +924,19 @@
             window.location.href = '/playground-documentation.html#api-key';
         });
 
-        // Generate API Key
-        generateApiKeyBtn.addEventListener('click', async () => {
+        // Generate API Key — first validates the form, then asks the user
+        // for an expiry via the expiry modal, then actually performs the
+        // generation only after they confirm.
+        generateApiKeyBtn.addEventListener('click', () => {
             // Clear previous errors
             errorSection.classList.add('hidden');
             apiKeyModal.classList.add('hidden');
             postOutputActions.classList.add('hidden');
-            
+
             // Validate inputs
             const emailErrorMsg = validateEmail(userEmail.value);
             const passwordErrorMsg = validatePassword(userPassword.value);
-            
+
             if (emailErrorMsg) {
                 emailError.textContent = emailErrorMsg;
                 emailError.classList.remove('hidden');
@@ -662,7 +945,7 @@
                 emailError.classList.add('hidden');
                 userEmail.classList.remove('border-red-500');
             }
-            
+
             if (passwordErrorMsg) {
                 passwordError.textContent = passwordErrorMsg;
                 passwordError.classList.remove('hidden');
@@ -671,11 +954,18 @@
                 passwordError.classList.add('hidden');
                 userPassword.classList.remove('border-red-500');
             }
-            
+
             if (emailErrorMsg || passwordErrorMsg) {
                 return;
             }
 
+            // Open the expiry chooser; only proceed when user confirms.
+            // The popup stays open during the fetch (showing a spinner), and is
+            // closed by the confirm handler once performApiKeyGeneration resolves.
+            openExpiryModal(() => performApiKeyGeneration());
+        });
+
+        async function performApiKeyGeneration() {
             generateApiKeyBtn.disabled = true;
             btnText.textContent = 'Generating...';
             loadingSpinner.classList.remove('hidden');
@@ -707,14 +997,19 @@
                     // Set status based on whether key existed before
                     if (keyExists) {
                         apiKeyStatus.textContent = 'Existing API Key Retrieved';
-                        apiKeyStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800';
+                        apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 whitespace-nowrap';
                         showToast('Existing API key retrieved successfully!', 'success');
                     } else {
                         apiKeyStatus.textContent = 'Newly Generated API Key';
-                        apiKeyStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800';
+                        apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-800 whitespace-nowrap';
                         showToast('New API key generated successfully!', 'success');
                     }
-                    
+
+                    // Save chosen expiry against this username (dummy, localStorage only)
+                    const chosenDays = selectedExpiryDays();
+                    const record = saveExpiryRecord(userName, chosenDays);
+                    applyExpiryToModal(record);
+
                     apiKeyModal.classList.remove('hidden');
                     errorSection.classList.add('hidden');
                     postOutputActions.classList.remove('hidden');
@@ -737,7 +1032,7 @@
                 btnText.textContent = 'Generate API Key';
                 loadingSpinner.classList.add('hidden');
             }
-        });
+        }
 
         // View API Key
         viewApiKeyBtn.addEventListener('click', async () => {
@@ -796,8 +1091,14 @@
                     
                     // View API Key always shows existing key
                     apiKeyStatus.textContent = 'Existing API Key Retrieved';
-                    apiKeyStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800';
-                    
+                    apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 whitespace-nowrap';
+
+                    // Restore the previously-saved expiry (if any) for this user.
+                    // If the stored expiry is in the past, applyExpiryToModal flips the
+                    // status pill to EXPIRED and shows the warning banner.
+                    const record = getExpiryRecord(userName);
+                    applyExpiryToModal(record);
+
                     apiKeyModal.classList.remove('hidden');
                     errorSection.classList.add('hidden');
                     postOutputActions.classList.remove('hidden');
@@ -823,12 +1124,39 @@
             }
         });
 
+        // Visual feedback: flip copy icon to a checkmark briefly
+        function flashCopiedIcon(btn) {
+            if (!btn) return;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>';
+            btn.classList.add('ring-2', 'ring-green-400');
+            setTimeout(() => {
+                btn.innerHTML = original;
+                btn.classList.remove('ring-2', 'ring-green-400');
+            }, 1200);
+        }
+
         // Copy API Key
         copyApiKeyBtn.addEventListener('click', () => {
             generatedApiKey.select();
             document.execCommand('copy');
+            flashCopiedIcon(copyApiKeyBtn);
             showToast('API key copied to clipboard!', 'success');
         });
+
+        // Copy Token
+        if (copyTokenBtn) {
+            copyTokenBtn.addEventListener('click', () => {
+                if (!tokenInput.value) {
+                    showToast('No token available to copy', 'error');
+                    return;
+                }
+                tokenInput.select();
+                document.execCommand('copy');
+                flashCopiedIcon(copyTokenBtn);
+                showToast('Token copied to clipboard!', 'success');
+            });
+        }
 
         // Download API Key Details
         downloadApiKeyBtn.addEventListener('click', () => {

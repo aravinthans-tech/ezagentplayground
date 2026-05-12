@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Usage - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes gradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes growBar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        .animate-fadeInUp { animation: fadeInUp .6s ease-out forwards; }
+        .animate-fadeIn { animation: fadeIn .5s ease-out forwards; }
+        .animate-slideInLeft { animation: slideInLeft .6s ease-out forwards; }
+        .animate-slideInRight { animation: slideInRight .6s ease-out forwards; }
+        .gradient-animate { background-size: 200% 200%; animation: gradient 3s ease infinite; }
+        .delay-100 { animation-delay: .1s; opacity: 0; }
+        .delay-200 { animation-delay: .2s; opacity: 0; }
+        .delay-300 { animation-delay: .3s; opacity: 0; }
+        .delay-400 { animation-delay: .4s; opacity: 0; }
+        .card-hover { transition: all .3s cubic-bezier(.4,0,.2,1); }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
+        .button-hover { transition: all .3s cubic-bezier(.4,0,.2,1); }
+        .button-hover:hover { transform: scale(1.02); }
+        .button-hover:active { transform: scale(.98); }
+        .input-focus { transition: all .3s ease; }
+        .input-focus:focus { box-shadow: 0 0 0 3px rgba(6,182,212,.15); }
+        .sidebar-btn { transition: all .3s cubic-bezier(.4,0,.2,1); }
+        .sidebar-btn:hover { transform: translateX(4px); }
+        html, body { overflow-x: hidden; height: 100%; margin: 0; padding: 0; }
+        body { display: flex; flex-direction: column; }
+        #sidebar {
+            display: flex !important; visibility: visible !important; opacity: 1 !important;
+            width: 256px !important; min-width: 256px !important; max-width: 256px !important;
+            background-color: white !important; position: relative !important; z-index: 10 !important;
+        }
+        code, pre { font-family: 'SF Mono','Monaco','Inconsolata','Fira Code',monospace; }
+        .bar { transform-origin: bottom; animation: growBar .8s cubic-bezier(.2,.7,.2,1) forwards; }
+        .status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+        .row-hover:hover { background-color: #f9fafb; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
+        <div class="flex items-center space-x-3 flex-shrink-0">
+            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
+                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
+                <span class="text-lg font-bold text-cyan-500">o</span>
+                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
+            </div>
+        </div>
+        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="/playground-documentation.html#api-key" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">API Usage</a>
+        </div>
+    </nav>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-16 right-4 z-[60]">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500">
+            <p id="toastMessage" class="font-medium text-sm text-cyan-800"></p>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]">
+            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2">
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
+                    <a href="/apikey.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Generate API Key
+                        </span>
+                    </a>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
+                    <a href="/formdetails.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path></svg>
+                            Form Details
+                        </span>
+                    </a>
+                    <a href="/subformdetails.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path></svg>
+                            SubForm Details
+                        </span>
+                    </a>
+                    <a href="/subformfields.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path></svg>
+                            SubForm Fields
+                        </span>
+                    </a>
+                    <a href="/subformsubmitarchive.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path></svg>
+                            Generate PDF
+                        </span>
+                    </a>
+                    <a href="/getdatafromsalesforce.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path></svg>
+                            Get Data From Salesforce
+                        </span>
+                    </a>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
+                    <a href="/usage-report.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold shadow-md">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>
+                            </svg>
+                            API Usage
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-4 pb-8">
+            <div class="max-w-7xl mx-auto">
+
+                <!-- Header -->
+                <div class="mb-4 animate-fadeInUp">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">API Usage</h2>
+                            <p class="text-xs text-gray-600 mt-1">Track every call made to your API — performance, success rate and recent history.</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="refreshBtn" class="text-xs px-2.5 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 button-hover flex items-center">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0014-7M19 5a9 9 0 00-14 7"></path></svg>
+                                Refresh
+                            </button>
+                            <button id="exportBtn" class="text-xs px-2.5 py-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white button-hover flex items-center">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInLeft delay-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total Calls</p>
+                                <p id="kpiTotal" class="mt-1 text-xl font-semibold text-gray-900">0</p>
+                                <p id="kpiTotalDelta" class="text-[11px] mt-0.5 font-medium text-gray-500">—</p>
+                            </div>
+                            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInLeft delay-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Success Rate</p>
+                                <p id="kpiSuccess" class="mt-1 text-xl font-semibold text-green-600">0%</p>
+                                <p class="text-[11px] text-gray-500 mt-0.5 font-medium"><span id="kpiSuccessCount">0</span> successful</p>
+                            </div>
+                            <div class="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Avg Response</p>
+                                <p id="kpiLatency" class="mt-1 text-xl font-semibold text-cyan-600">0 ms</p>
+                                <p class="text-[11px] text-gray-500 mt-0.5 font-medium">p95 <span id="kpiP95">0 ms</span></p>
+                            </div>
+                            <div class="w-9 h-9 rounded-lg bg-cyan-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Failed Calls</p>
+                                <p id="kpiFailed" class="mt-1 text-xl font-semibold text-red-600">0</p>
+                                <p class="text-[11px] text-red-500 mt-0.5 font-medium"><span id="kpiFailedRate">0%</span> error rate</p>
+                            </div>
+                            <div class="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart + Top functions -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+                    <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-4 card-hover animate-fadeInUp delay-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-gray-900">Calls — Last 7 days</h3>
+                            <div class="flex items-center space-x-3 text-[11px]">
+                                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Total</span>
+                                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-red-400 mr-1"></span>Failed</span>
+                            </div>
+                        </div>
+                        <div id="chart" class="flex items-end h-40 space-x-3 pl-1 pr-1"></div>
+                        <div id="chartLabels" class="flex justify-between text-[11px] text-gray-500 mt-2 pl-1 pr-1"></div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-fadeInUp delay-300">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-3">Top Functions</h3>
+                        <div id="topFunctions" class="space-y-2.5"></div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-lg shadow-md p-3 mb-4 animate-fadeInUp delay-300">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Function</label>
+                            <select id="filterFunction" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus focus:border-cyan-500">
+                                <option value="">All Functions</option>
+                                <option>Generate API Key</option>
+                                <option>Form Details</option>
+                                <option>SubForm Details</option>
+                                <option>SubForm Fields</option>
+                                <option>Generate PDF</option>
+                                <option>Get Data From Salesforce</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Status</label>
+                            <select id="filterStatus" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus focus:border-cyan-500">
+                                <option value="">All</option>
+                                <option value="success">Success (2xx)</option>
+                                <option value="client">Client Error (4xx)</option>
+                                <option value="server">Server Error (5xx)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Date Range</label>
+                            <select id="filterDate" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus focus:border-cyan-500">
+                                <option value="7">Last 7 days</option>
+                                <option value="1">Today</option>
+                                <option value="30">Last 30 days</option>
+                                <option value="0">All time</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Search</label>
+                            <input id="filterSearch" type="text" placeholder="endpoint, IP..." class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus focus:border-cyan-500" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden animate-fadeInUp delay-400">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Function</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Endpoint</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Method</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Latency</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+                        <p id="pageInfo" class="text-xs text-gray-500">Showing 0 of 0</p>
+                        <div class="flex items-center space-x-2">
+                            <button id="prevBtn" class="text-xs px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50">Prev</button>
+                            <button id="nextBtn" class="text-xs px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Sample data (no backend) ----------
+        const FUNCTIONS = [
+            { name: 'Generate API Key',         endpoint: '/api/ApiKey/generate',            method: 'POST' },
+            { name: 'Form Details',             endpoint: '/api/FormDetails/form/all',       method: 'POST' },
+            { name: 'SubForm Details',          endpoint: '/api/SubFormDetails/list',        method: 'POST' },
+            { name: 'SubForm Fields',           endpoint: '/api/SubFormFields/list',         method: 'POST' },
+            { name: 'Generate PDF',             endpoint: '/api/SubFormSubmitArchive/pdf',   method: 'POST' },
+            { name: 'Get Data From Salesforce', endpoint: '/api/GetDataFromSalesforce/get',  method: 'POST' },
+        ];
+        const CLIENTS = ['Postman/10.21', 'curl/8.4.0', 'axios/1.6.7', 'PythonRequests/2.31', 'Browser-JS/fetch', 'NodeFetch/3.3'];
+        function randIp() { return [10, 192, 172, 8, 13, 64][Math.floor(Math.random()*6)] + '.' + (Math.floor(Math.random()*255)) + '.' + (Math.floor(Math.random()*255)) + '.' + (Math.floor(Math.random()*255)); }
+        function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+        function randStatus() {
+            const r = Math.random();
+            if (r < 0.86) return pick([200, 200, 200, 201, 200]);
+            if (r < 0.95) return pick([400, 401, 403, 404, 422]);
+            return pick([500, 502, 503]);
+        }
+        function statusClass(code) {
+            if (code >= 200 && code < 300) return 'bg-green-100 text-green-700';
+            if (code >= 400 && code < 500) return 'bg-amber-100 text-amber-700';
+            return 'bg-red-100 text-red-700';
+        }
+        function statusLabel(code) {
+            if (code >= 200 && code < 300) return code + ' OK';
+            if (code >= 400 && code < 500) return code + ' Client';
+            return code + ' Server';
+        }
+        function fmtTime(d) {
+            const pad = n => String(n).padStart(2,'0');
+            return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+
+        // Generate ~260 sample records spread over the last 30 days so the
+        // KPI cards can compute meaningful period-over-period trends.
+        // The current 7-day window is biased to have a bit more traffic than
+        // the previous one so the "vs last period" line shows realistic deltas.
+        function buildSample() {
+            const out = [];
+            const now = Date.now();
+            const thirtyDays = 30 * 24 * 3600 * 1000;
+            for (let i = 0; i < 260; i++) {
+                const fn = pick(FUNCTIONS);
+                // 60% of records fall inside the last 7 days, 40% in the prior 23
+                const inRecent = Math.random() < 0.6;
+                const span = inRecent ? 7 * 24 * 3600 * 1000 : thirtyDays;
+                const offset = inRecent ? 0 : 7 * 24 * 3600 * 1000;
+                const t = new Date(now - offset - Math.floor(Math.random() * span));
+                const code = randStatus();
+                out.push({
+                    time: t,
+                    name: fn.name,
+                    endpoint: fn.endpoint,
+                    method: fn.method,
+                    status: code,
+                    latency: Math.floor(40 + Math.random()*420 + (code >= 500 ? 600 : 0)),
+                    client: pick(CLIENTS),
+                    ip: randIp()
+                });
+            }
+            return out.sort((a,b) => b.time - a.time);
+        }
+
+        const ALL = buildSample();
+        let filtered = ALL.slice();
+        let page = 1;
+        const PAGE_SIZE = 10;
+
+        // ---------- KPIs ----------
+        function recomputeKpis(data) {
+            const total = data.length;
+            const success = data.filter(d => d.status >= 200 && d.status < 300).length;
+            const failed = total - success;
+            const avg = total ? Math.round(data.reduce((s,d) => s + d.latency, 0) / total) : 0;
+            const sorted = data.map(d => d.latency).sort((a,b) => a-b);
+            const p95 = sorted.length ? sorted[Math.floor(sorted.length*0.95) - 1] || sorted[sorted.length-1] : 0;
+            document.getElementById('kpiTotal').textContent = total.toLocaleString();
+            document.getElementById('kpiSuccess').textContent = total ? Math.round(success/total*100) + '%' : '0%';
+            document.getElementById('kpiSuccessCount').textContent = success.toLocaleString();
+            document.getElementById('kpiLatency').textContent = avg + ' ms';
+            document.getElementById('kpiP95').textContent = p95 + ' ms';
+            document.getElementById('kpiFailed').textContent = failed.toLocaleString();
+            document.getElementById('kpiFailedRate').textContent = (total ? (failed/total*100).toFixed(1) : '0') + '%';
+            renderTotalDelta(data);
+        }
+
+        // Compute the % change in total calls between the currently filtered
+        // window and an equal-length window immediately before it (taken from
+        // the full ALL dataset). Updates the "Total Calls" hint label.
+        function renderTotalDelta(filtered) {
+            const el = document.getElementById('kpiTotalDelta');
+            if (!el) return;
+
+            // Determine current window length from the active date filter.
+            const dt = parseInt(document.getElementById('filterDate').value, 10);
+            const nowMs = Date.now();
+            let currStart, currEnd, periodLabel;
+            if (dt > 0) {
+                currEnd = nowMs;
+                currStart = nowMs - dt * 24 * 3600 * 1000;
+                periodLabel = dt === 1 ? 'yesterday' : ('previous ' + dt + ' days');
+            } else if (filtered.length) {
+                // "All time" filter — derive window from filtered data extents.
+                const times = filtered.map(d => d.time.getTime());
+                currStart = Math.min.apply(null, times);
+                currEnd = Math.max.apply(null, times);
+                periodLabel = 'previous period';
+            } else {
+                el.textContent = '—';
+                el.className = 'text-[11px] mt-0.5 font-medium text-gray-500';
+                return;
+            }
+
+            const span = Math.max(currEnd - currStart, 1);
+            const prevStart = currStart - span;
+            const prevEnd = currStart;
+
+            // Apply the same non-date filters to ALL so the comparison is apples-to-apples.
+            const fn = document.getElementById('filterFunction').value;
+            const st = document.getElementById('filterStatus').value;
+            const q  = document.getElementById('filterSearch').value.trim().toLowerCase();
+            const matchesNonDate = (d) => {
+                if (fn && d.name !== fn) return false;
+                if (st === 'success' && !(d.status >= 200 && d.status < 300)) return false;
+                if (st === 'client'  && !(d.status >= 400 && d.status < 500)) return false;
+                if (st === 'server'  && !(d.status >= 500)) return false;
+                if (q) {
+                    const blob = (d.endpoint + ' ' + d.client + ' ' + d.ip + ' ' + d.name).toLowerCase();
+                    if (!blob.includes(q)) return false;
+                }
+                return true;
+            };
+            const prevCount = ALL.filter(d => {
+                const t = d.time.getTime();
+                return t >= prevStart && t < prevEnd && matchesNonDate(d);
+            }).length;
+            const currCount = filtered.length;
+
+            if (prevCount === 0 && currCount === 0) {
+                el.textContent = 'No data in previous ' + (dt > 0 ? (dt + ' days') : 'period');
+                el.className = 'text-[11px] mt-0.5 font-medium text-gray-500';
+                return;
+            }
+            if (prevCount === 0) {
+                el.textContent = 'New activity vs ' + periodLabel;
+                el.className = 'text-[11px] mt-0.5 font-medium text-green-600';
+                return;
+            }
+            const pct = (currCount - prevCount) / prevCount * 100;
+            const sign = pct >= 0 ? '+' : '';
+            const color = pct >= 0 ? 'text-green-600' : 'text-red-600';
+            el.textContent = sign + pct.toFixed(1) + '% vs ' + periodLabel;
+            el.className = 'text-[11px] mt-0.5 font-medium ' + color;
+        }
+
+        // ---------- Chart ----------
+        function renderChart(data) {
+            const chart = document.getElementById('chart');
+            const labels = document.getElementById('chartLabels');
+            chart.innerHTML = '';
+            labels.innerHTML = '';
+            const now = new Date();
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                days.push(d);
+            }
+            const buckets = days.map(d => {
+                const key = d.toDateString();
+                const items = data.filter(x => x.time.toDateString() === key);
+                return { d, total: items.length, failed: items.filter(x => x.status >= 400).length };
+            });
+            const max = Math.max(1, ...buckets.map(b => b.total));
+            buckets.forEach((b, i) => {
+                const col = document.createElement('div');
+                col.className = 'flex-1 flex flex-col items-center justify-end relative h-full';
+                const totalH = Math.max(4, Math.round((b.total / max) * 100));
+                const failedH = Math.max(0, Math.round((b.failed / max) * 100));
+                col.innerHTML = `
+                    <div class="text-[10px] text-gray-500 mb-1">${b.total}</div>
+                    <div class="relative w-full max-w-[36px] mx-auto" style="height: ${totalH}%">
+                        <div class="bar absolute bottom-0 left-0 right-0 rounded-t-md bg-gradient-to-t from-purple-500 to-blue-500" style="height:100%; animation-delay:${i*60}ms"></div>
+                        <div class="bar absolute bottom-0 left-0 right-0 rounded-t-md bg-red-400/80" style="height:${b.total ? (failedH/totalH*100) : 0}%; animation-delay:${i*60+120}ms"></div>
+                    </div>
+                `;
+                chart.appendChild(col);
+                const lbl = document.createElement('div');
+                lbl.className = 'flex-1 text-center';
+                lbl.textContent = b.d.toLocaleDateString(undefined, { weekday: 'short' });
+                labels.appendChild(lbl);
+            });
+        }
+
+        // ---------- Top Functions ----------
+        function renderTopFunctions(data) {
+            const box = document.getElementById('topFunctions');
+            const counts = {};
+            data.forEach(d => { counts[d.name] = (counts[d.name] || 0) + 1; });
+            const rows = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 6);
+            const max = Math.max(1, ...rows.map(r => r[1]));
+            box.innerHTML = rows.map(([name, n]) => `
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-700 font-medium">${name}</span>
+                        <span class="text-gray-500">${n}</span>
+                    </div>
+                    <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full" style="width:${Math.round(n/max*100)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ---------- Table ----------
+        function renderTable() {
+            const body = document.getElementById('tableBody');
+            const start = (page - 1) * PAGE_SIZE;
+            const slice = filtered.slice(start, start + PAGE_SIZE);
+            body.innerHTML = slice.map(d => `
+                <tr class="row-hover">
+                    <td class="px-4 py-2 text-gray-700 whitespace-nowrap">${fmtTime(d.time)}</td>
+                    <td class="px-4 py-2 text-gray-900 font-medium whitespace-nowrap">${d.name}</td>
+                    <td class="px-4 py-2 text-gray-600"><code class="text-xs">${d.endpoint}</code></td>
+                    <td class="px-4 py-2"><span class="status-pill bg-blue-100 text-blue-700">${d.method}</span></td>
+                    <td class="px-4 py-2"><span class="status-pill ${statusClass(d.status)}">${statusLabel(d.status)}</span></td>
+                    <td class="px-4 py-2 text-gray-700">${d.latency} ms</td>
+                    <td class="px-4 py-2 text-gray-500 font-mono text-xs">${d.ip}</td>
+                </tr>
+            `).join('') || `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500 text-sm">No records match the current filters.</td></tr>`;
+            document.getElementById('pageInfo').textContent = `Showing ${filtered.length ? start + 1 : 0}–${Math.min(filtered.length, start + PAGE_SIZE)} of ${filtered.length}`;
+            document.getElementById('prevBtn').disabled = page <= 1;
+            document.getElementById('nextBtn').disabled = page * PAGE_SIZE >= filtered.length;
+        }
+
+        // ---------- Filter ----------
+        function applyFilters() {
+            const fn = document.getElementById('filterFunction').value;
+            const st = document.getElementById('filterStatus').value;
+            const dt = parseInt(document.getElementById('filterDate').value, 10);
+            const q  = document.getElementById('filterSearch').value.trim().toLowerCase();
+            const cutoff = dt > 0 ? Date.now() - dt * 24 * 3600 * 1000 : 0;
+            filtered = ALL.filter(d => {
+                if (fn && d.name !== fn) return false;
+                if (st === 'success' && !(d.status >= 200 && d.status < 300)) return false;
+                if (st === 'client'  && !(d.status >= 400 && d.status < 500)) return false;
+                if (st === 'server'  && !(d.status >= 500)) return false;
+                if (cutoff && d.time.getTime() < cutoff) return false;
+                if (q) {
+                    const blob = (d.endpoint + ' ' + d.client + ' ' + d.ip + ' ' + d.name).toLowerCase();
+                    if (!blob.includes(q)) return false;
+                }
+                return true;
+            });
+            page = 1;
+            recomputeKpis(filtered);
+            renderChart(filtered);
+            renderTopFunctions(filtered);
+            renderTable();
+        }
+
+        // ---------- Toast ----------
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 2500);
+        }
+
+        // ---------- Export ----------
+        function exportCsv() {
+            const headers = ['Time','Function','Endpoint','Method','Status','Latency(ms)','IP'];
+            const rows = filtered.map(d => [fmtTime(d.time), d.name, d.endpoint, d.method, d.status, d.latency, d.ip]);
+            const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `api-usage-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('CSV exported');
+        }
+
+        // ---------- Wire up ----------
+        ['filterFunction','filterStatus','filterDate'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+        document.getElementById('filterSearch').addEventListener('input', applyFilters);
+        document.getElementById('prevBtn').addEventListener('click', () => { if (page > 1) { page--; renderTable(); } });
+        document.getElementById('nextBtn').addEventListener('click', () => { if (page * PAGE_SIZE < filtered.length) { page++; renderTable(); } });
+        document.getElementById('refreshBtn').addEventListener('click', () => { applyFilters(); showToast('Refreshed'); });
+        document.getElementById('exportBtn').addEventListener('click', exportCsv);
+
+        // initial render
+        applyFilters();
+    </script>
+</body>
+</html>
