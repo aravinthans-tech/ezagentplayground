@@ -6,8 +6,14 @@
     <title>Generate API Key - API Playground</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
+    <link rel="stylesheet" href="/css/playground-animations.css">
+    <link rel="stylesheet" href="/css/playground-v6.css">
+    <link rel="stylesheet" href="/css/playground-dark.css">
     <style>
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -148,10 +154,6 @@
             transform: scale(1.01);
             box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
         }
-        .gradient-animate {
-            background-size: 200% 200%;
-            animation: gradient 3s ease infinite;
-        }
         .delay-100 {
             animation-delay: 0.1s;
             opacity: 0;
@@ -188,29 +190,37 @@
         .sidebar-btn {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .sidebar-btn:hover {
-            transform: translateX(4px);
-        }
+        .sidebar-btn:hover { }
+
+        /* Sidebar: fixed layout — no motion */
+        #sidebar, aside#sidebar { animation: none !important; }
+        #sidebar .sidebar-btn,
+        #sidebar .api-function-btn,
+        #sidebar .api-nav { transition: background-color 0.15s ease, color 0.15s ease !important; }
+        #sidebar .sidebar-btn:hover,
+        #sidebar .api-function-btn:hover,
+        #sidebar .api-nav:hover,
+        #sidebar .button-hover:hover,
+        #sidebar .button-hover:active { transform: none !important; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; ">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
-        <div class="flex items-center space-x-3 flex-shrink-0">
-            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
-                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
-                <span class="text-lg font-bold text-cyan-500">o</span>
-                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
-            </div>
-        </div>
-        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="/logo.png" alt="EZOFIS" class="pg-brand-logo h-8 w-auto max-w-[100px] object-contain flex-shrink-0" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
+            <span class="pg-logo-fallback hidden items-center gap-0.5 text-base font-bold tracking-tight whitespace-nowrap" style="display:none"><span class="text-purple-600">ez</span><span class="text-purple-500">o</span><span class="text-purple-700">fis</span></span>
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
         <div class="flex space-x-4 flex-1 justify-end">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Code Examples
             </a>
             <a href="/playground-documentation.html#api-key" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Developer Docs
+            </a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                My API Keys
             </a>
             <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 API Usage
@@ -227,114 +237,9 @@
 
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
-        <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]" style="display: flex !important; visibility: visible !important;">
-            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2">
-                <!-- API KEY Section -->
-                <div class="mb-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition duration-200 hover:shadow-lg active"
-                        data-function="generate-apikey"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                            Generate API Key
-                        </div>
-                    </button>
-                </div>
-
-                <!-- FUNCTIONS Section -->
-                <div>
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95 hidden"
-                        data-function="generate-qrcode"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Generate QR Code
-                        </div>
-                    </button>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="form-details"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
-                            </svg>
-                            Form Details
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="subform-details"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
-                            </svg>
-                            SubForm Details
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="subform-fields"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
-                            </svg>
-                            SubForm Fields
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="generate-pdf"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
-                            </svg>
-                            Generate PDF
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="getdata-salesforce"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
-                            </svg>
-                            Get Data From Salesforce
-                        </div>
-                    </button>
-                    </div>
-
-                <!-- REPORTS Section -->
-                <div>
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
-                    <a href="/usage-report.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>
-                            </svg>
-                            API Usage
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="/js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/apikey.html');</script>
         <!-- Main Content Area -->
         <div class="flex-1 overflow-y-auto p-4 pb-8 flex flex-col">
             <div class="max-w-4xl w-full mx-auto my-auto">
@@ -358,8 +263,9 @@
                                 type="email" 
                                 id="userEmail" 
                                 name="userEmail"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus"
                                 placeholder="admin@ezofis.com"
+                                autocomplete="username"
                                 required
                             />
                             <p id="emailError" class="hidden text-[11px] text-red-600 mt-1"></p>
@@ -375,8 +281,9 @@
                                     type="password"
                                     id="userPassword"
                                     name="userPassword"
-                                    class="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
+                                    class="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus"
                                     placeholder="Enter password"
+                                    autocomplete="current-password"
                                     required
                                 />
                                 <button
@@ -404,7 +311,7 @@
                             <button 
                                 type="button"
                                 id="generateApiKeyBtn"
-                                class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover"
+                                class="flex-1 pg-btn-primary text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover"
                             >
                                 <span id="btnText">Generate API Key</span>
                                 <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -415,7 +322,7 @@
                             <button 
                                 type="button"
                                 id="viewApiKeyBtn"
-                                class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover"
+                                class="flex-1 pg-btn-primary text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover"
                             >
                                 <span id="viewBtnText">View API Key</span>
                                 <svg id="viewLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -602,7 +509,7 @@
                             <code class="text-xs font-mono text-gray-800">POST /api/Client/apiKey</code>
                             <div class="text-xs text-gray-600 mt-1">Query: ?userName=email&password=pass</div>
                         </div>
-                        <div class="border-l-4 border-cyan-500 pl-3">
+                        <div class="border-l-4 border-purple-500 pl-3">
                             <div class="font-semibold text-gray-700 mb-1 text-xs">View API Key</div>
                             <code class="text-xs font-mono text-gray-800">GET /api/Client/apiKey</code>
                             <div class="text-xs text-gray-600 mt-1">Query: ?userName=email&password=pass</div>
@@ -625,7 +532,7 @@
                                 <div class="ml-2">
                                     <h4 class="text-xs font-semibold text-yellow-800">Security Notice</h4>
                                     <div class="mt-1 text-xs text-yellow-700">
-                                        <p>API keys are generated based on your email and password. If an API key already exists, it will be returned. Save your API key securely.</p>
+                                        <p>Each Generate creates a new key stored in the database. Disable keys you no longer need; only enabled, non-expired keys can call APIs. Usage is logged per key.</p>
                                     </div>
                                 </div>
                             </div>
@@ -633,6 +540,7 @@
                     </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -802,7 +710,7 @@
                 return;
             }
 
-            // Show loading state inside the popup — do NOT close it yet.
+            // Show loading state inside the popup â€” do NOT close it yet.
             // The popup only closes once the API call resolves; then the
             // API-key result popup is opened by performApiKeyGeneration().
             const originalBtnHtml = expiryConfirmBtn.innerHTML;
@@ -924,7 +832,7 @@
             window.location.href = '/playground-documentation.html#api-key';
         });
 
-        // Generate API Key — first validates the form, then asks the user
+        // Generate API Key â€” first validates the form, then asks the user
         // for an expiry via the expiry modal, then actually performs the
         // generation only after they confirm.
         generateApiKeyBtn.addEventListener('click', () => {
@@ -974,13 +882,8 @@
                 const userName = userEmail.value;
                 const password = userPassword.value;
                 
-                // First check if API key already exists
-                const checkUrl = `${API_BASE_URL}/api/Client/apiKey?userName=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`;
-                const checkResponse = await fetch(checkUrl, { method: 'GET' });
-                const keyExists = checkResponse.ok;
-                
-                // Now generate/retrieve the API key
-                const url = `${API_BASE_URL}/api/Client/apiKey?userName=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}`;
+                const days = selectedExpiryDays();
+                const url = `${API_BASE_URL}/api/Client/apiKey?userName=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}&daysValid=${days}`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -994,21 +897,15 @@
                     tokenInput.value = data.token || '';
                     generatedApiKey.value = data.apiKey || '';
                     
-                    // Set status based on whether key existed before
-                    if (keyExists) {
-                        apiKeyStatus.textContent = 'Existing API Key Retrieved';
-                        apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 whitespace-nowrap';
-                        showToast('Existing API key retrieved successfully!', 'success');
-                    } else {
-                        apiKeyStatus.textContent = 'Newly Generated API Key';
-                        apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-800 whitespace-nowrap';
-                        showToast('New API key generated successfully!', 'success');
-                    }
+                    apiKeyStatus.textContent = 'Newly Generated API Key';
+                    apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-800 whitespace-nowrap';
+                    showToast('New API key generated successfully!', 'success');
 
-                    // Save chosen expiry against this username (dummy, localStorage only)
-                    const chosenDays = selectedExpiryDays();
-                    const record = saveExpiryRecord(userName, chosenDays);
-                    applyExpiryToModal(record);
+                    if (data.expiresAt) {
+                        applyExpiryToModal({ expiresAt: new Date(data.expiresAt).getTime() });
+                    } else {
+                        applyExpiryToModal({ expiresAt: null });
+                    }
 
                     apiKeyModal.classList.remove('hidden');
                     errorSection.classList.add('hidden');
@@ -1093,16 +990,16 @@
                     apiKeyStatus.textContent = 'Existing API Key Retrieved';
                     apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 whitespace-nowrap';
 
-                    // Restore the previously-saved expiry (if any) for this user.
-                    // If the stored expiry is in the past, applyExpiryToModal flips the
-                    // status pill to EXPIRED and shows the warning banner.
-                    const record = getExpiryRecord(userName);
-                    applyExpiryToModal(record);
+                    if (data.expiresAt) {
+                        applyExpiryToModal({ expiresAt: new Date(data.expiresAt).getTime() });
+                    } else {
+                        applyExpiryToModal({ expiresAt: null });
+                    }
 
                     apiKeyModal.classList.remove('hidden');
                     errorSection.classList.add('hidden');
                     postOutputActions.classList.remove('hidden');
-                    showToast('Existing API key retrieved successfully!', 'success');
+                    showToast('API key retrieved successfully!', 'success');
                 } else {
                     const errorText = await response.text();
                     document.getElementById('errorMessage').textContent = errorText;
@@ -1221,45 +1118,6 @@
                 }, 3000);
             }
         }
-
-        // Sidebar API function selection
-        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
-
-        apiFunctionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const functionName = button.getAttribute('data-function');
-                
-                // Update active button with animation
-                apiFunctionButtons.forEach(btn => {
-                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
-                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-                });
-                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
-                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-
-                // Navigate to the function page
-                if (functionName === 'generate-qrcode') {
-                    window.location.href = '/index.html';
-                } else if (functionName === 'generate-apikey') {
-                    window.location.href = '/apikey.html';
-                } else if (functionName === 'file-summary') {
-                    window.location.href = '/filesummary.html';
-                } else if (functionName === 'form-details') {
-                    window.location.href = '/formdetails.html';
-                } else if (functionName === 'subform-details') {
-                    window.location.href = '/subformdetails.html';
-                } else if (functionName === 'subform-fields') {
-                    window.location.href = '/subformfields.html';
-                } else if (functionName === 'generate-pdf') {
-                    window.location.href = '/subformsubmitarchive.html';
-                } else if (functionName === 'getdata-salesforce') {
-                    window.location.href = '/getdatafromsalesforce.html';
-                } else if (functionName === 'kyc-agent') {
-                    window.location.href = '/kycagent.html';
-                }
-            });
-        });
-
         // Smooth reveal animations on page load
         document.addEventListener('DOMContentLoaded', () => {
             // Animate cards
@@ -1285,6 +1143,7 @@
         // Smooth scroll behavior
         document.documentElement.style.scrollBehavior = 'smooth';
     </script>
+    <script src="/js/playground-shell.js"></script>
 </body>
 </html>
 

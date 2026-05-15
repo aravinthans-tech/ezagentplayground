@@ -1,0 +1,106 @@
+/* Dark theme fixes — works with theme.css [data-theme="dark"] */
+html[data-theme="dark"] .pg-app {
+  --gray-2: var(--surface-muted);
+  --gray-3: var(--border-color);
+  --gray-10: var(--text-muted);
+  --gray-11: var(--text-secondary);
+  --gray-13: var(--text-primary);
+  --surface-primary: #15131a;
+  --surface-raised: #1d1a24;
+  --border-color: #2f2a38;
+}
+
+html[data-theme="dark"] .pg-app,
+html[data-theme="dark"] .pg-app body {
+  background: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .pg-app nav .pg-brand-title {
+  color: var(--text-primary) !important;
+  border-left-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] .pg-app .pg-brand-title,
+html[data-theme="dark"] .pg-app h1,
+html[data-theme="dark"] .pg-app h2,
+html[data-theme="dark"] .pg-app h3,
+html[data-theme="dark"] .pg-app label,
+html[data-theme="dark"] .pg-app .text-gray-900,
+html[data-theme="dark"] .pg-app .text-gray-800,
+html[data-theme="dark"] .pg-app .text-gray-700 {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .pg-app .text-gray-600,
+html[data-theme="dark"] .pg-app .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] .pg-app .bg-white,
+html[data-theme="dark"] .pg-app .card-hover {
+  background: var(--surface-raised) !important;
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] .pg-app #sidebar a.pg-nav-item--active,
+html[data-theme="dark"] .pg-app #sidebar .pg-nav-item--active {
+  background: var(--active-bg) !important;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+html[data-theme="dark"] .pg-app #sidebar .api-function-btn.bg-gradient-to-r,
+html[data-theme="dark"] .pg-app #sidebar .api-function-btn.text-white,
+html[data-theme="dark"] .pg-app #sidebar a.bg-gray-100,
+html[data-theme="dark"] .pg-app #sidebar .api-function-btn.bg-gray-100 {
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .pg-app #sidebar .api-function-btn.bg-gradient-to-r.active,
+html[data-theme="dark"] .pg-app #sidebar a.pg-nav-item--active {
+  background: var(--active-bg) !important;
+  color: var(--primary) !important;
+}
+
+html[data-theme="dark"] .pg-app #sidebar a.pg-nav-item:not(.pg-nav-item--active):hover,
+html[data-theme="dark"] .pg-app #sidebar a.api-nav:not(.pg-nav-item--active):hover,
+html[data-theme="dark"] #sidebar a.pg-nav-item:not(.pg-nav-item--active):hover {
+  background: rgba(168, 85, 247, 0.18) !important;
+  border-color: rgba(168, 85, 247, 0.55) !important;
+  color: #e9d5ff !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+html[data-theme="dark"] .pg-app pre.bg-gray-100 {
+  background: var(--code-bg) !important;
+  color: var(--code-text) !important;
+}
+
+html[data-theme="dark"] .pg-app .bg-yellow-50 {
+  background: rgba(234, 179, 8, 0.12) !important;
+  border-color: rgba(234, 179, 8, 0.4) !important;
+}
+
+html[data-theme="dark"] .pg-app .text-yellow-800,
+html[data-theme="dark"] .pg-app .text-yellow-700 {
+  color: #fcd34d !important;
+}
+
+html[data-theme="dark"] .pg-app .border-cyan-500,
+html[data-theme="dark"] .pg-app .border-purple-500 {
+  border-left-color: var(--primary) !important;
+}
+
+html[data-theme="dark"] .pg-app input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-raised) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .pg-app nav a.theme-nav-active:not(.pg-brand) {
+  background: var(--active-bg) !important;
+  color: var(--primary) !important;
+}

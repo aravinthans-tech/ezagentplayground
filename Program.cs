@@ -1,7 +1,11 @@
+using QRCodeAPI.Configuration;
 using QRCodeAPI.Middleware;
 using QRCodeAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<PlaygroundDemoOptions>(
+    builder.Configuration.GetSection(PlaygroundDemoOptions.SectionName));
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -43,6 +47,8 @@ builder.Services.AddScoped<AwsRekognitionMatchingService>();
 builder.Services.AddScoped<FaceMatchingService>();
 
 builder.Services.AddScoped<KycVerificationService>();
+
+builder.Services.AddScoped<ApiKeyService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

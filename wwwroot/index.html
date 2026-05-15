@@ -6,8 +6,12 @@
     <title>Generate QR Code - QR Code API</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/playground-v6.css">
+    <link rel="stylesheet" href="/css/playground-dark.css">
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js"></script>
     <style>
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -158,26 +162,36 @@
         .animate-blink {
             animation: blink 1.5s ease-in-out infinite;
         }
+
+        /* Sidebar: fixed layout — no motion */
+        #sidebar, aside#sidebar { animation: none !important; }
+        #sidebar .sidebar-btn,
+        #sidebar .api-function-btn,
+        #sidebar .api-nav { transition: background-color 0.15s ease, color 0.15s ease !important; }
+        #sidebar .sidebar-btn:hover,
+        #sidebar .api-function-btn:hover,
+        #sidebar .api-nav:hover,
+        #sidebar .button-hover:hover,
+        #sidebar .button-hover:active { transform: none !important; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; ">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
-        <div class="flex items-center space-x-3 flex-shrink-0">
-            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
-                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
-                <span class="text-lg font-bold text-cyan-500">o</span>
-                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
-            </div>
-        </div>
-        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="/logo.png" alt="EZOFIS" class="pg-brand-logo h-8 w-auto max-w-[100px] object-contain flex-shrink-0" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
+            <span class="pg-logo-fallback hidden items-center gap-0.5 text-base font-bold tracking-tight whitespace-nowrap" style="display:none"><span class="text-purple-600">ez</span><span class="text-purple-500">o</span><span class="text-purple-700">fis</span></span>
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
         <div class="flex space-x-4 flex-1 justify-end">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Code Examples
             </a>
             <a href="/playground-documentation.html#generate-qr" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Developer Docs
+            </a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                My API Keys
             </a>
             <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 API Usage
@@ -214,22 +228,17 @@
                             Generate API Key
                         </div>
                     </button>
+                    <a href="/my-api-keys.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-all duration-300 hover:shadow-md">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            My API Keys
+                        </div>
+                    </a>
                 </div>
 
                 <!-- FUNCTIONS Section -->
                 <div>
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold transition-all duration-300 hover:shadow-lg active hidden"
-                        data-function="generate-qrcode"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Generate QR Code
-                        </div>
-                    </button>
                     <button 
                         class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
                         data-function="form-details"
@@ -749,6 +758,7 @@
         // Smooth scroll behavior
         document.documentElement.style.scrollBehavior = 'smooth';
     </script>
+    <script src="/js/playground-shell.js"></script>
 </body>
 </html>
 

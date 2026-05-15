@@ -6,68 +6,27 @@
     <title>API Usage - API Playground</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes gradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        @keyframes growBar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-        .animate-fadeInUp { animation: fadeInUp .6s ease-out forwards; }
-        .animate-fadeIn { animation: fadeIn .5s ease-out forwards; }
-        .animate-slideInLeft { animation: slideInLeft .6s ease-out forwards; }
-        .animate-slideInRight { animation: slideInRight .6s ease-out forwards; }
-        .gradient-animate { background-size: 200% 200%; animation: gradient 3s ease infinite; }
-        .delay-100 { animation-delay: .1s; opacity: 0; }
-        .delay-200 { animation-delay: .2s; opacity: 0; }
-        .delay-300 { animation-delay: .3s; opacity: 0; }
-        .delay-400 { animation-delay: .4s; opacity: 0; }
-        .card-hover { transition: all .3s cubic-bezier(.4,0,.2,1); }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
-        .button-hover { transition: all .3s cubic-bezier(.4,0,.2,1); }
-        .button-hover:hover { transform: scale(1.02); }
-        .button-hover:active { transform: scale(.98); }
-        .input-focus { transition: all .3s ease; }
-        .input-focus:focus { box-shadow: 0 0 0 3px rgba(6,182,212,.15); }
-        .sidebar-btn { transition: all .3s cubic-bezier(.4,0,.2,1); }
-        .sidebar-btn:hover { transform: translateX(4px); }
-        html, body { overflow-x: hidden; height: 100%; margin: 0; padding: 0; }
-        body { display: flex; flex-direction: column; }
-        #sidebar {
-            display: flex !important; visibility: visible !important; opacity: 1 !important;
-            width: 256px !important; min-width: 256px !important; max-width: 256px !important;
-            background-color: white !important; position: relative !important; z-index: 10 !important;
-        }
-        code, pre { font-family: 'SF Mono','Monaco','Inconsolata','Fira Code',monospace; }
-        .bar { transform-origin: bottom; animation: growBar .8s cubic-bezier(.2,.7,.2,1) forwards; }
-        .status-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
-        .row-hover:hover { background-color: #f9fafb; }
-        .modal-backdrop {
-            background-color: rgba(15, 23, 42, 0.45);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            animation: fadeIn .2s ease-out;
-        }
-    </style>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
+    <link rel="stylesheet" href="/css/playground-animations.css">
+    <link rel="stylesheet" href="/css/playground-v6.css">
+    <link rel="stylesheet" href="/css/playground-dark.css">
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
+<body class="pg-app bg-gradient-to-br gradient-animate from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%; ">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
-        <div class="flex items-center space-x-3 flex-shrink-0">
-            <img src="/logo.png" alt="Logo" class="h-8 w-auto object-contain" style="max-width: 120px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="hidden items-center space-x-0.5 whitespace-nowrap" id="logoFallback">
-                <span class="text-lg font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">ez</span>
-                <span class="text-lg font-bold text-cyan-500">o</span>
-                <span class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">fis</span>
-            </div>
-        </div>
-        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="/logo.png" alt="EZOFIS" class="pg-brand-logo h-8 w-auto max-w-[100px] object-contain flex-shrink-0" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
+            <span class="pg-logo-fallback hidden items-center gap-0.5 text-base font-bold tracking-tight whitespace-nowrap" style="display:none"><span class="text-purple-600">ez</span><span class="text-purple-500">o</span><span class="text-purple-700">fis</span></span>
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
         <div class="flex space-x-4 flex-1 justify-end">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Code Examples</a>
             <a href="/playground-documentation.html#api-key" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
             <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">API Usage</a>
         </div>
     </nav>
@@ -81,72 +40,9 @@
 
     <!-- Main -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
-        <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]">
-            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2">
-                <div class="mb-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
-                    <a href="/apikey.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                            Generate API Key
-                        </span>
-                    </a>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <a href="/formdetails.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path></svg>
-                            Form Details
-                        </span>
-                    </a>
-                    <a href="/subformdetails.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path></svg>
-                            SubForm Details
-                        </span>
-                    </a>
-                    <a href="/subformfields.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path></svg>
-                            SubForm Fields
-                        </span>
-                    </a>
-                    <a href="/subformsubmitarchive.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path></svg>
-                            Generate PDF
-                        </span>
-                    </a>
-                    <a href="/getdatafromsalesforce.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path></svg>
-                            Get Data From Salesforce
-                        </span>
-                    </a>
-                </div>
-
-                <div>
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
-                    <a href="/usage-report.html" class="sidebar-btn block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold shadow-md">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>
-                            </svg>
-                            API Usage
-                        </span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="/js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/usage-report.html');</script>
         <!-- Content -->
         <div class="flex-1 overflow-y-auto p-4 pb-8">
             <div class="max-w-7xl mx-auto">
@@ -163,7 +59,7 @@
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0014-7M19 5a9 9 0 00-14 7"></path></svg>
                                 Refresh
                             </button>
-                            <button id="exportBtn" class="text-xs px-2.5 py-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white button-hover flex items-center">
+                            <button id="exportBtn" class="text-xs px-2.5 py-1.5 rounded-md bg-gradient-to-r pg-btn-primary hover:from-cyan-600 hover:to-teal-600 text-white button-hover flex items-center">
                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 Export CSV
                             </button>
@@ -636,7 +532,7 @@
                         <span class="text-gray-500">${n}</span>
                     </div>
                     <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full" style="width:${Math.round(n/max*100)}%"></div>
+                        <div class="h-2 bg-gradient-to-r pg-btn-primary rounded-full" style="width:${Math.round(n/max*100)}%"></div>
                     </div>
                 </div>
             `).join('');
@@ -756,5 +652,6 @@
         // initial render
         applyFilters();
     </script>
+    <script src="/js/playground-shell.js"></script>
 </body>
 </html>

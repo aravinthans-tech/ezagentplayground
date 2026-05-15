@@ -6,106 +6,34 @@
     <title>SubForm Fields - API Playground</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        * { font-family: 'Inter', system-ui, sans-serif; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
-        .gradient-animate { background-size: 200% 200%; animation: gradient 3s ease infinite; }
-        .animate-fadeInUp { animation: fadeInUp .55s ease-out forwards; }
-        .animate-slideInLeft { animation: slideInLeft .55s ease-out forwards; }
-        .animate-slideInRight { animation: slideInRight .55s ease-out forwards; }
-        .delay-100 { animation-delay: 0.1s; opacity: 0; }
-        .delay-200 { animation-delay: 0.2s; opacity: 0; }
-        .delay-300 { animation-delay: 0.3s; opacity: 0; }
-        .delay-400 { animation-delay: 0.4s; opacity: 0; }
-        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 14px 24px -8px rgba(0,0,0,.15); }
-        .button-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .button-hover:hover { transform: scale(1.02); }
-        .button-hover:active { transform: scale(0.98); }
-        .input-focus { transition: all 0.3s ease; }
-        .input-focus:focus { transform: scale(1.01); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); }
-        pre { white-space: pre-wrap; word-break: break-word; font-size: 0.66rem; line-height: 1.25; }
-        code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    </style>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
+    <link rel="stylesheet" href="/css/playground-animations.css">
+    <link rel="stylesheet" href="/css/playground-v6.css">
+    <link rel="stylesheet" href="/css/playground-dark.css">
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col gradient-animate" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%;">
+<body class="pg-app bg-gradient-to-br gradient-animate from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%; ">
     <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
-        <div class="flex items-center space-x-3">
-            <img src="/logo.png" alt="Logo" class="h-8 w-auto max-w-[120px]" onerror="this.style.display='none'">
-        </div>
-        <h1 class="text-lg font-semibold text-gray-900 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">API Playground</h1>
+        <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="/logo.png" alt="EZOFIS" class="pg-brand-logo h-8 w-auto max-w-[100px] object-contain flex-shrink-0" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
+            <span class="pg-logo-fallback hidden items-center gap-0.5 text-base font-bold tracking-tight whitespace-nowrap" style="display:none"><span class="text-purple-600">ez</span><span class="text-purple-500">o</span><span class="text-purple-700">fis</span></span>
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
         <div class="flex space-x-4 flex-1 justify-end text-sm">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
             <a href="/playground-documentation.html#subform-fields" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
             <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
         </div>
     </nav>
 
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
-        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]">
-            <div class="p-4 border-b bg-gradient-to-r from-purple-50 to-blue-50">
-                <h2 class="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">API Functions</h2>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2">
-                <div class="mb-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/apikey.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                            Generate API Key
-                        </div>
-                    </button>
-                </div>
-                <div class="space-y-2">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/formdetails.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path></svg>
-                            Form Details
-                        </div>
-                    </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/subformdetails.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path></svg>
-                            SubForm Details
-                        </div>
-                    </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-600 to-blue-600 text-white button-hover" data-go="/subformfields.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path></svg>
-                            SubForm Fields
-                        </div>
-                    </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/subformsubmitarchive.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path></svg>
-                            Generate PDF
-                        </div>
-                    </button>
-                    <button type="button" class="api-nav w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover" data-go="/getdatafromsalesforce.html">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path></svg>
-                            Get Data From Salesforce
-                        </div>
-                    </button>
-                    </div>
-
-                <div class="space-y-2 mt-3">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
-                    <a href="/usage-report.html" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 button-hover">
-                        <div class="flex items-center"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path></svg>API Usage</div>
-                    </a>
-                </div>
-            </div>
-        </aside>
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="/js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/subformfields.html');</script>
 
         <main class="flex-1 overflow-y-auto p-4">
             <div class="max-w-6xl mx-auto">
@@ -135,7 +63,7 @@
   "009 - Account Details"
 ]</textarea>
                         </div>
-                        <button type="button" id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 flex items-center justify-center gap-2 button-hover">
+                        <button type="button" id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium pg-btn-primary flex items-center justify-center gap-2 button-hover">
                             <span id="btnLabel">Get subform fields</span>
                             <svg id="spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                         </button>
@@ -273,6 +201,7 @@
             } catch (_) {}
         });
     </script>
+    <script src="/js/playground-shell.js"></script>
 </body>
 </html>
 

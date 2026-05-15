@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My API Keys - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
+    <link rel="stylesheet" href="/css/playground-animations.css">
+    <link rel="stylesheet" href="/css/playground-v6.css">
+    <link rel="stylesheet" href="/css/playground-dark.css">
+    <style>
+        .key-toggle-track {
+            position: relative;
+            width: 2.75rem;
+            height: 1.375rem;
+            padding: 0;
+            border: 1px solid #c4c0cc;
+            border-radius: 9999px;
+            background: #e5e7eb;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .key-toggle-track.on {
+            background: #9333ea;
+            border-color: #7e22ce;
+        }
+        .key-toggle-track:hover:not(:disabled) {
+            border-color: #9333ea;
+        }
+        .key-toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 1.0625rem;
+            height: 1.0625rem;
+            border-radius: 9999px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .key-toggle-track.on .key-toggle-thumb {
+            transform: translateX(1.25rem);
+        }
+        .key-toggle-track:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        html[data-theme="dark"] .key-toggle-track {
+            background: #3f3a4a;
+            border-color: #5c5568;
+        }
+        html[data-theme="dark"] .key-toggle-track.on {
+            background: #a855f7;
+            border-color: #9333ea;
+        }
+        .key-usage-row td {
+            padding: 0;
+            background: #faf9fb;
+            border-bottom: 1px solid #ece9f0;
+        }
+        html[data-theme="dark"] .key-usage-row td {
+            background: #1f1c24;
+            border-bottom-color: #3f3a4a;
+        }
+        .my-keys-table {
+            border-collapse: collapse;
+        }
+        .my-keys-table th,
+        .my-keys-table td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+            line-height: 1.25;
+        }
+        .my-keys-table th {
+            font-size: 0.6875rem;
+        }
+        .my-keys-table td {
+            font-size: 0.8125rem;
+        }
+        .my-keys-table .col-calls {
+            width: 4.25rem;
+            text-align: center;
+        }
+        .my-keys-table .col-status {
+            width: 5.75rem;
+        }
+        .my-keys-table .col-enabled {
+            min-width: 8.75rem;
+        }
+        .my-keys-table .col-api-key {
+            min-width: 11.75rem;
+            width: 11.75rem;
+        }
+        .my-keys-table .col-actions {
+            width: 3.25rem;
+            text-align: center;
+            padding-left: 0.5rem;
+            padding-right: 0.75rem;
+        }
+        .key-enable-cell-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            line-height: 1;
+        }
+        .key-status-label {
+            line-height: 1.25rem;
+        }
+        .key-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            background: #fff;
+            color: #211f26;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .key-icon-btn:hover {
+            background: #f4f4f5;
+            border-color: #d4d4d8;
+        }
+        .key-icon-btn svg {
+            width: 1.125rem;
+            height: 1.125rem;
+        }
+        .key-api-cell {
+            display: grid;
+            grid-template-columns: 9.5rem 1.5rem;
+            align-items: center;
+            column-gap: 0.125rem;
+            line-height: 1.25rem;
+        }
+        .key-api-cell .key-api-mask {
+            grid-column: 1;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.8125rem;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: inherit;
+        }
+        .key-api-cell .key-show-btn {
+            grid-column: 2;
+            justify-self: center;
+        }
+        .key-icon-btn--ghost {
+            width: 1.5rem;
+            height: 1.5rem;
+            min-width: 1.5rem;
+            min-height: 1.5rem;
+            padding: 0;
+            border: none;
+            background: transparent;
+            border-radius: 0.25rem;
+        }
+        .key-icon-btn--ghost:hover {
+            background: rgba(0, 0, 0, 0.06);
+            border-color: transparent;
+        }
+        .key-api-cell .key-icon-btn--ghost svg {
+            width: 1.125rem;
+            height: 1.125rem;
+        }
+        html[data-theme="dark"] .key-icon-btn--ghost:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .key-usage-btn.is-open {
+            background: #f4f4f5;
+            border-color: #a1a1aa;
+        }
+        html[data-theme="dark"] .key-icon-btn {
+            background: #2a2630;
+            border-color: #4a4458;
+            color: #e4e4e7;
+        }
+        html[data-theme="dark"] .key-icon-btn:hover {
+            background: #3f3a4a;
+        }
+        .key-usage-panel {
+            padding: 0.875rem 1.125rem 1.125rem;
+        }
+        .key-usage-logs-scroll {
+            max-height: 10.5rem;
+            overflow-y: auto;
+            border: 1px solid #e8e4ee;
+            border-radius: 0.375rem;
+            background: #fff;
+        }
+        html[data-theme="dark"] .key-usage-logs-scroll {
+            background: #2a2630;
+            border-color: #4a4458;
+        }
+        .key-usage-fn-row {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .key-usage-fn-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: #3f3f46;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
+        .key-usage-export-btn {
+            font-size: 0.6875rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #d4d4d8;
+            background: #fff;
+            color: #18181b;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .key-usage-export-btn:hover:not(:disabled) {
+            background: #f4f4f5;
+        }
+        .key-usage-export-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="pg-app bg-gradient-to-br gradient-animate from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height:100vh;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-40 animate-fadeIn">
+        <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="/logo.png" alt="EZOFIS" class="pg-brand-logo h-8 w-auto max-w-[100px] object-contain flex-shrink-0" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
+            <span class="pg-logo-fallback hidden items-center gap-0.5 text-base font-bold tracking-tight whitespace-nowrap" style="display:none"><span class="text-purple-600">ez</span><span class="text-purple-500">o</span><span class="text-purple-700">fis</span></span>
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-3 justify-end flex-1 text-sm">
+            <a href="/examples.html" class="px-3 py-1 rounded font-medium text-gray-700 hover:bg-gray-100 transition-colors">Code Examples</a>
+            <a href="/playground-documentation.html#api-key" class="px-3 py-1 rounded font-medium text-gray-700 hover:bg-gray-100 transition-colors">Developer Docs</a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 shadow-sm">My API Keys</a>
+            <a href="/usage-report.html" class="px-3 py-1 rounded font-medium text-gray-700 hover:bg-gray-100 transition-colors">API Usage</a>
+        </div>
+    </nav>
+
+    <div id="toast" class="hidden fixed top-16 right-4 z-[60] toast">
+        <div id="toastContent" class="bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500 max-w-sm">
+            <p id="toastMessage" class="text-sm font-medium text-cyan-900"></p>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden" style="min-height:0">
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="/js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/my-api-keys.html');</script>
+
+        <main class="flex-1 overflow-y-auto p-4 flex flex-col">
+            <div class="max-w-6xl mx-auto w-full space-y-4 flex-1">
+                <div class="text-center mb-2 animate-fadeInUp">
+                    <h2 class="text-xl font-semibold text-gray-900">My API Keys</h2>
+                    <p id="pageSubtitle" class="text-xs text-gray-600 mt-1">Sign in to view keys. Use the <strong>toggle</strong> in each row to enable or disable API access.</p>
+                </div>
+
+                <div id="signInCard" class="bg-white rounded-lg shadow-md p-4 card-hover max-w-md mx-auto w-full animate-fadeInUp delay-100">
+                    <h3 class="text-base font-semibold text-gray-900 mb-3">Sign in</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="userEmail" class="block text-xs font-semibold text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="userEmail" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus" placeholder="admin@ezofis.com" autocomplete="username" />
+                        </div>
+                        <div>
+                            <label for="userPassword" class="block text-xs font-semibold text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="password" id="userPassword" class="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md input-focus" placeholder="Enter password" autocomplete="current-password" />
+                                <button type="button" id="togglePasswordBtn" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600 button-hover" aria-label="Show password">
+                                    <svg id="eyeIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <svg id="eyeOffIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908A3 3 0 1115 12m-7.5-2.121a9.97 9.97 0 014.121-4.121m4.243 4.243a9.97 9.97 0 014.121 4.121M3 3l18 18"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p id="signInError" class="hidden text-xs text-red-600"></p>
+                        <button type="button" id="signInBtn" class="w-full py-2 rounded-md text-white text-sm font-medium pg-btn-primary button-hover shadow-sm">View my API keys</button>
+                        <p class="text-[11px] text-gray-500 text-center">Need a new key? <a href="/apikey.html" class="text-purple-700 hover:underline font-medium">Generate API Key</a></p>
+                    </div>
+                </div>
+
+                <div id="keysPanel" class="hidden space-y-3 animate-fadeInUp delay-200">
+                    <div class="flex items-center justify-between flex-wrap gap-2 card-hover bg-white rounded-lg shadow-sm px-4 py-3 border border-gray-100">
+                        <div>
+                            <p id="signedInAs" class="text-sm font-medium text-gray-800"></p>
+                            <p id="myKeysSummary" class="text-[11px] text-gray-500 mt-0.5">â€”</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" id="signOutBtn" class="text-xs px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 button-hover font-medium">Sign out</button>
+                            <button type="button" id="refreshKeysBtn" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 text-white button-hover font-medium shadow-sm">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover animate-fadeInUp delay-300">
+                        <div id="myKeysLoading" class="hidden text-center py-10">
+                            <svg class="animate-spin h-8 w-8 mx-auto text-cyan-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="text-xs text-gray-500 mt-3">Loading keysâ€¦</p>
+                        </div>
+                        <div id="myKeysEmpty" class="hidden text-center py-10 text-xs text-gray-500 animate-fadeIn">No API keys yet. <a href="/apikey.html" class="text-purple-700 hover:underline font-medium">Generate your first key</a>.</div>
+                        <div class="overflow-x-auto">
+                            <table id="myKeysTable" class="my-keys-table min-w-full divide-y divide-gray-200 hidden">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide">Label</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-api-key">API Key</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide">Created</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide">Expires</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-calls">Calls</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-status">Status</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-enabled">Enabled</th>
+                                        <th class="col-actions" aria-label="Usage"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myKeysBody" class="divide-y divide-gray-100 bg-white"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <div id="showKeyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4">
+        <div class="modal-content bg-white rounded-lg shadow-2xl max-w-lg w-full p-4">
+            <h4 class="text-base font-semibold text-gray-900 mb-2">API key</h4>
+            <p id="showKeyLabel" class="text-xs text-gray-600 mb-2"></p>
+            <div class="relative mb-3">
+                <input id="showKeyValue" readonly class="w-full pl-3 pr-10 py-2 text-sm font-mono border border-gray-300 rounded-md input-focus" />
+                <button type="button" id="copyShowKeyBtn" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-purple-600 button-hover flex items-center justify-center" title="Copy API key" aria-label="Copy API key">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex justify-end">
+                <button type="button" id="showKeyCloseBtn" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 text-white button-hover">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        const SESSION_KEY = 'myApiKeysSession';
+        const forceSignIn = new URLSearchParams(window.location.search).get('signin') === '1';
+
+        let cachedKeys = [];
+        let signedIn = false;
+        let demoModeActive = false;
+        let demoEmail = '';
+        let togglingKey = false;
+        let expandedUsageKeyId = null;
+        const usageCache = {};
+
+        const userEmail = document.getElementById('userEmail');
+        const userPassword = document.getElementById('userPassword');
+        const signInCard = document.getElementById('signInCard');
+        const keysPanel = document.getElementById('keysPanel');
+
+        function showToast(msg, ok = true) {
+            const t = document.getElementById('toast');
+            const tc = document.getElementById('toastContent');
+            const m = document.getElementById('toastMessage');
+            m.textContent = msg;
+            tc.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 max-w-sm ' + (ok ? 'border-cyan-500' : 'border-red-500');
+            m.className = 'text-sm font-medium ' + (ok ? 'text-cyan-900' : 'text-red-900');
+            t.classList.remove('hidden');
+            t.style.opacity = '0';
+            requestAnimationFrame(() => { t.style.opacity = '1'; });
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.classList.add('hidden'), 300); }, 2800);
+        }
+
+        function authQuery() {
+            return `userName=${encodeURIComponent(userEmail.value)}&password=${encodeURIComponent(userPassword.value)}`;
+        }
+
+        function keysListUrl() {
+            return demoModeActive
+                ? `${API_BASE_URL}/api/Client/playground-demo/apiKeys`
+                : `${API_BASE_URL}/api/Client/apiKeys?${authQuery()}`;
+        }
+
+        function keyEnabledUrl(keyId, enabled) {
+            return demoModeActive
+                ? `${API_BASE_URL}/api/Client/playground-demo/apiKey/${keyId}/enabled?enabled=${enabled}`
+                : `${API_BASE_URL}/api/Client/apiKey/${keyId}/enabled?${authQuery()}&enabled=${enabled}`;
+        }
+
+        function keyUsageUrl(keyId) {
+            return demoModeActive
+                ? `${API_BASE_URL}/api/Client/playground-demo/apiKey/usage?apiKeyId=${keyId}&days=30`
+                : `${API_BASE_URL}/api/Client/apiKey/usage?${authQuery()}&apiKeyId=${keyId}&days=30`;
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        const KEY_ICONS = {
+            show: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>',
+            usageClosed: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>',
+            usageOpen: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>'
+        };
+
+        function syncUsageButtonIcon(keyId, open) {
+            const btn = document.querySelector('.key-usage-btn[data-key-id="' + keyId + '"]');
+            if (!btn) return;
+            btn.innerHTML = open ? KEY_ICONS.usageOpen : KEY_ICONS.usageClosed;
+            btn.classList.toggle('is-open', !!open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.title = open ? 'Collapse usage' : 'Show usage (last 30 days)';
+        }
+
+        function fmtDateShort(isoOrDate) {
+            if (!isoOrDate) return '-';
+            const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function csvEscape(val) {
+            const s = String(val ?? '');
+            if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+        }
+
+        function downloadUsageCsv(keyId) {
+            const cache = usageCache[keyId];
+            if (!cache?.logs?.length) {
+                showToast('No usage data to export', false);
+                return;
+            }
+            const headers = ['CalledAt', 'Function', 'StatusCode', 'LatencyMs', 'Method', 'Endpoint'];
+            const rows = cache.logs.map(l => [
+                l.calledAt, l.functionName, l.statusCode, l.latencyMs, l.httpMethod || '', l.endpoint || ''
+            ]);
+            const csv = [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            const label = (cache.keyLabel || 'api-key').replace(/[^\w.-]+/g, '_');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'usage-' + label + '-' + keyId + '.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('Usage exported');
+        }
+
+        function closeAllUsagePanels() {
+            document.querySelectorAll('.key-usage-row').forEach(r => r.classList.add('hidden'));
+            document.querySelectorAll('.key-usage-btn').forEach(b => {
+                b.classList.remove('is-open');
+                b.innerHTML = KEY_ICONS.usageClosed;
+                b.setAttribute('aria-expanded', 'false');
+                b.title = 'Show usage (last 30 days)';
+            });
+            expandedUsageKeyId = null;
+        }
+
+        function renderUsagePanelHtml(keyId, data, keyLabel) {
+            const byFn = data.byFunction || [];
+            const logs = data.logs || [];
+            const fnPills = byFn.length
+                ? byFn.map(f =>
+                    '<span class="key-usage-fn-pill">' +
+                    escapeHtml(f.functionName) + ' <span class="text-gray-500">' + f.callCount + '</span></span>'
+                ).join('')
+                : '';
+
+            const logRows = logs.length
+                ? logs.map(l => {
+                    const ep = ((l.httpMethod ? l.httpMethod + ' ' : '') + (l.endpoint || '')).trim() || '-';
+                    return '<tr class="border-b border-gray-100 last:border-0">' +
+                    '<td class="py-2 pr-3 text-gray-500 whitespace-nowrap">' + fmtDateShort(l.calledAt) + '</td>' +
+                    '<td class="py-2 pr-3 font-medium text-gray-800">' + escapeHtml(l.functionName) + '</td>' +
+                    '<td class="py-2 pr-3 font-mono text-[10px] text-gray-700 max-w-[14rem] truncate" title="' + escapeHtml(ep) + '">' + escapeHtml(ep) + '</td>' +
+                    '<td class="py-2 pr-3">' + l.statusCode + '</td>' +
+                    '<td class="py-2">' + l.latencyMs + 'ms</td></tr>';
+                }).join('')
+                : '<tr><td colspan="5" class="py-3 text-center text-gray-500">No recent calls.</td></tr>';
+
+            const scrollHint = logs.length > 5
+                ? '<p class="text-[10px] text-gray-400 mt-1">' + logs.length + ' calls - scroll to see all</p>'
+                : '';
+
+            return '<div class="key-usage-panel" id="usage-panel-' + keyId + '">' +
+                '<div class="flex items-start justify-between gap-3 mb-2">' +
+                '<div class="min-w-0 flex-1">' +
+                '<p class="text-xs font-semibold text-gray-800">Usage (last 30 days)</p>' +
+                '<div class="flex items-center gap-3 mt-0.5 flex-nowrap overflow-x-auto">' +
+                '<p class="text-[10px] text-gray-500 whitespace-nowrap flex-shrink-0">' + escapeHtml(keyLabel || 'API key') + ' &middot; ' + (data.totalCalls ?? logs.length) + ' call(s)</p>' +
+                (fnPills ? '<div class="key-usage-fn-row">' + fnPills + '</div>' : '') +
+                '</div></div>' +
+                '<button type="button" class="key-usage-export-btn button-hover flex-shrink-0" data-key-id="' + keyId + '"' + (logs.length ? '' : ' disabled') + '>Export CSV</button>' +
+                '</div>' +
+                '<p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Recent calls</p>' +
+                '<div class="key-usage-logs-scroll"><table class="w-full text-xs text-left">' +
+                '<thead class="sticky top-0 bg-white text-gray-500 border-b border-gray-200"><tr>' +
+                '<th class="py-1.5 pr-3 font-semibold">Time</th><th class="py-1.5 pr-3 font-semibold">Function</th>' +
+                '<th class="py-1.5 pr-3 font-semibold">Endpoint</th>' +
+                '<th class="py-1.5 pr-3 font-semibold">Status</th><th class="py-1.5 font-semibold">Latency</th></tr></thead>' +
+                '<tbody>' + logRows + '</tbody></table></div>' + scrollHint + '</div>';
+        }
+
+        async function toggleKeyUsage(keyId) {
+            const id = String(keyId);
+            if (expandedUsageKeyId === id) {
+                closeAllUsagePanels();
+                return;
+            }
+            closeAllUsagePanels();
+            expandedUsageKeyId = id;
+            const usageRow = document.querySelector('.key-usage-row[data-usage-for="' + id + '"]');
+            const wrap = document.getElementById('usage-panel-wrap-' + id);
+            if (!usageRow || !wrap) return;
+            usageRow.classList.remove('hidden');
+            syncUsageButtonIcon(id, true);
+            wrap.innerHTML = '<p class="text-xs text-gray-500 py-2 animate-pulse">Loading usage...</p>';
+
+            const k = cachedKeys.find(x => String(x.id) === id);
+            try {
+                const res = await fetch(keyUsageUrl(id));
+                if (!res.ok) {
+                    wrap.innerHTML = '<p class="text-xs text-red-600 py-2">Could not load usage.</p>';
+                    return;
+                }
+                const data = await res.json();
+                const logs = data.logs || [];
+                usageCache[id] = { logs: logs, keyLabel: k?.keyLabel || 'API key' };
+                wrap.innerHTML = renderUsagePanelHtml(id, data, k?.keyLabel);
+            } catch {
+                wrap.innerHTML = '<p class="text-xs text-red-600 py-2">Network error.</p>';
+            }
+        }
+
+        function saveSession() {
+            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: userEmail.value })); } catch (_) {}
+        }
+
+        function clearSession() {
+            try { sessionStorage.removeItem(SESSION_KEY); } catch (_) {}
+        }
+
+        function showKeysPanel() {
+            signedIn = true;
+            signInCard.classList.add('hidden');
+            keysPanel.classList.remove('hidden');
+            keysPanel.classList.add('animate-fadeInUp');
+            const label = demoModeActive ? demoEmail : userEmail.value;
+            document.getElementById('signedInAs').textContent = demoModeActive
+                ? 'API keys for ' + label
+                : 'Signed in as ' + label;
+            if (!demoModeActive) saveSession();
+        }
+
+        function showSignIn() {
+            signedIn = false;
+            demoModeActive = false;
+            signInCard.classList.remove('hidden');
+            keysPanel.classList.add('hidden');
+            clearSession();
+            document.getElementById('pageSubtitle').textContent =
+                'Sign in to view keys. Use the toggle in each row to enable or disable API access.';
+        }
+
+        function renderEnableCell(k) {
+            if (k.isExpired) {
+                return `<td class="col-enabled"><span class="text-[11px] text-gray-400 italic">Expired</span></td>`;
+            }
+            const on = !!k.isEnabled;
+            return `<td class="col-enabled">
+                <div class="key-enable-cell-inner" role="group" aria-label="Key enabled">
+                    <button type="button" class="key-toggle-btn key-toggle-track ${on ? 'on' : ''}" data-key-id="${k.id}" data-enabled="${on}" role="switch" aria-checked="${on}" aria-label="${on ? 'Enabled - click to disable' : 'Disabled - click to enable'}" title="${on ? 'Click to disable' : 'Click to enable'}">
+                        <span class="key-toggle-thumb" aria-hidden="true"></span>
+                    </button>
+                    <span class="key-status-label text-xs font-semibold whitespace-nowrap ${on ? 'text-green-600' : 'text-gray-500'}">${on ? 'Enabled' : 'Disabled'}</span>
+                </div>
+            </td>`;
+        }
+
+        async function setKeyEnabled(keyId, enabled) {
+            if (togglingKey) return;
+            togglingKey = true;
+            try {
+                const res = await fetch(keyEnabledUrl(keyId, enabled), { method: 'PATCH' });
+                if (!res.ok) {
+                    showToast('Could not update key status', false);
+                    return false;
+                }
+                showToast(enabled ? 'API key enabled' : 'API key disabled');
+                await loadMyApiKeys();
+                return true;
+            } catch {
+                showToast('Network error', false);
+                return false;
+            } finally {
+                togglingKey = false;
+            }
+        }
+
+        async function loadMyApiKeys() {
+            const summary = document.getElementById('myKeysSummary');
+            const loading = document.getElementById('myKeysLoading');
+            const empty = document.getElementById('myKeysEmpty');
+            const table = document.getElementById('myKeysTable');
+            const body = document.getElementById('myKeysBody');
+
+            loading.classList.remove('hidden');
+            empty.classList.add('hidden');
+            table.classList.add('hidden');
+
+            try {
+                const res = await fetch(keysListUrl());
+                if (res.status === 401 || res.status === 400) {
+                    if (!demoModeActive) {
+                        showSignIn();
+                        document.getElementById('signInError').textContent = 'Invalid email or password.';
+                        document.getElementById('signInError').classList.remove('hidden');
+                    }
+                    loading.classList.add('hidden');
+                    return;
+                }
+                if (!res.ok) {
+                    if (demoModeActive && res.status === 404) {
+                        let msg = 'Demo mode is not configured on the server.';
+                        try {
+                            const err = await res.json();
+                            if (err?.message) msg = err.message;
+                        } catch (_) {}
+                        summary.textContent = msg;
+                    } else {
+                        summary.textContent = 'Could not load keys.';
+                    }
+                    loading.classList.add('hidden');
+                    return;
+                }
+                document.getElementById('signInError').classList.add('hidden');
+                const data = await res.json();
+                cachedKeys = data.keys || [];
+                const enabled = cachedKeys.filter(k => k.isEnabled && !k.isExpired).length;
+                summary.textContent = `${data.totalKeys} key(s) Â· ${enabled} enabled Â· ${cachedKeys.reduce((s, k) => s + (k.totalCalls || 0), 0)} total API calls`;
+
+                loading.classList.add('hidden');
+                if (!cachedKeys.length) {
+                    empty.classList.remove('hidden');
+                    closeAllUsagePanels();
+                    return;
+                }
+
+                const reopenKeyId = expandedUsageKeyId;
+                body.innerHTML = cachedKeys.map((k, i) => {
+                    const statusBadge = k.isExpired
+                        ? '<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700">Expired</span>'
+                        : (k.isEnabled
+                            ? '<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-50 text-green-700">Active</span>'
+                            : '<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">Disabled</span>');
+                    const delay = Math.min(i * 0.06, 0.4);
+                    const label = escapeHtml(k.keyLabel || '-');
+                    return `<tr class="key-main-row hover:bg-gray-50/80 transition-colors table-row-enter" data-key-id="${k.id}" style="animation-delay:${delay}s">
+                        <td class="text-gray-800 font-medium">${label}</td>
+                        <td class="col-api-key text-gray-600">
+                            <div class="key-api-cell font-mono">
+                                <span class="key-api-mask">${escapeHtml(k.apiKey)}</span>
+                                <button type="button" class="key-icon-btn key-icon-btn--ghost key-show-btn" data-key-id="${k.id}" title="Show API key" aria-label="Show API key">${KEY_ICONS.show}</button>
+                            </div>
+                        </td>
+                        <td class="text-gray-600 whitespace-nowrap">${fmtDateShort(k.createdAt)}</td>
+                        <td class="text-gray-600 whitespace-nowrap">${k.expiresAt ? fmtDateShort(k.expiresAt) : 'Never'}</td>
+                        <td class="col-calls font-semibold text-gray-800">${k.totalCalls ?? 0}</td>
+                        <td class="col-status">${statusBadge}</td>
+                        ${renderEnableCell(k)}
+                        <td class="col-actions">
+                            <button type="button" class="key-icon-btn key-usage-btn" data-key-id="${k.id}" title="Show usage (last 30 days)" aria-label="Show usage" aria-expanded="false">${KEY_ICONS.usageClosed}</button>
+                        </td>
+                    </tr>
+                    <tr class="key-usage-row hidden" data-usage-for="${k.id}">
+                        <td colspan="8"><div id="usage-panel-wrap-${k.id}"></div></td>
+                    </tr>`;
+                }).join('');
+                table.classList.remove('hidden');
+                if (reopenKeyId && cachedKeys.some(k => String(k.id) === reopenKeyId)) {
+                    expandedUsageKeyId = null;
+                    await toggleKeyUsage(reopenKeyId);
+                }
+            } catch {
+                loading.classList.add('hidden');
+                summary.textContent = 'Network error loading keys.';
+            }
+        }
+
+        document.getElementById('signInBtn').addEventListener('click', async () => {
+            document.getElementById('signInError').classList.add('hidden');
+            if (!userEmail.value.trim() || !userPassword.value) {
+                document.getElementById('signInError').textContent = 'Email and password are required.';
+                document.getElementById('signInError').classList.remove('hidden');
+                return;
+            }
+            showKeysPanel();
+            await loadMyApiKeys();
+        });
+
+        document.getElementById('signOutBtn').addEventListener('click', () => {
+            if (demoModeActive) {
+                window.location.href = '/my-api-keys.html?signin=1';
+                return;
+            }
+            userPassword.value = '';
+            cachedKeys = [];
+            showSignIn();
+        });
+
+        document.getElementById('refreshKeysBtn').addEventListener('click', () => loadMyApiKeys());
+
+        document.getElementById('togglePasswordBtn').addEventListener('click', () => {
+            const hidden = userPassword.type === 'password';
+            userPassword.type = hidden ? 'text' : 'password';
+            document.getElementById('eyeIcon').classList.toggle('hidden', !hidden);
+            document.getElementById('eyeOffIcon').classList.toggle('hidden', hidden);
+        });
+
+        document.getElementById('myKeysBody').addEventListener('click', async (e) => {
+            const toggleBtn = e.target.closest('.key-toggle-btn');
+            if (toggleBtn && !toggleBtn.disabled) {
+                const currentlyOn = toggleBtn.classList.contains('on');
+                await setKeyEnabled(toggleBtn.getAttribute('data-key-id'), !currentlyOn);
+                return;
+            }
+            const showBtn = e.target.closest('.key-show-btn');
+            if (showBtn) {
+                const k = cachedKeys.find(x => String(x.id) === showBtn.getAttribute('data-key-id'));
+                if (!k) return;
+                document.getElementById('showKeyLabel').textContent = k.keyLabel || 'API key';
+                document.getElementById('showKeyValue').value = k.apiKeyFull || '';
+                document.getElementById('showKeyModal').classList.remove('hidden');
+                return;
+            }
+            const usageBtn = e.target.closest('.key-usage-btn');
+            const exportBtn = e.target.closest('.key-usage-export-btn');
+            if (exportBtn && !exportBtn.disabled) {
+                downloadUsageCsv(exportBtn.getAttribute('data-key-id'));
+                return;
+            }
+            if (usageBtn) await toggleKeyUsage(usageBtn.getAttribute('data-key-id'));
+        });
+
+        document.getElementById('showKeyCloseBtn').addEventListener('click', () => document.getElementById('showKeyModal').classList.add('hidden'));
+        document.getElementById('showKeyModal').addEventListener('click', e => { if (e.target.id === 'showKeyModal') document.getElementById('showKeyModal').classList.add('hidden'); });
+        document.getElementById('copyShowKeyBtn').addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(document.getElementById('showKeyValue').value); showToast('Copied'); } catch { showToast('Copy failed', false); }
+        });
+
+        userPassword.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('signInBtn').click(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeAllUsagePanels();
+                document.getElementById('showKeyModal').classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.card-hover').forEach((el, i) => {
+                setTimeout(() => { el.style.opacity = '1'; }, i * 80);
+            });
+        });
+
+        async function startDemoView(email) {
+            demoModeActive = true;
+            demoEmail = email;
+            userEmail.value = email;
+            document.getElementById('pageSubtitle').textContent =
+                'Keys for ' + email + '. Use the toggle in each row to enable or disable API access.';
+            showKeysPanel();
+            await loadMyApiKeys();
+        }
+
+        async function initPage() {
+            if (forceSignIn) {
+                try {
+                    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+                    if (s?.email) userEmail.value = s.email;
+                } catch (_) {}
+                return;
+            }
+
+            let email = 'seth@ezofis.com';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/Client/playground-demo/info`);
+                if (res.ok) {
+                    const info = await res.json();
+                    if (info.email) email = info.email;
+                }
+            } catch (_) {}
+
+            await startDemoView(email);
+        }
+
+        initPage();
+    </script>
+    <script src="/js/playground-shell.js"></script>
+</body>
+</html>
