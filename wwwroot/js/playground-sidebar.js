@@ -42,10 +42,46 @@
         }
     ];
 
+    const PAGE_TO_FUNCTION = {
+        '/index.html': 'qrcode',
+        '/formdetails.html': 'formdetails',
+        '/subformdetails.html': 'subformdetails',
+        '/subformfields.html': 'subformfields',
+        '/subformsubmitarchive.html': 'generatepdf',
+        '/getdatafromsalesforce.html': 'getdatafromsalesforce',
+        '/apikey.html': 'apikey',
+        '/filesummary.html': 'filesummary',
+        '/kycagent.html': 'kycagent'
+    };
+
     function normalizePath(path) {
         if (!path) return '';
-        const p = path.split('?')[0];
-        return p.endsWith('/') && p.length > 1 ? p.slice(0, -1) : p;
+        let p = path.split('?')[0];
+        if (p.endsWith('/') && p.length > 1) p = p.slice(0, -1);
+        if (!p || p === '/') return '/index.html';
+        return p;
+    }
+
+    function functionForPage(path) {
+        return PAGE_TO_FUNCTION[normalizePath(path)] || null;
+    }
+
+    function rememberCurrentApi(path) {
+        const fn = functionForPage(path);
+        if (fn) localStorage.setItem('lastApiCall', fn);
+    }
+
+    function wireExamplesNavLinks(path) {
+        const fn = functionForPage(path);
+        if (!fn) return;
+        const target = '/examples.html?function=' + encodeURIComponent(fn);
+        document.querySelectorAll('nav a[href]').forEach(function (a) {
+            const raw = a.getAttribute('href') || '';
+            const base = raw.split('?')[0];
+            if (base === '/examples.html' || base.endsWith('/examples.html')) {
+                a.setAttribute('href', target);
+            }
+        });
     }
 
     function svg(icon) {
@@ -84,7 +120,13 @@
         if (!root) return;
         root.className = 'w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]';
         root.innerHTML = render(activeHref);
+
+        const pagePath = window.location.pathname || activeHref;
+        if (!normalizePath(pagePath).includes('examples.html')) {
+            rememberCurrentApi(pagePath);
+            wireExamplesNavLinks(pagePath);
+        }
     }
 
-    window.PlaygroundSidebar = { mount, render };
+    window.PlaygroundSidebar = { mount, render, PAGE_TO_FUNCTION, normalizePath, functionForPage };
 })();

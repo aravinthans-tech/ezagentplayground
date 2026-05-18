@@ -82,7 +82,7 @@
 
 .input-focus:focus {
   transform: scale(1.01);
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
+  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.12);
 }
 
 .modal-backdrop {

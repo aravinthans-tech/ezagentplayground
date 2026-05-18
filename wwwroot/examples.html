@@ -8,10 +8,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/theme.css">
+    <script>
+      (function () {
+        var t = localStorage.getItem("theme");
+        document.documentElement.setAttribute("data-theme", t === "dark" || t === "light" ? t : "light");
+      })();
+    </script>
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
+    <link rel="stylesheet" href="/css/playground-animations.css">
     <link rel="stylesheet" href="/css/playground-v6.css">
     <link rel="stylesheet" href="/css/playground-dark.css">
-    <link rel="stylesheet" href="/theme.css">
-    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-examples.css">
+    <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -56,19 +67,6 @@
                 opacity: 1;
                 transform: translateX(0);
             }
-        }
-        @keyframes blink {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.7;
-                transform: scale(1.02);
-            }
-        }
-        .animate-blink {
-            animation: blink 1.5s ease-in-out infinite;
         }
         @keyframes gradient {
             0% {
@@ -175,7 +173,7 @@
         #sidebar .button-hover:active { transform: none !important; }
     </style>
 </head>
-<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; ">
+<body class="pg-app pg-examples-page bg-gradient-to-br gradient-animate from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden;">
     <!-- Navigation Bar -->
     <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
         <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
@@ -184,18 +182,10 @@
             <h1 class="pg-brand-title">API Playground</h1>
         </a>
         <div class="flex space-x-4 flex-1 justify-end">
-            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600">
-                Code Examples
-            </a>
-            <a href="/playground-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                Developer Docs
-            </a>
-            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                My API Keys
-            </a>
-            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                API Usage
-            </a>
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-600 shadow-sm">Code Examples</a>
+            <a href="/playground-documentation.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
         </div>
     </nav>
 
@@ -208,114 +198,18 @@
 
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
-        <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]" style="display: flex !important; visibility: visible !important;">
-            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2">
-                <!-- API KEY Section -->
-                <div class="mb-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="generate-apikey"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                            Generate API Key
-                        </div>
-                    </button>
-                    <a href="/my-api-keys.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-all duration-300 hover:shadow-md">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                            My API Keys
-                        </div>
-                    </a>
-                </div>
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="/js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/examples.html');</script>
 
-                <!-- FUNCTIONS Section -->
-                <div>
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="form-details"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
-                            </svg>
-                            Form Details
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="subform-details"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
-                            </svg>
-                            SubForm Details
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="subform-fields"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
-                            </svg>
-                            SubForm Fields
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="generate-pdf"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
-                            </svg>
-                            Generate PDF
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="getdata-salesforce"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
-                            </svg>
-                            Get Data From Salesforce
-                        </div>
-                    </button>
-                </div>
-
-                <!-- REPORTS Section -->
-                <div class="mt-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
-                    <a href="/usage-report.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>
-                            </svg>
-                            API Usage
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-4 pb-8">
-        <div class="grid grid-cols-3 gap-4">
-            <!-- Left Column: Configuration -->
-            <div class="flex flex-col space-y-4">
+        <main class="flex-1 overflow-y-auto p-4 pb-8">
+        <div class="pg-examples-layout">
+            <header class="pg-examples-header animate-fadeInUp">
+                <h2>Code Examples</h2>
+                <p>Pick a function, adjust configuration, and copy sample code in cURL, Python, or JavaScript.</p>
+            </header>
+            <div class="pg-examples-grid">
+            <div class="pg-examples-side">
                 <div class="bg-white rounded-lg shadow-md p-4 flex-shrink-0 card-hover animate-slideInLeft delay-100">
                     <h2 class="text-base font-semibold text-gray-900 mb-3 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Configuration</h2>
                     <div class="space-y-3">
@@ -327,13 +221,13 @@
                                 id="functionType" 
                                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
                             >
-                                <option value="qrcode">Generate QR Code</option>
                                 <option value="formdetails">Form Details</option>
                                 <option value="subformdetails">SubForm Details</option>
                                 <option value="subformfields">SubForm Fields</option>
                                 <option value="generatepdf">Generate PDF</option>
                                 <option value="getdatafromsalesforce">Get Data From Salesforce</option>
                                 <option value="apikey">Generate API Key</option>
+                                <option value="qrcode">Generate QR Code</option>
                             </select>
                         </div>
                         <div>
@@ -579,44 +473,44 @@
             </div>
 
             <!-- Middle & Right Columns: Code Examples -->
-            <div class="col-span-2 flex flex-col">
-                <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-300">
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-base font-semibold text-gray-900 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Code Examples</h2>
-                        <div class="flex space-x-1.5">
-                            <button class="tab-button px-2.5 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 button-hover" data-tab="curl">cURL</button>
-                            <button class="tab-button active px-2.5 py-1 text-xs font-medium bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md button-hover" data-tab="python">Python</button>
-                            <button class="tab-button px-2.5 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 button-hover" data-tab="javascript">JavaScript</button>
+            <section class="pg-examples-code">
+                <div class="bg-white rounded-lg shadow-md p-4 card-hover pg-examples-code-panel">
+                    <div class="pg-examples-code-toolbar">
+                        <p class="text-sm font-medium text-gray-700 m-0">Sample request</p>
+                        <div class="pg-examples-tabs" role="tablist" aria-label="Code language">
+                            <button type="button" role="tab" class="pg-lang-tab is-active" data-tab="curl" aria-selected="true">cURL</button>
+                            <button type="button" role="tab" class="pg-lang-tab" data-tab="python" aria-selected="false">Python</button>
+                            <button type="button" role="tab" class="pg-lang-tab" data-tab="javascript" aria-selected="false">JavaScript</button>
                         </div>
                     </div>
                     
                     <div class="flex flex-col">
                         <!-- cURL Tab -->
-                        <div id="curl-tab" class="tab-content hidden flex flex-col">
+                        <div id="curl-tab" class="tab-content flex flex-col" role="tabpanel">
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="text-sm font-semibold text-gray-900">cURL Command</h3>
                                 <button 
-                                    class="copy-code-btn bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-medium py-1 px-3 rounded-md transition duration-200 text-xs"
+                                    class="copy-code-btn text-white font-medium py-1 px-3 rounded-md transition duration-200 text-xs"
                                     data-code="curl"
                                 >
                                     Copy Code
                                 </button>
                             </div>
-                            <pre id="curl-code" class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto code-block border-2 border-gray-800"></pre>
+                            <pre id="curl-code" class="pg-sample-code p-4 rounded-lg text-xs overflow-x-auto code-block border"></pre>
                         </div>
 
                         <!-- Python Tab -->
-                        <div id="python-tab" class="tab-content flex flex-col">
+                        <div id="python-tab" class="tab-content hidden flex flex-col" role="tabpanel">
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="text-sm font-semibold text-gray-900">Python Code</h3>
                                 <button 
-                                    class="copy-code-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition duration-200 text-xs"
+                                    class="copy-code-btn text-white font-medium py-1 px-3 rounded-md transition duration-200 text-xs"
                                     data-code="python"
                                 >
                                     Copy Code
                                 </button>
                             </div>
-                            <pre id="python-code" class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto code-block border-2 border-gray-800"></pre>
+                            <pre id="python-code" class="pg-sample-code p-4 rounded-lg text-xs overflow-x-auto code-block border"></pre>
                         </div>
 
                         <!-- JavaScript Tab -->
@@ -624,18 +518,20 @@
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="text-sm font-semibold text-gray-900">JavaScript Code</h3>
                                 <button 
-                                    class="copy-code-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition duration-200 text-xs"
+                                    class="copy-code-btn text-white font-medium py-1 px-3 rounded-md transition duration-200 text-xs"
                                     data-code="javascript"
                                 >
                                     Copy Code
                                 </button>
                             </div>
-                            <pre id="javascript-code" class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto code-block border-2 border-gray-800"></pre>
+                            <pre id="javascript-code" class="pg-sample-code p-4 rounded-lg text-xs overflow-x-auto code-block border"></pre>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
+        </div>
+        </main>
     </div>
     <script>
         const API_BASE_URL = window.location.origin;
@@ -664,12 +560,13 @@
         const getdatafromsalesforceFields = document.getElementById('getdatafromsalesforce-fields');
         const apikeyFields = document.getElementById('apikey-fields');
         const apiInfoContent = document.getElementById('apiInfoContent');
-        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabButtons = document.querySelectorAll('.pg-lang-tab');
         const tabContents = document.querySelectorAll('.tab-content');
         
         // Function type change handler
         functionTypeSelect.addEventListener('change', () => {
             const functionType = functionTypeSelect.value;
+            if (functionType) localStorage.setItem('lastApiCall', functionType);
             const allFieldGroups = [qrcodeFields, filesummaryFields, kycagentFields, formdetailsFields, subformdetailsFields, subformfieldsFields, generatepdfFields, getdatafromsalesforceFields, apikeyFields];
             allFieldGroups.forEach((el) => { if (el) el.classList.add('hidden'); });
             if (functionType === 'qrcode') {
@@ -918,19 +815,48 @@ token: "string"</pre>
                 
                 // Update buttons
                 tabButtons.forEach(btn => {
-                    btn.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white');
-                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                    btn.classList.remove('is-active');
+                    btn.setAttribute('aria-selected', 'false');
                 });
-                button.classList.add('active', 'bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white');
-                button.classList.remove('bg-gray-200', 'text-gray-700');
+                button.classList.add('is-active');
+                button.setAttribute('aria-selected', 'true');
 
-                // Update content
                 tabContents.forEach(content => content.classList.add('hidden'));
                 document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 
                 updateCodeExamples();
             });
         });
+
+        function syncHljsTheme() {
+            const link = document.getElementById('hljs-theme');
+            if (!link) return;
+            link.href = document.documentElement.getAttribute('data-theme') === 'dark'
+                ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+                : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+        }
+
+        function highlightSampleCodeBlocks() {
+            if (typeof hljs === 'undefined') return;
+            syncHljsTheme();
+            const blocks = [
+                ['curl-code', 'bash'],
+                ['python-code', 'python'],
+                ['javascript-code', 'javascript']
+            ];
+            blocks.forEach(([id, lang]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const code = el.textContent;
+                if (!code || !code.trim()) return;
+                try {
+                    el.innerHTML = hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
+                    el.classList.add('hljs');
+                } catch (_) {
+                    el.textContent = code;
+                }
+            });
+        }
 
         // Update code examples
         function updateCodeExamples() {
@@ -1376,6 +1302,8 @@ const response = await fetch("${API_BASE_URL}/api/Client/apiKey?" + params.toStr
 const text = await response.text();
 console.log(text);`;
             }
+
+            highlightSampleCodeBlocks();
         }
 
         // Update code examples when inputs change
@@ -1476,23 +1404,32 @@ console.log(text);`;
             const data = localStorage.getItem(`${apiType}_data`);
             return data ? JSON.parse(data) : null;
         }
-        
-        // Auto-detect function type from URL or localStorage
-        window.addEventListener('load', () => {
+
+        const VALID_FUNCTIONS = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'apikey']);
+
+        function resolveInitialFunctionType() {
             const urlParams = new URLSearchParams(window.location.search);
             const functionParam = urlParams.get('function');
+            if (functionParam && VALID_FUNCTIONS.has(functionParam)) return functionParam;
+
             const lastApiCall = localStorage.getItem('lastApiCall');
-            
-            const validFunctions = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'apikey']);
-            let functionType = 'qrcode'; // default
-            
-            if (functionParam && validFunctions.has(functionParam)) {
-                functionType = functionParam;
-            } else if (lastApiCall && validFunctions.has(lastApiCall)) {
-                functionType = lastApiCall;
-            }
-            
-            // Set function type
+            if (lastApiCall && VALID_FUNCTIONS.has(lastApiCall)) return lastApiCall;
+
+            try {
+                const ref = document.referrer ? new URL(document.referrer) : null;
+                if (ref && ref.origin === window.location.origin && window.PlaygroundSidebar) {
+                    const mapped = window.PlaygroundSidebar.functionForPage(ref.pathname);
+                    if (mapped && VALID_FUNCTIONS.has(mapped)) return mapped;
+                }
+            } catch (_) {}
+
+            return 'formdetails';
+        }
+
+        function applyInitialFunctionType() {
+            const functionType = resolveInitialFunctionType();
+            localStorage.setItem('lastApiCall', functionType);
+
             functionTypeSelect.value = functionType;
             functionTypeSelect.dispatchEvent(new Event('change'));
             
@@ -1565,57 +1502,18 @@ console.log(text);`;
                 }
             }
             
-            // Update code examples with loaded data
             updateCodeExamples();
-            
-            // Add blink animation to code examples section if coming from API call
-            if (functionParam || lastApiCall) {
-                const codeExamplesSection = document.querySelector('.col-span-2');
-                if (codeExamplesSection) {
-                    codeExamplesSection.classList.add('animate-blink');
-                    // Remove blink after 5 seconds
-                    setTimeout(() => {
-                        codeExamplesSection.classList.remove('animate-blink');
-                    }, 5000);
-                }
-            }
-        });
-        
-        // Initialize code examples on load
-        updateCodeExamples();
+        }
 
-        // Sidebar API function selection
-        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyInitialFunctionType);
+        } else {
+            applyInitialFunctionType();
+        }
 
-        apiFunctionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const functionName = button.getAttribute('data-function');
-                
-                // Update active button
-                apiFunctionButtons.forEach(btn => {
-                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
-                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-                });
-                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
-                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-
-                // Navigate to dedicated function pages from sidebar
-                const functionPageMap = {
-                    'generate-qrcode': '/index.html',
-                    'generate-apikey': '/apikey.html',
-                    'file-summary': '/filesummary.html',
-                    'form-details': '/formdetails.html',
-                    'subform-details': '/subformdetails.html',
-                    'subform-fields': '/subformfields.html',
-                    'generate-pdf': '/subformsubmitarchive.html',
-                    'getdata-salesforce': '/getdatafromsalesforce.html',
-                    'kyc-agent': '/kycagent.html'
-                };
-                const targetPage = functionPageMap[functionName];
-                if (targetPage) {
-                    window.location.href = targetPage;
-                }
-            });
+        new MutationObserver(() => highlightSampleCodeBlocks()).observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
         });
 
         // Smooth reveal animations on page load

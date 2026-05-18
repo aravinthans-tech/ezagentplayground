@@ -5,7 +5,8 @@
   function preferredTheme() {
     const saved = localStorage.getItem(storageKey);
     if (saved === "light" || saved === "dark") return saved;
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    /* Playground defaults to light; use the nav toggle to switch to dark */
+    return "light";
   }
 
   function applyTheme(theme) {

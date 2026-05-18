@@ -1,6 +1,6 @@
 /* Developer documentation — isolated from generic pg-app card rules */
 .pg-docs-page {
-  --doc-accent: #9333ea;
+  --doc-accent: #7c5cfc;
   --doc-border: #e8e4ee;
   --doc-muted: #65636d;
 }
@@ -79,7 +79,7 @@
 .pg-docs-page .doc-filter-bar select:focus {
   outline: none;
   border-color: var(--doc-accent);
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
+  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
 }
 
 /* Quick jump pills — only when viewing all */

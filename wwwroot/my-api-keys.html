@@ -14,7 +14,30 @@
     <link rel="stylesheet" href="/css/playground-animations.css">
     <link rel="stylesheet" href="/css/playground-v6.css">
     <link rel="stylesheet" href="/css/playground-dark.css">
+    <script>
+        (function () {
+            if (new URLSearchParams(window.location.search).get('signin') !== '1') {
+                document.documentElement.classList.add('my-keys-booting');
+            }
+        })();
+    </script>
     <style>
+        #keysBootState {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            min-height: 12rem;
+            padding: 2rem 1rem;
+        }
+        html.my-keys-booting #keysBootState {
+            display: flex !important;
+        }
+        html.my-keys-booting #signInCard,
+        html.my-keys-booting #keysPanel {
+            display: none !important;
+        }
         .key-toggle-track {
             position: relative;
             width: 2.75rem;
@@ -28,11 +51,11 @@
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .key-toggle-track.on {
-            background: #9333ea;
-            border-color: #7e22ce;
+            background: var(--primary, #7c5cfc);
+            border-color: var(--primary-hover, #6a48eb);
         }
         .key-toggle-track:hover:not(:disabled) {
-            border-color: #9333ea;
+            border-color: var(--primary, #7c5cfc);
         }
         .key-toggle-thumb {
             position: absolute;
@@ -57,8 +80,8 @@
             border-color: #5c5568;
         }
         html[data-theme="dark"] .key-toggle-track.on {
-            background: #a855f7;
-            border-color: #9333ea;
+            background: var(--primary, #8b72fc);
+            border-color: var(--primary-hover, #7c5cfc);
         }
         .key-usage-row td {
             padding: 0;
@@ -170,6 +193,58 @@
             background: rgba(0, 0, 0, 0.06);
             border-color: transparent;
         }
+        .key-header-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: #18181b;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .key-header-icon-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+        .key-header-icon-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        html[data-theme="dark"] .key-header-icon-btn {
+            color: #e4e4e7;
+        }
+        html[data-theme="dark"] .key-header-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .key-summary-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.35rem;
+        }
+        .key-summary-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #3f3f46;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
+        html[data-theme="dark"] .key-summary-pill {
+            color: #d4d4d8;
+            background: #2a2630;
+            border-color: #4a4458;
+        }
         .key-api-cell .key-icon-btn--ghost svg {
             width: 1.125rem;
             height: 1.125rem;
@@ -227,18 +302,8 @@
             font-size: 0.6875rem;
             padding: 0.35rem 0.75rem;
             border-radius: 0.375rem;
-            border: 1px solid #d4d4d8;
-            background: #fff;
-            color: #18181b;
             font-weight: 500;
             cursor: pointer;
-        }
-        .key-usage-export-btn:hover:not(:disabled) {
-            background: #f4f4f5;
-        }
-        .key-usage-export-btn:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
         }
     </style>
 </head>
@@ -275,6 +340,14 @@
                     <p id="pageSubtitle" class="text-xs text-gray-600 mt-1">Sign in to view keys. Use the <strong>toggle</strong> in each row to enable or disable API access.</p>
                 </div>
 
+                <div id="keysBootState" class="card-hover bg-white rounded-lg shadow-sm border border-gray-100 max-w-md mx-auto w-full" aria-busy="true" aria-label="Loading API keys">
+                    <svg class="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-xs text-gray-500">Loading your API keys...</p>
+                </div>
+
                 <div id="signInCard" class="bg-white rounded-lg shadow-md p-4 card-hover max-w-md mx-auto w-full animate-fadeInUp delay-100">
                     <h3 class="text-base font-semibold text-gray-900 mb-3">Sign in</h3>
                     <div class="space-y-3">
@@ -302,12 +375,17 @@
                     <div class="flex items-center justify-between flex-wrap gap-2 card-hover bg-white rounded-lg shadow-sm px-4 py-3 border border-gray-100">
                         <div>
                             <p id="signedInAs" class="text-sm font-medium text-gray-800"></p>
-                            <p id="myKeysSummary" class="text-[11px] text-gray-500 mt-0.5">â€”</p>
+                            <div id="myKeysSummary" class="key-summary-row" aria-live="polite">
+                                <span class="key-summary-pill" data-stat="keys">0 key(s)</span>
+                                <span class="key-summary-pill" data-stat="enabled">0 enabled</span>
+                                <span class="key-summary-pill" data-stat="calls">0 total API calls</span>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button type="button" id="signOutBtn" class="text-xs px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 button-hover font-medium">Sign out</button>
-                            <button type="button" id="refreshKeysBtn" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 text-white button-hover font-medium shadow-sm">Refresh</button>
-                        </div>
+                        <button type="button" id="refreshKeysBtn" class="key-header-icon-btn" title="Refresh keys" aria-label="Refresh keys">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
                     </div>
 
                     <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover animate-fadeInUp delay-300">
@@ -316,7 +394,7 @@
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <p class="text-xs text-gray-500 mt-3">Loading keysâ€¦</p>
+                            <p class="text-xs text-gray-500 mt-3">Loading keys...</p>
                         </div>
                         <div id="myKeysEmpty" class="hidden text-center py-10 text-xs text-gray-500 animate-fadeIn">No API keys yet. <a href="/apikey.html" class="text-purple-700 hover:underline font-medium">Generate your first key</a>.</div>
                         <div class="overflow-x-auto">
@@ -509,7 +587,7 @@
                 '<div class="min-w-0 flex-1">' +
                 '<p class="text-xs font-semibold text-gray-800">Usage (last 30 days)</p>' +
                 '<div class="flex items-center gap-3 mt-0.5 flex-nowrap overflow-x-auto">' +
-                '<p class="text-[10px] text-gray-500 whitespace-nowrap flex-shrink-0">' + escapeHtml(keyLabel || 'API key') + ' &middot; ' + (data.totalCalls ?? logs.length) + ' call(s)</p>' +
+                '<p class="text-[10px] text-gray-500 whitespace-nowrap flex-shrink-0">' + escapeHtml(keyLabel || 'API key') + ', ' + (data.totalCalls ?? logs.length) + ' call(s)</p>' +
                 (fnPills ? '<div class="key-usage-fn-row">' + fnPills + '</div>' : '') +
                 '</div></div>' +
                 '<button type="button" class="key-usage-export-btn button-hover flex-shrink-0" data-key-id="' + keyId + '"' + (logs.length ? '' : ' disabled') + '>Export CSV</button>' +
@@ -619,6 +697,31 @@
             }
         }
 
+        function ensureSummaryStructure() {
+            const row = document.getElementById('myKeysSummary');
+            if (!row || row.querySelector('[data-stat="keys"]')) return;
+            row.innerHTML =
+                '<span class="key-summary-pill" data-stat="keys">0 key(s)</span>' +
+                '<span class="key-summary-pill" data-stat="enabled">0 enabled</span>' +
+                '<span class="key-summary-pill" data-stat="calls">0 total API calls</span>';
+        }
+
+        function updateKeysSummary(keys) {
+            const row = document.getElementById('myKeysSummary');
+            if (!row) return;
+            ensureSummaryStructure();
+            const list = Array.isArray(keys) ? keys : [];
+            const total = list.length;
+            const enabled = list.filter(k => k.isEnabled && !k.isExpired).length;
+            const totalCalls = list.reduce((s, k) => s + (Number(k.totalCalls) || 0), 0);
+            const keysEl = row.querySelector('[data-stat="keys"]');
+            const enabledEl = row.querySelector('[data-stat="enabled"]');
+            const callsEl = row.querySelector('[data-stat="calls"]');
+            if (keysEl) keysEl.textContent = total + ' key(s)';
+            if (enabledEl) enabledEl.textContent = enabled + ' enabled';
+            if (callsEl) callsEl.textContent = totalCalls + ' total API calls';
+        }
+
         async function loadMyApiKeys() {
             const summary = document.getElementById('myKeysSummary');
             const loading = document.getElementById('myKeysLoading');
@@ -648,9 +751,9 @@
                             const err = await res.json();
                             if (err?.message) msg = err.message;
                         } catch (_) {}
-                        summary.textContent = msg;
+                        if (summary) summary.innerHTML = '<span class="key-summary-pill">' + escapeHtml(msg) + '</span>';
                     } else {
-                        summary.textContent = 'Could not load keys.';
+                        if (summary) summary.innerHTML = '<span class="key-summary-pill">Could not load keys.</span>';
                     }
                     loading.classList.add('hidden');
                     return;
@@ -658,8 +761,7 @@
                 document.getElementById('signInError').classList.add('hidden');
                 const data = await res.json();
                 cachedKeys = data.keys || [];
-                const enabled = cachedKeys.filter(k => k.isEnabled && !k.isExpired).length;
-                summary.textContent = `${data.totalKeys} key(s) Â· ${enabled} enabled Â· ${cachedKeys.reduce((s, k) => s + (k.totalCalls || 0), 0)} total API calls`;
+                updateKeysSummary(cachedKeys);
 
                 loading.classList.add('hidden');
                 if (!cachedKeys.length) {
@@ -699,13 +801,14 @@
                     </tr>`;
                 }).join('');
                 table.classList.remove('hidden');
+                updateKeysSummary(cachedKeys);
                 if (reopenKeyId && cachedKeys.some(k => String(k.id) === reopenKeyId)) {
                     expandedUsageKeyId = null;
                     await toggleKeyUsage(reopenKeyId);
                 }
             } catch {
                 loading.classList.add('hidden');
-                summary.textContent = 'Network error loading keys.';
+                if (summary) summary.innerHTML = '<span class="key-summary-pill">Network error loading keys.</span>';
             }
         }
 
@@ -718,16 +821,6 @@
             }
             showKeysPanel();
             await loadMyApiKeys();
-        });
-
-        document.getElementById('signOutBtn').addEventListener('click', () => {
-            if (demoModeActive) {
-                window.location.href = '/my-api-keys.html?signin=1';
-                return;
-            }
-            userPassword.value = '';
-            cachedKeys = [];
-            showSignIn();
         });
 
         document.getElementById('refreshKeysBtn').addEventListener('click', () => loadMyApiKeys());
@@ -794,25 +887,35 @@
             await loadMyApiKeys();
         }
 
+        function endKeysBoot() {
+            document.documentElement.classList.remove('my-keys-booting');
+            const boot = document.getElementById('keysBootState');
+            if (boot) boot.classList.add('hidden');
+        }
+
         async function initPage() {
-            if (forceSignIn) {
-                try {
-                    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-                    if (s?.email) userEmail.value = s.email;
-                } catch (_) {}
-                return;
-            }
-
-            let email = 'seth@ezofis.com';
             try {
-                const res = await fetch(`${API_BASE_URL}/api/Client/playground-demo/info`);
-                if (res.ok) {
-                    const info = await res.json();
-                    if (info.email) email = info.email;
+                if (forceSignIn) {
+                    try {
+                        const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+                        if (s?.email) userEmail.value = s.email;
+                    } catch (_) {}
+                    return;
                 }
-            } catch (_) {}
 
-            await startDemoView(email);
+                let email = 'seth@ezofis.com';
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/Client/playground-demo/info`);
+                    if (res.ok) {
+                        const info = await res.json();
+                        if (info.email) email = info.email;
+                    }
+                } catch (_) {}
+
+                await startDemoView(email);
+            } finally {
+                endKeysBoot();
+            }
         }
 
         initPage();

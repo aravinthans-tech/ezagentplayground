@@ -14,6 +14,100 @@
     <link rel="stylesheet" href="/css/playground-animations.css">
     <link rel="stylesheet" href="/css/playground-v6.css">
     <link rel="stylesheet" href="/css/playground-dark.css">
+    <style>
+        .usage-dashboard-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 0.5rem;
+            backdrop-filter: blur(2px);
+        }
+        .usage-dashboard-loading.hidden { display: none; }
+        .usage-dashboard-loading-text {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #374151;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        html[data-theme="dark"] .usage-dashboard-loading {
+            background: rgba(21, 19, 26, 0.85);
+        }
+        html[data-theme="dark"] .usage-dashboard-loading-text {
+            color: #e4e4e7;
+            background: var(--surface-raised, #1d1a24);
+            border-color: var(--border-color, #2f2a38);
+        }
+        #usageDashboard.usage-dashboard-refreshing {
+            opacity: 0.45;
+            transform: scale(0.99);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+        #usageDashboard.usage-dashboard-enter {
+            animation: usageDashboardIn 0.5s ease-out;
+        }
+        @keyframes usageDashboardIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #chart .usage-chart-bar {
+            transform-origin: bottom center;
+            animation: usageBarGrow 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+            opacity: 0;
+        }
+        @keyframes usageBarGrow {
+            from { transform: scaleY(0); opacity: 0; }
+            to { transform: scaleY(1); opacity: 1; }
+        }
+        #topFunctions .usage-fn-bar-fill {
+            transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .usage-kpi-pop {
+            animation: usageKpiPop 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+        }
+        @keyframes usageKpiPop {
+            from { opacity: 0.4; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pg-app .usage-fn-link {
+            background: transparent !important;
+            background-image: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #2563eb !important;
+            padding: 0 !important;
+            font-weight: 400;
+            font-size: inherit;
+            text-align: left;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            cursor: pointer;
+        }
+        .pg-app .usage-fn-link:hover {
+            background: transparent !important;
+            color: #1d4ed8 !important;
+            text-decoration: underline;
+        }
+        .pg-app .usage-fn-link:focus-visible {
+            outline: 2px solid rgba(37, 99, 235, 0.45);
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+        html[data-theme="dark"] .pg-app .usage-fn-link {
+            color: #60a5fa !important;
+        }
+        html[data-theme="dark"] .pg-app .usage-fn-link:hover {
+            color: #93c5fd !important;
+        }
+    </style>
 </head>
 <body class="pg-app bg-gradient-to-br gradient-animate from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%; ">
     <!-- Navigation Bar -->
@@ -55,16 +149,24 @@
                             <p class="text-xs text-gray-600 mt-1">Track every call made to your API — performance, success rate and recent history.</p>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button id="refreshBtn" class="text-xs px-2.5 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 button-hover flex items-center">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0014-7M19 5a9 9 0 00-14 7"></path></svg>
-                                Refresh
+                            <button type="button" id="refreshBtn" class="key-header-icon-btn" title="Refresh" aria-label="Refresh">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
                             </button>
-                            <button id="exportBtn" class="text-xs px-2.5 py-1.5 rounded-md bg-gradient-to-r pg-btn-primary hover:from-cyan-600 hover:to-teal-600 text-white button-hover flex items-center">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <button type="button" id="exportBtn" class="usage-export-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/>
+                                </svg>
                                 Export CSV
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <div id="usageDashboard" class="relative min-h-[200px]">
+                <div id="usageDashboardLoading" class="usage-dashboard-loading hidden" aria-live="polite">
+                    <span class="usage-dashboard-loading-text">Refreshing dashboard…</span>
                 </div>
 
                 <!-- Summary Cards -->
@@ -126,7 +228,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
                     <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-4 card-hover animate-fadeInUp delay-200">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-sm font-semibold text-gray-900">Calls — Last 7 days</h3>
+                            <h3 id="chartTitle" class="text-sm font-semibold text-gray-900">Calls — Last 7 days</h3>
                             <div class="flex items-center space-x-3 text-[11px]">
                                 <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Total</span>
                                 <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-red-400 mr-1"></span>Failed</span>
@@ -248,6 +350,8 @@
                     </div>
                 </div>
 
+                </div>
+
             </div>
         </div>
     </div>
@@ -272,9 +376,9 @@
             return pick([500, 502, 503]);
         }
         function statusClass(code) {
-            if (code >= 200 && code < 300) return 'bg-green-100 text-green-700';
-            if (code >= 400 && code < 500) return 'bg-amber-100 text-amber-700';
-            return 'bg-red-100 text-red-700';
+            if (code >= 200 && code < 300) return 'text-green-700';
+            if (code >= 400 && code < 500) return 'text-amber-700';
+            return 'text-red-700';
         }
         function statusLabel(code) {
             if (code >= 200 && code < 300) return code + ' OK';
@@ -388,10 +492,106 @@
             return out.sort((a,b) => b.time - a.time);
         }
 
-        const ALL = buildSample();
-        let filtered = ALL.slice();
+        let ALL = [];
+        let filtered = [];
         let page = 1;
         const PAGE_SIZE = 10;
+        let usageLoading = false;
+
+        function setRefreshBusy(busy) {
+            const btn = document.getElementById('refreshBtn');
+            if (!btn) return;
+            btn.disabled = busy;
+            btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+            btn.classList.toggle('is-refreshing', busy);
+        }
+
+        function setDashboardLoading(busy) {
+            const el = document.getElementById('usageDashboardLoading');
+            if (el) el.classList.toggle('hidden', !busy);
+        }
+
+        function updateChartTitle() {
+            const dt = parseInt(document.getElementById('filterDate').value, 10);
+            const labels = { 1: 'Today', 7: 'Last 7 days', 30: 'Last 30 days', 0: 'All time' };
+            const el = document.getElementById('chartTitle');
+            if (el) el.textContent = 'Calls — ' + (labels[dt] || 'Last 7 days');
+        }
+
+        function renderDashboard() {
+            updateChartTitle();
+            applyFilters();
+        }
+
+        function replayDashboardAnimations() {
+            const dash = document.getElementById('usageDashboard');
+            if (!dash) return;
+
+            dash.classList.remove('usage-dashboard-enter');
+            void dash.offsetWidth;
+            dash.classList.add('usage-dashboard-enter');
+
+            const animTokens = ['animate-fadeInUp', 'animate-fadeIn', 'animate-slideInLeft', 'animate-slideInRight', 'delay-100', 'delay-200', 'delay-300', 'delay-400'];
+            dash.querySelectorAll('[class*="animate-"]').forEach(el => {
+                const keep = [...el.classList].filter(c => animTokens.includes(c) || c.startsWith('animate-') || c.startsWith('delay-'));
+                keep.forEach(c => el.classList.remove(c));
+                void el.offsetWidth;
+                keep.forEach(c => el.classList.add(c));
+            });
+
+            dash.querySelectorAll('.card-hover').forEach((card, i) => {
+                card.classList.remove('usage-kpi-pop');
+                void card.offsetWidth;
+                card.style.animationDelay = (i * 0.07) + 's';
+                card.classList.add('usage-kpi-pop');
+            });
+
+            document.querySelectorAll('#tableBody tr').forEach((row, i) => {
+                row.classList.remove('table-row-enter');
+                void row.offsetWidth;
+                row.style.animationDelay = Math.min(i * 0.06, 0.45) + 's';
+                row.classList.add('table-row-enter');
+            });
+        }
+
+        function clearDashboardUi() {
+            page = 1;
+            ['kpiTotal', 'kpiSuccess', 'kpiLatency', 'kpiFailed'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = id === 'kpiSuccess' ? '0%' : (id === 'kpiLatency' ? '0 ms' : '0');
+            });
+            const delta = document.getElementById('kpiTotalDelta');
+            if (delta) { delta.textContent = '—'; delta.className = 'text-[11px] mt-0.5 font-medium text-gray-500'; }
+            const chart = document.getElementById('chart');
+            const labels = document.getElementById('chartLabels');
+            const top = document.getElementById('topFunctions');
+            if (chart) chart.innerHTML = '';
+            if (labels) labels.innerHTML = '';
+            if (top) top.innerHTML = '';
+            const body = document.getElementById('tableBody');
+            if (body) body.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500 text-sm">Loading…</td></tr>';
+        }
+
+        function refreshDashboard() {
+            if (usageLoading) return;
+            usageLoading = true;
+            setRefreshBusy(true);
+            setDashboardLoading(true);
+            const dash = document.getElementById('usageDashboard');
+            if (dash) dash.classList.add('usage-dashboard-refreshing');
+            if (typeof closeInputsModal === 'function') closeInputsModal();
+            clearDashboardUi();
+
+            window.setTimeout(() => {
+                ALL = buildSample();
+                usageLoading = false;
+                setRefreshBusy(false);
+                setDashboardLoading(false);
+                if (dash) dash.classList.remove('usage-dashboard-refreshing');
+                renderDashboard();
+                requestAnimationFrame(() => replayDashboardAnimations());
+            }, 380);
+        }
 
         // ---------- KPIs ----------
         function recomputeKpis(data) {
@@ -506,8 +706,8 @@
                 col.innerHTML = `
                     <div class="text-[10px] text-gray-500 mb-1">${b.total}</div>
                     <div class="relative w-full max-w-[36px] mx-auto" style="height: ${totalH}%">
-                        <div class="bar absolute bottom-0 left-0 right-0 rounded-t-md bg-gradient-to-t from-purple-500 to-blue-500" style="height:100%; animation-delay:${i*60}ms"></div>
-                        <div class="bar absolute bottom-0 left-0 right-0 rounded-t-md bg-red-400/80" style="height:${b.total ? (failedH/totalH*100) : 0}%; animation-delay:${i*60+120}ms"></div>
+                        <div class="usage-chart-bar absolute bottom-0 left-0 right-0 rounded-t-md bg-gradient-to-t from-purple-500 to-blue-500" style="height:100%; animation-delay:${i*60}ms"></div>
+                        <div class="usage-chart-bar absolute bottom-0 left-0 right-0 rounded-t-md bg-red-400/80" style="height:${b.total ? (failedH/totalH*100) : 0}%; animation-delay:${i*60+120}ms"></div>
                     </div>
                 `;
                 chart.appendChild(col);
@@ -532,10 +732,17 @@
                         <span class="text-gray-500">${n}</span>
                     </div>
                     <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-2 bg-gradient-to-r pg-btn-primary rounded-full" style="width:${Math.round(n/max*100)}%"></div>
+                        <div class="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full usage-fn-bar-fill" data-pct="${Math.round(n / max * 100)}" style="width:0%"></div>
                     </div>
                 </div>
             `).join('');
+            requestAnimationFrame(() => {
+                box.querySelectorAll('.usage-fn-bar-fill').forEach((bar, i) => {
+                    const pct = bar.getAttribute('data-pct') || '0';
+                    bar.style.transitionDelay = (i * 0.08) + 's';
+                    bar.style.width = pct + '%';
+                });
+            });
         }
 
         // ---------- Table ----------
@@ -543,15 +750,15 @@
             const body = document.getElementById('tableBody');
             const start = (page - 1) * PAGE_SIZE;
             const slice = filtered.slice(start, start + PAGE_SIZE);
-            body.innerHTML = slice.map(d => `
-                <tr class="row-hover">
+            body.innerHTML = slice.map((d, i) => `
+                <tr class="row-hover table-row-enter" style="animation-delay:${Math.min(i * 0.06, 0.45)}s">
                     <td class="px-4 py-2 text-gray-700 whitespace-nowrap">${fmtTime(d.time)}</td>
                     <td class="px-4 py-2 whitespace-nowrap">
-                        <button type="button" data-inputs-id="${d.id}" title="View request inputs" class="text-purple-700 hover:text-purple-900 font-medium hover:underline focus:outline-none">${d.name}</button>
+                        <button type="button" data-inputs-id="${d.id}" title="View request inputs" class="usage-fn-link">${d.name}</button>
                     </td>
-                    <td class="px-4 py-2 text-gray-600"><code class="text-xs">${d.endpoint}</code></td>
-                    <td class="px-4 py-2"><span class="status-pill bg-blue-100 text-blue-700">${d.method}</span></td>
-                    <td class="px-4 py-2"><span class="status-pill ${statusClass(d.status)}">${statusLabel(d.status)}</span></td>
+                    <td class="px-4 py-2 text-gray-600 font-mono text-xs">${d.endpoint}</td>
+                    <td class="px-4 py-2 text-gray-800 font-medium">${d.method}</td>
+                    <td class="px-4 py-2 font-medium ${statusClass(d.status)}">${statusLabel(d.status)}</td>
                     <td class="px-4 py-2 text-gray-700">${d.latency} ms</td>
                     <td class="px-4 py-2 text-gray-500 font-mono text-xs">${d.ip}</td>
                 </tr>
@@ -617,7 +824,7 @@
             document.getElementById('inputsModalMeta').textContent = rec.method + '  ' + rec.endpoint;
             document.getElementById('inputsModalTime').textContent = fmtTime(rec.time);
             const statusEl = document.getElementById('inputsModalStatus');
-            statusEl.innerHTML = `<span class="status-pill ${statusClass(rec.status)}">${statusLabel(rec.status)}</span>`;
+            statusEl.innerHTML = `<span class="font-medium ${statusClass(rec.status)}">${statusLabel(rec.status)}</span>`;
             document.getElementById('inputsModalLatency').textContent = rec.latency + ' ms';
             document.getElementById('inputsModalBody').textContent = JSON.stringify(rec.inputs || {}, null, 2);
             document.getElementById('copyInputsLabel').textContent = 'Copy';
@@ -642,15 +849,17 @@
         });
 
         // ---------- Wire up ----------
-        ['filterFunction','filterStatus','filterDate'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+        ['filterFunction', 'filterStatus'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+        document.getElementById('filterDate').addEventListener('change', applyFilters);
         document.getElementById('filterSearch').addEventListener('input', applyFilters);
         document.getElementById('prevBtn').addEventListener('click', () => { if (page > 1) { page--; renderTable(); } });
         document.getElementById('nextBtn').addEventListener('click', () => { if (page * PAGE_SIZE < filtered.length) { page++; renderTable(); } });
-        document.getElementById('refreshBtn').addEventListener('click', () => { applyFilters(); showToast('Refreshed'); });
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            refreshDashboard();
+        });
         document.getElementById('exportBtn').addEventListener('click', exportCsv);
 
-        // initial render
-        applyFilters();
+        refreshDashboard();
     </script>
     <script src="/js/playground-shell.js"></script>
 </body>
