@@ -74,6 +74,7 @@ public class ApiKeyMiddleware
             path.StartsWith("/subformfields.html") ||
             path.StartsWith("/subformsubmitarchive.html") ||
             path.StartsWith("/getdatafromsalesforce.html") ||
+            path.StartsWith("/access2pay.html") ||
             path.StartsWith("/usage-report.html") ||
             path.StartsWith("/playground-documentation.html") ||
             path.StartsWith("/kycagent.html") ||

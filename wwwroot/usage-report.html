@@ -146,7 +146,8 @@
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900">API Usage</h2>
-                            <p class="text-xs text-gray-600 mt-1">Track every call made to your API — performance, success rate and recent history.</p>
+                            <p id="usageSubtitle" class="text-xs text-gray-600 mt-1">Track every call made to your API — performance, success rate and recent history.</p>
+                            <p id="usageProductLabel" class="text-[11px] font-semibold text-purple-700 mt-0.5 hidden"></p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <button type="button" id="refreshBtn" class="key-header-icon-btn" title="Refresh" aria-label="Refresh">
@@ -251,12 +252,6 @@
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Function</label>
                             <select id="filterFunction" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus focus:border-cyan-500">
                                 <option value="">All Functions</option>
-                                <option>Generate API Key</option>
-                                <option>Form Details</option>
-                                <option>SubForm Details</option>
-                                <option>SubForm Fields</option>
-                                <option>Generate PDF</option>
-                                <option>Get Data From Salesforce</option>
                             </select>
                         </div>
                         <div>
@@ -357,15 +352,53 @@
     </div>
 
     <script>
-        // ---------- Sample data (no backend) ----------
-        const FUNCTIONS = [
-            { name: 'Generate API Key',         endpoint: '/api/ApiKey/generate',            method: 'POST' },
-            { name: 'Form Details',             endpoint: '/api/FormDetails/form/all',       method: 'POST' },
-            { name: 'SubForm Details',          endpoint: '/api/SubFormDetails/list',        method: 'POST' },
-            { name: 'SubForm Fields',           endpoint: '/api/SubFormFields/list',         method: 'POST' },
-            { name: 'Generate PDF',             endpoint: '/api/SubFormSubmitArchive/pdf',   method: 'POST' },
-            { name: 'Get Data From Salesforce', endpoint: '/api/GetDataFromSalesforce/get',  method: 'POST' },
+        // ---------- Sample data (no backend) — filtered by ?id=1 (Daimler Benz) or ?id=2 (Access2Pay) ----------
+        const PRODUCT_META = {
+            1: { label: 'Daimler Benz', subtitle: 'Usage for Daimler Benz playground APIs.' },
+            2: { label: 'Access2Pay', subtitle: 'Usage for Access2Pay playground APIs.' }
+        };
+        const ALL_FUNCTIONS = [
+            { name: 'Form Details',             endpoint: '/api/FormDetails',                    method: 'POST', productId: 1 },
+            { name: 'SubForm Details',          endpoint: '/api/SubFormDetails',                 method: 'POST', productId: 1 },
+            { name: 'SubForm Fields',           endpoint: '/api/SubFormFields',                  method: 'POST', productId: 1 },
+            { name: 'Generate PDF',             endpoint: '/api/SubFormSubmitAndArchive',        method: 'POST', productId: 1 },
+            { name: 'Get Data From Salesforce', endpoint: '/api/GetDataFromSalesforce',            method: 'POST', productId: 1 },
+            { name: 'Access2Pay Connector Insert', endpoint: '/api/Access2Pay/connectorInsert', method: 'POST', productId: 2 },
+            { name: 'Access2Pay Get',           endpoint: '/api/Access2Pay/get',                 method: 'POST', productId: 2 },
+            { name: 'Access2Pay Update',        endpoint: '/api/Access2Pay/update',              method: 'PUT',  productId: 2 }
         ];
+
+        function getProductId() {
+            if (window.PlaygroundSidebar && typeof window.PlaygroundSidebar.getProductId === 'function') {
+                return window.PlaygroundSidebar.getProductId();
+            }
+            return new URLSearchParams(window.location.search).get('id') === '2' ? 2 : 1;
+        }
+
+        function getActiveFunctions() {
+            const pid = getProductId();
+            return ALL_FUNCTIONS.filter(f => f.productId === pid);
+        }
+
+        function populateFunctionFilter() {
+            const sel = document.getElementById('filterFunction');
+            if (!sel) return;
+            const fns = getActiveFunctions();
+            sel.innerHTML = '<option value="">All Functions</option>' +
+                fns.map(f => `<option>${f.name}</option>`).join('');
+        }
+
+        function updateUsageHeader() {
+            const meta = PRODUCT_META[getProductId()] || PRODUCT_META[1];
+            const sub = document.getElementById('usageSubtitle');
+            const badge = document.getElementById('usageProductLabel');
+            if (sub) sub.textContent = meta.subtitle;
+            if (badge) {
+                badge.textContent = meta.label;
+                badge.classList.remove('hidden');
+            }
+            document.title = 'API Usage — ' + meta.label;
+        }
         const CLIENTS = ['Postman/10.21', 'curl/8.4.0', 'axios/1.6.7', 'PythonRequests/2.31', 'Browser-JS/fetch', 'NodeFetch/3.3'];
         function randIp() { return [10, 192, 172, 8, 13, 64][Math.floor(Math.random()*6)] + '.' + (Math.floor(Math.random()*255)) + '.' + (Math.floor(Math.random()*255)) + '.' + (Math.floor(Math.random()*255)); }
         function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
@@ -459,17 +492,54 @@
                         ezofisToken: maskedJwt(),
                         payload: { searchText: pick(SAMPLE_SEARCH) }
                     };
+                case 'Access2Pay Connector Insert':
+                    return {
+                        apiKey: maskedKey(),
+                        connectorId: pick([89, 90, 91]),
+                        payload: {
+                            processId: 26,
+                            workflowId: 104,
+                            transactionId: pick([26, 27, 28]),
+                            formId: 141,
+                            transactionStatus: 'Pending'
+                        }
+                    };
+                case 'Access2Pay Get':
+                    return {
+                        apiKey: maskedKey(),
+                        sortBy: { criteria: 'id', order: 'DESC' },
+                        filterBy: [],
+                        currentPage: 1,
+                        itemsPerPage: pick([0, 10, 20]),
+                        mode: 'browse'
+                    };
+                case 'Access2Pay Update':
+                    return {
+                        apiKey: maskedKey(),
+                        id: String(pick([12, 24, 36, 48])),
+                        body: pick(['Pending', 'Approved', 'Rejected'])
+                    };
                 default:
                     return {};
             }
         }
 
+        function endpointForSample(fn) {
+            if (fn.name === 'Access2Pay Update') {
+                const id = pick([12, 24, 36, 48, 88]);
+                return '/api/Access2Pay/update/' + id;
+            }
+            return fn.endpoint;
+        }
+
         function buildSample() {
             const out = [];
+            const pool = getActiveFunctions();
+            if (!pool.length) return out;
             const now = Date.now();
             const thirtyDays = 30 * 24 * 3600 * 1000;
             for (let i = 0; i < 260; i++) {
-                const fn = pick(FUNCTIONS);
+                const fn = pick(pool);
                 // 60% of records fall inside the last 7 days, 40% in the prior 23
                 const inRecent = Math.random() < 0.6;
                 const span = inRecent ? 7 * 24 * 3600 * 1000 : thirtyDays;
@@ -480,7 +550,7 @@
                     id: i,
                     time: t,
                     name: fn.name,
-                    endpoint: fn.endpoint,
+                    endpoint: endpointForSample(fn),
                     method: fn.method,
                     status: code,
                     latency: Math.floor(40 + Math.random()*420 + (code >= 500 ? 600 : 0)),
@@ -859,6 +929,8 @@
         });
         document.getElementById('exportBtn').addEventListener('click', exportCsv);
 
+        populateFunctionFilter();
+        updateUsageHeader();
         refreshDashboard();
     </script>
     <script src="/js/playground-shell.js"></script>
