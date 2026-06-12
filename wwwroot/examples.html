@@ -226,6 +226,9 @@
                                 <option value="subformfields">SubForm Fields</option>
                                 <option value="generatepdf">Generate PDF</option>
                                 <option value="getdatafromsalesforce">Get Data From Salesforce</option>
+                                <option value="access2payinsert">Access2Pay Connector Insert</option>
+                                <option value="access2payget">Access2Pay Get</option>
+                                <option value="access2payupdate">Access2Pay Update</option>
                                 <option value="apikey">Generate API Key</option>
                                 <option value="qrcode">Generate QR Code</option>
                             </select>
@@ -447,6 +450,33 @@
                             </div>
                         </div>
 
+                        <div id="access2pay-fields" class="hidden space-y-3">
+                            <div id="a2pInsertFields">
+                                <label for="a2pInsertJson" class="block text-xs font-semibold text-gray-700 mb-1">Connector Insert JSON</label>
+                                <textarea id="a2pInsertJson" rows="6" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none input-focus code-block text-xs" spellcheck="false">{}</textarea>
+                            </div>
+                            <div id="a2pGetFields" class="hidden">
+                                <label for="a2pGetJson" class="block text-xs font-semibold text-gray-700 mb-1">Query JSON</label>
+                                <textarea id="a2pGetJson" rows="6" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none input-focus code-block text-xs" spellcheck="false">{
+  "sortBy": { "criteria": "id", "order": "DESC" },
+  "filterBy": [],
+  "currentPage": 1,
+  "itemsPerPage": 0,
+  "mode": "browse"
+}</textarea>
+                            </div>
+                            <div id="a2pUpdateFields" class="hidden space-y-3">
+                                <div>
+                                    <label for="a2pUpdateId" class="block text-xs font-semibold text-gray-700 mb-1">Record ID</label>
+                                    <input type="text" id="a2pUpdateId" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus" placeholder="id" />
+                                </div>
+                                <div>
+                                    <label for="a2pUpdateBody" class="block text-xs font-semibold text-gray-700 mb-1">Update body (JSON string)</label>
+                                    <input type="text" id="a2pUpdateBody" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus font-mono" value="string" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="apikey-fields" class="hidden space-y-3">
                             <p class="text-xs text-gray-600">API key generation does not use the <code class="bg-gray-100 px-1 rounded">X-API-Key</code> field above.</p>
                             <div>
@@ -558,6 +588,10 @@
         const subformfieldsFields = document.getElementById('subformfields-fields');
         const generatepdfFields = document.getElementById('generatepdf-fields');
         const getdatafromsalesforceFields = document.getElementById('getdatafromsalesforce-fields');
+        const access2payFields = document.getElementById('access2pay-fields');
+        const a2pInsertFields = document.getElementById('a2pInsertFields');
+        const a2pGetFields = document.getElementById('a2pGetFields');
+        const a2pUpdateFields = document.getElementById('a2pUpdateFields');
         const apikeyFields = document.getElementById('apikey-fields');
         const apiInfoContent = document.getElementById('apiInfoContent');
         const tabButtons = document.querySelectorAll('.pg-lang-tab');
@@ -567,7 +601,7 @@
         functionTypeSelect.addEventListener('change', () => {
             const functionType = functionTypeSelect.value;
             if (functionType) localStorage.setItem('lastApiCall', functionType);
-            const allFieldGroups = [qrcodeFields, filesummaryFields, kycagentFields, formdetailsFields, subformdetailsFields, subformfieldsFields, generatepdfFields, getdatafromsalesforceFields, apikeyFields];
+            const allFieldGroups = [qrcodeFields, filesummaryFields, kycagentFields, formdetailsFields, subformdetailsFields, subformfieldsFields, generatepdfFields, getdatafromsalesforceFields, access2payFields, apikeyFields];
             allFieldGroups.forEach((el) => { if (el) el.classList.add('hidden'); });
             if (functionType === 'qrcode') {
                 qrcodeFields?.classList.remove('hidden');
@@ -585,6 +619,11 @@
                 generatepdfFields?.classList.remove('hidden');
             } else if (functionType === 'getdatafromsalesforce') {
                 getdatafromsalesforceFields?.classList.remove('hidden');
+            } else if (functionType === 'access2payinsert' || functionType === 'access2payget' || functionType === 'access2payupdate') {
+                access2payFields?.classList.remove('hidden');
+                a2pInsertFields?.classList.toggle('hidden', functionType !== 'access2payinsert');
+                a2pGetFields?.classList.toggle('hidden', functionType !== 'access2payget');
+                a2pUpdateFields?.classList.toggle('hidden', functionType !== 'access2payupdate');
             } else if (functionType === 'apikey') {
                 apikeyFields?.classList.remove('hidden');
             }
@@ -783,6 +822,53 @@ token: "string"</pre>
                         <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
   "payload": { "searchText": "ACC001" }
 }</pre>
+                    </div>
+                `;
+            } else if (functionType === 'access2payinsert') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Access2Pay/connectorInsert</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                `;
+            } else if (functionType === 'access2payget') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Access2Pay/get</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">{
+  "sortBy": { "criteria": "id", "order": "DESC" },
+  "filterBy": [],
+  "currentPage": 1,
+  "itemsPerPage": 0,
+  "mode": "browse"
+}</pre>
+                    </div>
+                `;
+            } else if (functionType === 'access2payupdate') {
+                apiInfoContent.innerHTML = `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">PUT /api/Access2Pay/update/{id}</code>
+                    </div>
+                    <div class="border-l-4 border-cyan-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Authentication</div>
+                        <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-2">Request Body</div>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">"string"</pre>
                     </div>
                 `;
             } else if (functionType === 'apikey') {
@@ -1278,6 +1364,109 @@ print(response.json())`;
 });
 const data = await response.json();
 console.log(data);`;
+            } else if (functionType === 'access2payinsert') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                let payload;
+                try { payload = JSON.parse(document.getElementById('a2pInsertJson')?.value || '{}'); } catch { payload = {}; }
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
+                const payloadPretty = JSON.stringify(payload, null, 2);
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Access2Pay/connectorInsert" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+
+url = "${API_BASE_URL}/api/Access2Pay/connectorInsert"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/connectorInsert", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
+            } else if (functionType === 'access2payget') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                let payload;
+                try { payload = JSON.parse(document.getElementById('a2pGetJson')?.value || '{}'); } catch { payload = { sortBy: { criteria: 'id', order: 'DESC' }, filterBy: [], currentPage: 1, itemsPerPage: 0, mode: 'browse' }; }
+                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
+                const payloadPretty = JSON.stringify(payload, null, 2);
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Access2Pay/get" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -d '${payloadOneLine}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+
+url = "${API_BASE_URL}/api/Access2Pay/get"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+}
+payload = ${payloadPretty}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/get", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+  },
+  body: JSON.stringify(${payloadPretty})
+});
+const data = await response.json();
+console.log(data);`;
+            } else if (functionType === 'access2payupdate') {
+                const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
+                const recordId = (document.getElementById('a2pUpdateId')?.value || 'id').trim();
+                const bodyStr = document.getElementById('a2pUpdateBody')?.value ?? 'string';
+                const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedBody = JSON.stringify(bodyStr);
+
+                document.getElementById('curl-code').textContent = `curl -X PUT "${API_BASE_URL}/api/Access2Pay/update/${recordId}" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${escapedApiKey}" \\
+  -d '${escapedBody}'`;
+
+                document.getElementById('python-code').textContent = `import requests
+
+url = "${API_BASE_URL}/api/Access2Pay/update/${recordId}"
+headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+}
+
+response = requests.put(url, headers=headers, json=${escapedBody})
+print(response.json())`;
+
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/update/${recordId}", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${escapedApiKey}"
+  },
+  body: JSON.stringify(${escapedBody})
+});
+const data = await response.json();
+console.log(data);`;
             } else if (functionType === 'apikey') {
                 const userName = document.getElementById('akUserEmail')?.value || 'admin@ezofis.com';
                 const password = document.getElementById('akUserPassword')?.value || 'YOUR_PASSWORD';
@@ -1345,6 +1534,10 @@ console.log(text);`;
         });
         const gpIsMultiple = document.getElementById('gpIsMultiple');
         if (gpIsMultiple) gpIsMultiple.addEventListener('change', updateCodeExamples);
+        ['a2pInsertJson', 'a2pGetJson', 'a2pUpdateId', 'a2pUpdateBody'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateCodeExamples);
+        });
         ['sfEzofisToken', 'sfPayloadJson'].forEach((id) => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('input', updateCodeExamples);
@@ -1405,15 +1598,37 @@ console.log(text);`;
             return data ? JSON.parse(data) : null;
         }
 
-        const VALID_FUNCTIONS = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'apikey']);
+        const VALID_FUNCTIONS = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'access2payinsert', 'access2payget', 'access2payupdate', 'apikey']);
+
+        const PRODUCT_FUNCTIONS = {
+            1: new Set(['formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'qrcode', 'apikey']),
+            2: new Set(['access2payinsert', 'access2payget', 'access2payupdate', 'apikey'])
+        };
+
+        function getProductId() {
+            return new URLSearchParams(window.location.search).get('id') === '2' ? 2 : 1;
+        }
+
+        function applyProductFunctionFilter() {
+            const allowed = PRODUCT_FUNCTIONS[getProductId()];
+            Array.from(functionTypeSelect.options).forEach((opt) => {
+                const show = allowed.has(opt.value);
+                opt.hidden = !show;
+                opt.disabled = !show;
+            });
+            if (!allowed.has(functionTypeSelect.value)) {
+                functionTypeSelect.value = getProductId() === 2 ? 'access2payinsert' : 'formdetails';
+            }
+        }
 
         function resolveInitialFunctionType() {
             const urlParams = new URLSearchParams(window.location.search);
+            const allowed = PRODUCT_FUNCTIONS[getProductId()];
             const functionParam = urlParams.get('function');
-            if (functionParam && VALID_FUNCTIONS.has(functionParam)) return functionParam;
+            if (functionParam && VALID_FUNCTIONS.has(functionParam) && allowed.has(functionParam)) return functionParam;
 
             const lastApiCall = localStorage.getItem('lastApiCall');
-            if (lastApiCall && VALID_FUNCTIONS.has(lastApiCall)) return lastApiCall;
+            if (lastApiCall && VALID_FUNCTIONS.has(lastApiCall) && allowed.has(lastApiCall)) return lastApiCall;
 
             try {
                 const ref = document.referrer ? new URL(document.referrer) : null;
@@ -1423,10 +1638,11 @@ console.log(text);`;
                 }
             } catch (_) {}
 
-            return 'formdetails';
+            return getProductId() === 2 ? 'access2payinsert' : 'formdetails';
         }
 
         function applyInitialFunctionType() {
+            applyProductFunctionFilter();
             const functionType = resolveInitialFunctionType();
             localStorage.setItem('lastApiCall', functionType);
 

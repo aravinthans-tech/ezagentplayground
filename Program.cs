@@ -32,6 +32,8 @@ builder.Services.AddScoped<FileSummaryService>();
 
 builder.Services.AddScoped<FormDetailsService>();
 
+builder.Services.AddScoped<Access2PayService>();
+
 // Register KycAgentService
 builder.Services.AddScoped<KycAgentService>();
 
@@ -77,7 +79,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Default route to API key page
-app.MapGet("/", () => Results.Redirect("/apikey.html"));
+app.MapGet("/", () => Results.Redirect("/apikey.html?id=1"));
 
 app.Run();
 

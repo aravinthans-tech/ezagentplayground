@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access2Pay - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
+    <link rel="stylesheet" href="/css/playground-animations.css">
+    <link rel="stylesheet" href="/css/playground-v6.css">
+    <link rel="stylesheet" href="/css/playground-dark.css">
+</head>
+<body class="pg-app bg-gradient-to-br gradient-animate from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; background-size: 400% 400%; ">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
+        <a href="/apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="/logo.png" alt="EZOFIS" class="pg-brand-logo h-8 w-auto max-w-[100px] object-contain flex-shrink-0" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
+            <span class="pg-logo-fallback hidden items-center gap-0.5 text-base font-bold tracking-tight whitespace-nowrap" style="display:none"><span class="text-purple-600">ez</span><span class="text-purple-500">o</span><span class="text-purple-700">fis</span></span>
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 flex-1 justify-end text-sm">
+            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="/playground-documentation.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="/js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/access2pay.html');</script>
+
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-4 animate-fadeInUp py-1">
+                    <h2 id="pageTitle" class="text-xl font-semibold text-gray-900">Access2Pay Connector Insert</h2>
+                    <p id="pageDesc" class="text-xs text-gray-600 mt-1">Call <code class="bg-gray-100 px-1 rounded">POST /api/Access2Pay/connectorInsert</code></p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 space-y-3 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-base font-semibold text-gray-900">Request</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
+                            <input id="apiKey" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm input-focus" placeholder="X-API-Key" autocomplete="off">
+                        </div>
+                        <div id="insertFields">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Connector JSON <span class="text-red-500">*</span></label>
+                            <textarea id="insertJson" rows="14" class="w-full border border-gray-300 rounded-md px-3 py-2 text-xs font-mono input-focus" spellcheck="false">{
+  "connectorId": 89,
+  "payload": {
+    "processId": 26,
+    "workflowId": 104,
+    "transactionId": 26,
+    "formId": 141,
+    "transactionStatus": "Pending",
+    "formentryId": 27,
+    "requestPayload": {}
+  }
+}</textarea>
+                        </div>
+                        <div id="getFields" class="hidden">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Query JSON <span class="text-red-500">*</span></label>
+                            <textarea id="getJson" rows="10" class="w-full border border-gray-300 rounded-md px-3 py-2 text-xs font-mono input-focus" spellcheck="false">{
+  "sortBy": { "criteria": "id", "order": "DESC" },
+  "filterBy": [],
+  "currentPage": 1,
+  "itemsPerPage": 0,
+  "mode": "browse"
+}</textarea>
+                        </div>
+                        <div id="updateFields" class="hidden space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Record ID <span class="text-red-500">*</span></label>
+                                <input id="updateId" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm input-focus" placeholder="id">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Update body (JSON string) <span class="text-red-500">*</span></label>
+                                <input id="updateBody" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono input-focus" value="string">
+                                <p class="text-[11px] text-gray-500 mt-1">Sent as a JSON string, e.g. <code>"string"</code></p>
+                            </div>
+                        </div>
+                        <button id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium pg-btn-primary button-hover">Submit</button>
+                        <div id="errBox" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-md p-2.5"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-base font-semibold text-gray-900 mb-2">Response</h3>
+                        <div class="space-y-3">
+                            <div><span class="text-xs font-semibold text-gray-500">id</span><pre id="outId" class="mt-1 bg-gray-50 border rounded p-2"></pre></div>
+                            <div><span class="text-xs font-semibold text-gray-500">output</span><pre id="outPlain" class="mt-1 bg-gray-50 border rounded p-2 max-h-96 overflow-auto"></pre></div>
+                            <div><span class="text-xs font-semibold text-gray-500">encryptOutput</span><pre id="outEnc" class="mt-1 bg-gray-50 border rounded p-2 max-h-96 overflow-auto"></pre></div>
+                        </div>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-end">
+                            <button type="button" id="viewCodeExamplesBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-purple-600 hover:bg-purple-700 border border-purple-800/20 shadow-sm">Code examples</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const API_BASE = window.location.origin;
+        const errBox = document.getElementById('errBox');
+        const OP_META = {
+            insert: {
+                title: 'Access2Pay Connector Insert',
+                desc: 'Call <code class="bg-gray-100 px-1 rounded">POST /api/Access2Pay/connectorInsert</code>',
+                btn: 'Connector Insert',
+                examplesFn: 'access2payinsert'
+            },
+            get: {
+                title: 'Access2Pay Get',
+                desc: 'Call <code class="bg-gray-100 px-1 rounded">POST /api/Access2Pay/get</code>',
+                btn: 'Get',
+                examplesFn: 'access2payget'
+            },
+            update: {
+                title: 'Access2Pay Update',
+                desc: 'Call <code class="bg-gray-100 px-1 rounded">PUT /api/Access2Pay/update/{id}</code>',
+                btn: 'Update',
+                examplesFn: 'access2payupdate'
+            }
+        };
+
+        function currentOp() {
+            const h = (window.location.hash || '#insert').replace('#', '').toLowerCase();
+            return OP_META[h] ? h : 'insert';
+        }
+
+        function applyOp() {
+            const op = currentOp();
+            const meta = OP_META[op];
+            document.getElementById('pageTitle').textContent = meta.title;
+            document.getElementById('pageDesc').innerHTML = meta.desc;
+            document.getElementById('submitBtn').textContent = meta.btn;
+            document.getElementById('insertFields').classList.toggle('hidden', op !== 'insert');
+            document.getElementById('getFields').classList.toggle('hidden', op !== 'get');
+            document.getElementById('updateFields').classList.toggle('hidden', op !== 'update');
+            localStorage.setItem('lastApiCall', meta.examplesFn);
+        }
+
+        window.addEventListener('hashchange', () => {
+            applyOp();
+            if (window.PlaygroundSidebar) PlaygroundSidebar.mount('/access2pay.html');
+        });
+        applyOp();
+
+        const pretty = (v) => {
+            try {
+                if (typeof v === 'string') {
+                    const t = v.trim();
+                    if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+                        return JSON.stringify(JSON.parse(t), null, 2);
+                    }
+                }
+                return typeof v === 'string' ? v : JSON.stringify(v, null, 2);
+            } catch {
+                return String(v ?? '');
+            }
+        };
+
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const op = currentOp();
+            if (!apiKey) {
+                errBox.textContent = 'Playground API key is required';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            let url;
+            let options = { headers: { 'X-API-Key': apiKey } };
+
+            if (op === 'insert') {
+                let body;
+                try { body = JSON.parse(document.getElementById('insertJson').value); }
+                catch (e) { errBox.textContent = 'Invalid connector JSON: ' + e.message; errBox.classList.remove('hidden'); return; }
+                url = `${API_BASE}/api/Access2Pay/connectorInsert`;
+                options.method = 'POST';
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            } else if (op === 'get') {
+                let body;
+                try { body = JSON.parse(document.getElementById('getJson').value); }
+                catch (e) { errBox.textContent = 'Invalid query JSON: ' + e.message; errBox.classList.remove('hidden'); return; }
+                url = `${API_BASE}/api/Access2Pay/get`;
+                options.method = 'POST';
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            } else {
+                const id = document.getElementById('updateId').value.trim();
+                const bodyStr = document.getElementById('updateBody').value;
+                if (!id) { errBox.textContent = 'Record ID is required'; errBox.classList.remove('hidden'); return; }
+                url = `${API_BASE}/api/Access2Pay/update/${encodeURIComponent(id)}`;
+                options.method = 'PUT';
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(bodyStr);
+            }
+
+            errBox.classList.add('hidden');
+            document.getElementById('postOutputActions').classList.add('hidden');
+            const btn = document.getElementById('submitBtn');
+            const btnLabel = OP_META[op].btn;
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            try {
+                const res = await fetch(url, options);
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    errBox.textContent = data.encryptOutput || data.EncryptOutput || data.message || res.statusText;
+                    errBox.classList.remove('hidden');
+                }
+                document.getElementById('outId').textContent = String(data.id ?? '');
+                document.getElementById('outPlain').textContent = pretty(data.output);
+                document.getElementById('outEnc').textContent = pretty(data.encryptOutput ?? data.EncryptOutput);
+                if (res.ok) {
+                    document.getElementById('postOutputActions').classList.remove('hidden');
+                    try {
+                        localStorage.setItem('access2pay_data', JSON.stringify({
+                            apiKey,
+                            op,
+                            insertJson: document.getElementById('insertJson').value,
+                            getJson: document.getElementById('getJson').value,
+                            updateId: document.getElementById('updateId').value,
+                            updateBody: document.getElementById('updateBody').value
+                        }));
+                    } catch (_) {}
+                }
+            } catch (e) {
+                errBox.textContent = e.message || String(e);
+                errBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = btnLabel;
+            }
+        });
+
+        document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => {
+            const pid = new URLSearchParams(window.location.search).get('id') || '2';
+            window.location.href = '/examples.html?function=' + encodeURIComponent(OP_META[currentOp()].examplesFn) + '&id=' + encodeURIComponent(pid);
+        });
+
+        try {
+            const saved = JSON.parse(localStorage.getItem('access2pay_data') || 'null');
+            if (saved) {
+                if (saved.apiKey) document.getElementById('apiKey').value = saved.apiKey;
+                if (saved.insertJson) document.getElementById('insertJson').value = saved.insertJson;
+                if (saved.getJson) document.getElementById('getJson').value = saved.getJson;
+                if (saved.updateId) document.getElementById('updateId').value = saved.updateId;
+                if (saved.updateBody) document.getElementById('updateBody').value = saved.updateBody;
+                if (saved.op && OP_META[saved.op]) window.location.hash = saved.op;
+            }
+        } catch (_) {}
+    </script>
+    <script src="/js/playground-shell.js"></script>
+</body>
+</html>

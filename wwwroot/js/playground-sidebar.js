@@ -1,5 +1,6 @@
 /**
  * Shared sidebar — V6 design + full API KEY section (Generate + My API Keys).
+ * URL ?id=1 → Daimler Benz functions | ?id=2 → Access2Pay functions
  */
 (function () {
     const ICONS = {
@@ -10,36 +11,24 @@
         lines: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>',
         doc: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>',
         cloud: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>',
+        payment: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>',
         chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>'
     };
 
-    const SECTIONS = [
-        {
-            title: 'API KEY',
-            extraClass: '',
-            items: [
-                { href: '/apikey.html', label: 'Generate API Key', icon: 'key' },
-                { href: '/my-api-keys.html', label: 'My API Keys', icon: 'shield' }
-            ]
-        },
-        {
-            title: 'FUNCTIONS',
-            extraClass: '',
-            items: [
-                { href: '/formdetails.html', label: 'Form Details', icon: 'list' },
-                { href: '/subformdetails.html', label: 'SubForm Details', icon: 'layers' },
-                { href: '/subformfields.html', label: 'SubForm Fields', icon: 'lines' },
-                { href: '/subformsubmitarchive.html', label: 'Generate PDF', icon: 'doc' },
-                { href: '/getdatafromsalesforce.html', label: 'Get Data From Salesforce', icon: 'cloud' }
-            ]
-        },
-        {
-            title: 'REPORTS',
-            extraClass: 'pg-sidebar-section--reports',
-            items: [
-                { href: '/usage-report.html', label: 'API Usage', icon: 'chart' }
-            ]
-        }
+    const PRODUCT = {
+        1: { label: 'Daimler Benz', defaultPath: '/formdetails.html' },
+        2: { label: 'Access2Pay', defaultPath: '/access2pay.html#insert' }
+    };
+
+    const FUNCTION_ITEMS = [
+        { href: '/formdetails.html', label: 'Form Details', icon: 'list', productId: 1 },
+        { href: '/subformdetails.html', label: 'SubForm Details', icon: 'layers', productId: 1 },
+        { href: '/subformfields.html', label: 'SubForm Fields', icon: 'lines', productId: 1 },
+        { href: '/subformsubmitarchive.html', label: 'Generate PDF', icon: 'doc', productId: 1 },
+        { href: '/getdatafromsalesforce.html', label: 'Get Data From Salesforce', icon: 'cloud', productId: 1 },
+        { href: '/access2pay.html#insert', label: 'Access2Pay Connector Insert', icon: 'payment', productId: 2 },
+        { href: '/access2pay.html#get', label: 'Access2Pay Get', icon: 'payment', productId: 2 },
+        { href: '/access2pay.html#update', label: 'Access2Pay Update', icon: 'payment', productId: 2 }
     ];
 
     const PAGE_TO_FUNCTION = {
@@ -49,9 +38,19 @@
         '/subformfields.html': 'subformfields',
         '/subformsubmitarchive.html': 'generatepdf',
         '/getdatafromsalesforce.html': 'getdatafromsalesforce',
+        '/access2pay.html': 'access2payinsert',
         '/apikey.html': 'apikey',
         '/filesummary.html': 'filesummary',
         '/kycagent.html': 'kycagent'
+    };
+
+    const PAGE_TO_PRODUCT = {
+        '/formdetails.html': 1,
+        '/subformdetails.html': 1,
+        '/subformfields.html': 1,
+        '/subformsubmitarchive.html': 1,
+        '/getdatafromsalesforce.html': 1,
+        '/access2pay.html': 2
     };
 
     function normalizePath(path) {
@@ -62,8 +61,34 @@
         return p;
     }
 
+    function getProductId() {
+        const id = new URLSearchParams(window.location.search).get('id');
+        return id === '2' ? 2 : 1;
+    }
+
+    function withProductId(href, productId) {
+        if (!href) return href;
+        const hashIdx = href.indexOf('#');
+        const pathPart = hashIdx >= 0 ? href.slice(0, hashIdx) : href;
+        const hashPart = hashIdx >= 0 ? href.slice(hashIdx) : '';
+        const url = new URL(pathPart, window.location.origin);
+        url.searchParams.set('id', String(productId));
+        return url.pathname + url.search + hashPart;
+    }
+
+    function productIdForPage(path) {
+        return PAGE_TO_PRODUCT[normalizePath(path)] || null;
+    }
+
     function functionForPage(path) {
-        return PAGE_TO_FUNCTION[normalizePath(path)] || null;
+        const normalized = normalizePath(path);
+        if (normalized === '/access2pay.html') {
+            const hash = (window.location.hash || '#insert').replace('#', '').toLowerCase();
+            if (hash === 'get') return 'access2payget';
+            if (hash === 'update') return 'access2payupdate';
+            return 'access2payinsert';
+        }
+        return PAGE_TO_FUNCTION[normalized] || null;
     }
 
     function rememberCurrentApi(path) {
@@ -74,7 +99,8 @@
     function wireExamplesNavLinks(path) {
         const fn = functionForPage(path);
         if (!fn) return;
-        const target = '/examples.html?function=' + encodeURIComponent(fn);
+        const productId = getProductId();
+        const target = '/examples.html?function=' + encodeURIComponent(fn) + '&id=' + productId;
         document.querySelectorAll('nav a[href]').forEach(function (a) {
             const raw = a.getAttribute('href') || '';
             const base = raw.split('?')[0];
@@ -82,6 +108,18 @@
                 a.setAttribute('href', target);
             }
         });
+    }
+
+    function ensureProductRoute() {
+        const path = normalizePath(window.location.pathname);
+        const pageProduct = productIdForPage(path);
+        if (!pageProduct) return;
+
+        const urlProduct = getProductId();
+        if (pageProduct === urlProduct) return;
+
+        const target = PRODUCT[urlProduct].defaultPath;
+        window.location.replace(withProductId(target, urlProduct));
     }
 
     function svg(icon) {
@@ -93,29 +131,58 @@
         return isActive ? `${base} pg-nav-item--active` : base;
     }
 
+    function isItemActive(item, activePath) {
+        const itemHref = item.href;
+        if (itemHref.includes('#')) {
+            const parts = itemHref.split('#');
+            const itemPath = normalizePath(parts[0]);
+            const itemHash = '#' + (parts[1] || 'insert');
+            const currentHash = window.location.hash || '#insert';
+            return itemPath === activePath && itemHash === currentHash;
+        }
+        return normalizePath(itemHref) === activePath;
+    }
+
     function render(activeHref) {
         const active = normalizePath(activeHref || window.location.pathname);
+        const productId = getProductId();
+        const product = PRODUCT[productId];
+        const functionItems = FUNCTION_ITEMS.filter(item => item.productId === productId);
+
         let html = `
             <div class="p-4 border-b pg-sidebar-header">
                 <h2 class="pg-sidebar-title text-base font-semibold">API Functions</h2>
+                <p class="text-[11px] text-gray-500 mt-0.5">${product.label}</p>
             </div>
             <div class="flex-1 overflow-y-auto p-2">`;
 
-        SECTIONS.forEach(section => {
-            html += `<div class="pg-sidebar-section ${section.extraClass}">`;
-            html += `<h3 class="pg-sidebar-heading">${section.title}</h3>`;
-            section.items.forEach(item => {
-                const isActive = normalizePath(item.href) === active;
-                html += `<a href="${item.href}" class="${linkClass(isActive)}">${svg(item.icon)}<span>${item.label}</span></a>`;
-            });
-            html += '</div>';
+        html += '<div class="pg-sidebar-section">';
+        html += '<h3 class="pg-sidebar-heading">API KEY</h3>';
+        html += `<a href="${withProductId('/apikey.html', productId)}" class="${linkClass(active === '/apikey.html')}">${svg('key')}<span>Generate API Key</span></a>`;
+        html += `<a href="${withProductId('/my-api-keys.html', productId)}" class="${linkClass(active === '/my-api-keys.html')}">${svg('shield')}<span>My API Keys</span></a>`;
+        html += '</div>';
+
+        html += '<div class="pg-sidebar-section">';
+        html += '<h3 class="pg-sidebar-heading">FUNCTIONS</h3>';
+        functionItems.forEach(item => {
+            const href = withProductId(item.href, productId);
+            const isActive = isItemActive({ href: item.href }, active);
+            html += `<a href="${href}" class="${linkClass(isActive)}">${svg(item.icon)}<span>${item.label}</span></a>`;
         });
+        html += '</div>';
+
+        html += '<div class="pg-sidebar-section pg-sidebar-section--reports">';
+        html += '<h3 class="pg-sidebar-heading">REPORTS</h3>';
+        html += `<a href="${withProductId('/usage-report.html', productId)}" class="${linkClass(active === '/usage-report.html')}">${svg('chart')}<span>API Usage</span></a>`;
+        html += '</div>';
 
         html += '</div>';
         return html;
     }
 
     function mount(activeHref) {
+        ensureProductRoute();
+
         const root = document.getElementById('sidebar');
         if (!root) return;
         root.className = 'w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3rem)]';
@@ -128,5 +195,14 @@
         }
     }
 
-    window.PlaygroundSidebar = { mount, render, PAGE_TO_FUNCTION, normalizePath, functionForPage };
+    window.PlaygroundSidebar = {
+        mount,
+        render,
+        PAGE_TO_FUNCTION,
+        normalizePath,
+        functionForPage,
+        getProductId,
+        withProductId,
+        PRODUCT
+    };
 })();

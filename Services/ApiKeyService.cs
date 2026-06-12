@@ -29,15 +29,33 @@ public class ApiKeyService
             tenantId = result.ToString() ?? "";
         }
 
-        using (var cmdToken = new SqlCommand(
-            "SELECT TOP 1 token FROM authenticate WHERE userid=@uid AND tenantId=@tid", connection))
+        var token = await GetTokenByTenantIdAsync(tenantId, connection);
+        if (token == null) return null;
+        return (tenantId, token);
+    }
+
+    public async Task<string?> GetTokenByTenantIdAsync(string tenantId, SqlConnection? existing = null)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId)) return null;
+
+        async Task<string?> Run(SqlConnection conn)
         {
+            using var cmdToken = new SqlCommand(
+                "SELECT TOP 1 token FROM authenticate WHERE userid=@uid AND tenantId=@tid", conn);
             cmdToken.Parameters.AddWithValue("@uid", tenantId);
             cmdToken.Parameters.AddWithValue("@tid", tenantId);
             var tok = await cmdToken.ExecuteScalarAsync();
-            if (tok == null) return null;
-            return (tenantId, tok.ToString() ?? "");
+            return tok?.ToString();
         }
+
+        if (existing != null) return await Run(existing);
+
+        var cs = GetConnectionString();
+        if (string.IsNullOrEmpty(cs)) return null;
+
+        await using var connection = new SqlConnection(cs);
+        await connection.OpenAsync();
+        return await Run(connection);
     }
 
     public async Task<bool> UserOwnsApiKeyAsync(string userName, string password, int apiKeyId, SqlConnection? existing = null)
@@ -127,6 +145,8 @@ public class ApiKeyService
             @"SELECT TOP 1 id, apikey, ExpiresAt
               FROM tenantuserApiKey
               WHERE username=@u AND password=@p
+                AND (IsEnabled IS NULL OR IsEnabled = 1)
+                AND (ExpiresAt IS NULL OR ExpiresAt > GETUTCDATE())
               ORDER BY createdat DESC", connection);
         cmd.Parameters.AddWithValue("@u", userName);
         cmd.Parameters.AddWithValue("@p", password);

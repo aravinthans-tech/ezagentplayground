@@ -81,7 +81,7 @@ public class ApiKeyController : ControllerBase
         {
             var result = await _apiKeyService.GetLatestApiKeyAsync(userName, password);
             if (result == null)
-                return NotFound("API key not found for this user");
+                return NotFound("No active API key found for this user. Generate a new key to continue.");
 
             return Ok(new
             {
