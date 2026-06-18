@@ -194,6 +194,26 @@
             return OP_META[h] ? h : 'insert';
         }
 
+        const responsesByOp = { insert: null, get: null, update: null };
+
+        function clearResponsePanel() {
+            document.getElementById('outId').textContent = '';
+            document.getElementById('outPlain').textContent = '';
+            document.getElementById('outEnc').textContent = '';
+            document.getElementById('postOutputActions').classList.add('hidden');
+        }
+
+        function showResponse(data) {
+            if (!data) {
+                clearResponsePanel();
+                return;
+            }
+            document.getElementById('outId').textContent = String(data.id ?? '');
+            document.getElementById('outPlain').textContent = pretty(data.output);
+            document.getElementById('outEnc').textContent = pretty(data.encryptOutput ?? data.EncryptOutput);
+            document.getElementById('postOutputActions').classList.remove('hidden');
+        }
+
         function applyOp() {
             const op = currentOp();
             const meta = OP_META[op];
@@ -204,6 +224,7 @@
             document.getElementById('getFields').classList.toggle('hidden', op !== 'get');
             document.getElementById('updateFields').classList.toggle('hidden', op !== 'update');
             localStorage.setItem('lastApiCall', meta.examplesFn);
+            showResponse(responsesByOp[op]);
         }
 
         window.addEventListener('hashchange', () => {
@@ -277,12 +298,15 @@
                 if (!res.ok) {
                     errBox.textContent = data.encryptOutput || data.EncryptOutput || data.message || res.statusText;
                     errBox.classList.remove('hidden');
-                }
-                document.getElementById('outId').textContent = String(data.id ?? '');
-                document.getElementById('outPlain').textContent = pretty(data.output);
-                document.getElementById('outEnc').textContent = pretty(data.encryptOutput ?? data.EncryptOutput);
-                if (res.ok) {
-                    document.getElementById('postOutputActions').classList.remove('hidden');
+                    responsesByOp[op] = null;
+                    clearResponsePanel();
+                } else {
+                    responsesByOp[op] = {
+                        id: data.id,
+                        output: data.output,
+                        encryptOutput: data.encryptOutput ?? data.EncryptOutput
+                    };
+                    showResponse(responsesByOp[op]);
                     try {
                         localStorage.setItem('access2pay_data', JSON.stringify({
                             apiKey,
@@ -290,7 +314,8 @@
                             insertJson: document.getElementById('insertJson').value,
                             getJson: document.getElementById('getJson').value,
                             updateId: document.getElementById('updateId').value,
-                            updateBody: document.getElementById('updateBody').value
+                            updateBody: document.getElementById('updateBody').value,
+                            responses: responsesByOp
                         }));
                     } catch (_) {}
                 }
@@ -322,7 +347,13 @@
                     if (saved.getJson) document.getElementById('getJson').value = saved.getJson;
                     if (saved.updateId) document.getElementById('updateId').value = saved.updateId;
                     if (saved.updateBody) document.getElementById('updateBody').value = saved.updateBody;
+                    if (saved.responses) {
+                        Object.keys(responsesByOp).forEach((key) => {
+                            if (saved.responses[key]) responsesByOp[key] = saved.responses[key];
+                        });
+                    }
                     if (saved.op && OP_META[saved.op]) window.location.hash = saved.op;
+                    else showResponse(responsesByOp[currentOp()]);
                 }
             } catch (_) {}
         }
