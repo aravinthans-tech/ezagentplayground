@@ -664,21 +664,13 @@
         
         // Load data on page load (only if not refreshed)
         window.addEventListener('load', () => {
-            // Check if this is a refresh
-            const navigationEntries = performance.getEntriesByType('navigation');
-            const isRefresh = navigationEntries.length > 0 && 
-                (navigationEntries[0].type === 'reload' || 
-                 navigationEntries[0].type === 'back_forward' && 
-                 !sessionStorage.getItem('navigated'));
-            
-            // Mark that we've navigated (not refreshed)
-            if (!isRefresh && !sessionStorage.getItem('navigated')) {
-                sessionStorage.setItem('navigated', 'true');
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload(['lastApiCall', 'qrcode_data', 'filesummary_data', 'kycagent_data']);
+                if (!window.PlaygroundFormStorage.shouldRestore()) return;
             }
-            
-            if (!isRefresh) {
-                // Restore QR Code data if exists
-                const qrcodeData = loadFromLocalStorage('qrcode');
+
+            // Restore QR Code data if exists
+            const qrcodeData = loadFromLocalStorage('qrcode');
                 if (qrcodeData) {
                     apiKeyInput.value = qrcodeData.apiKey || '';
                     qrValueInput.value = qrcodeData.qrValue || '';
@@ -689,13 +681,6 @@
                         document.getElementById('postOutputActions').classList.remove('hidden');
                     }
                 }
-            } else {
-                // Clear on refresh
-                localStorage.removeItem('lastApiCall');
-                localStorage.removeItem('qrcode_data');
-                localStorage.removeItem('filesummary_data');
-                sessionStorage.removeItem('navigated');
-            }
         });
 
         // Copy to clipboard helper

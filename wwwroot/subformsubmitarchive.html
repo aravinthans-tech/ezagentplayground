@@ -122,7 +122,12 @@
                 btn.textContent = 'Submit + Archive';
             }
         });
-        window.addEventListener('load', () => { try { const s=JSON.parse(localStorage.getItem('subformsubmitarchive_data')||'null'); if(!s) return; ['apiKey','ezofisToken','panelName'].forEach(k=>{ if(s[k]) document.getElementById(k).value=s[k];}); ['formId','templateId','entryIdForFormEntry','entryId'].forEach(k=>{ if(s[k]!==undefined) document.getElementById(k).value=s[k];}); if(s.isMultiple) document.getElementById('isMultiple').checked=true; if(s.fieldsText) document.getElementById('fieldsJson').value=s.fieldsText; } catch(_){} });
+        window.addEventListener('load', () => { try {
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload(['subformsubmitarchive_data']);
+                if (!window.PlaygroundFormStorage.shouldRestore()) return;
+            }
+            const s=JSON.parse(localStorage.getItem('subformsubmitarchive_data')||'null'); if(!s) return; ['apiKey','ezofisToken','panelName'].forEach(k=>{ if(s[k]) document.getElementById(k).value=s[k];}); ['formId','templateId','entryIdForFormEntry','entryId'].forEach(k=>{ if(s[k]!==undefined) document.getElementById(k).value=s[k];}); if(s.isMultiple) document.getElementById('isMultiple').checked=true; if(s.fieldsText) document.getElementById('fieldsJson').value=s.fieldsText; } catch(_){} });
         document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => { window.location.href = '/examples.html?function=generatepdf'; });
         document.getElementById('viewDocumentationBtn').addEventListener('click', () => { window.location.href = '/playground-documentation.html#generate-pdf'; });
     </script>

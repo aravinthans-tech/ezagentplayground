@@ -94,3 +94,25 @@
     }
   });
 })();
+
+(function () {
+  function isPageReload() {
+    const nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    return !!(nav && (nav.type === "reload" || nav.type === "back_forward"));
+  }
+
+  window.PlaygroundFormStorage = {
+    isPageReload: isPageReload,
+    shouldRestore: function () {
+      return !isPageReload();
+    },
+    clearOnReload: function (keys) {
+      if (!isPageReload()) return;
+      (keys || []).forEach(function (k) {
+        try {
+          localStorage.removeItem(k);
+        } catch (_) {}
+      });
+    }
+  };
+})();

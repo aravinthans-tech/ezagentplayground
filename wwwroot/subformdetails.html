@@ -176,6 +176,10 @@
         });
 
         window.addEventListener('load', () => {
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload(['subformdetails_data']);
+                if (!window.PlaygroundFormStorage.shouldRestore()) return;
+            }
             try {
                 const saved = JSON.parse(localStorage.getItem('subformdetails_data') || 'null');
                 if (saved) {

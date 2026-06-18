@@ -453,7 +453,65 @@
                         <div id="access2pay-fields" class="hidden space-y-3">
                             <div id="a2pInsertFields">
                                 <label for="a2pInsertJson" class="block text-xs font-semibold text-gray-700 mb-1">Connector Insert JSON</label>
-                                <textarea id="a2pInsertJson" rows="6" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none input-focus code-block text-xs" spellcheck="false">{}</textarea>
+                                <textarea id="a2pInsertJson" rows="18" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none input-focus code-block text-xs" spellcheck="false">{
+  "connectorId": 89,
+  "payload": {
+    "processId": 26,
+    "workflowId": 104,
+    "transactionId": 26,
+    "formId": 141,
+    "transactionStatus": "Pending",
+    "formentryId": 27,
+    "requestPayLoad": {
+      "referenceNo": "REQ-28",
+      "submission": {
+        "submittedFrom": "muthu.perumal@ezofis.com",
+        "emailSubject": "Maple Leaf Logistics Inc. Invoice 95812-1 for A2P",
+        "receivedFileName": "_20260604140429723.pdf",
+        "submittedAtUtc": ""
+      },
+      "sourceDocument": {
+        "fileName": "_20260604140429723.pdf",
+        "mimeType": "application/pdf",
+        "storageProvider": "blob",
+        "location": "https://eztapi.ezofis.com/api/file/viewBinary/2/EU_15/214/6/1",
+        "externalId": ""
+      },
+      "Vendor": {
+        "company": "Maple Leaf Logistics Inc. Invoice 95812-1 for A2P"
+      },
+      "Invoice": {
+        "documentType": "Invoice",
+        "invoiceNumber": "INV-2026-004",
+        "invoiceDate": "2025-09-07",
+        "poNumber": "PO-1002",
+        "currency": "CAD",
+        "buyer": {
+          "billToName": "ABC Company",
+          "billToAddress": "789 Pine Ave, Toronto, BC"
+        },
+        "amounts": {
+          "taxAmount": "$468.26",
+          "netTotal": null
+        },
+        "paymentTerms": "Net 30 days",
+        "lineItems": [
+          {
+            "lineNumber": 1,
+            "description": "Transportation service for milled wood products",
+            "quantity": "1.0000",
+            "unitOfMeasure": "Flat Rate",
+            "rate": "1495.0000",
+            "lineAmount": "1495.00",
+            "metadata": [
+              { "lineNumber": 1, "header": "Description", "dataType": "SHORT_TEXT", "value": "Office Chair" }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}</textarea>
                             </div>
                             <div id="a2pGetFields" class="hidden">
                                 <label for="a2pGetJson" class="block text-xs font-semibold text-gray-700 mb-1">Query JSON</label>
@@ -1606,6 +1664,9 @@ console.log(text);`;
         };
 
         function getProductId() {
+            if (window.PlaygroundSidebar && typeof window.PlaygroundSidebar.getProductId === 'function') {
+                return window.PlaygroundSidebar.getProductId();
+            }
             return new URLSearchParams(window.location.search).get('id') === '2' ? 2 : 1;
         }
 
@@ -1642,6 +1703,22 @@ console.log(text);`;
         }
 
         function applyInitialFunctionType() {
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload([
+                    'lastApiCall',
+                    'qrcode_data',
+                    'filesummary_data',
+                    'kycagent_data',
+                    'formdetails_data',
+                    'subformdetails_data',
+                    'subformfields_data',
+                    'subformsubmitarchive_data',
+                    'getdatafromsalesforce_data',
+                    'access2pay_data'
+                ]);
+            }
+            const shouldRestore = !window.PlaygroundFormStorage || window.PlaygroundFormStorage.shouldRestore();
+
             applyProductFunctionFilter();
             const functionType = resolveInitialFunctionType();
             localStorage.setItem('lastApiCall', functionType);
@@ -1649,7 +1726,8 @@ console.log(text);`;
             functionTypeSelect.value = functionType;
             functionTypeSelect.dispatchEvent(new Event('change'));
             
-            // Load data from localStorage
+            // Load data from localStorage (skip on full page refresh)
+            if (shouldRestore) {
             if (functionType === 'qrcode') {
                 const qrcodeData = loadFromLocalStorage('qrcode');
                 if (qrcodeData) {
@@ -1716,6 +1794,7 @@ console.log(text);`;
                     const pj = document.getElementById('sfPayloadJson');
                     if (pj && sf.payloadText) pj.value = sf.payloadText;
                 }
+            }
             }
             
             updateCodeExamples();

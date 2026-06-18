@@ -828,10 +828,18 @@
 
         const postOutputActions = document.getElementById('postOutputActions');
         document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => {
-            window.location.href = '/examples.html?function=apikey';
+            const sb = window.PlaygroundSidebar;
+            const pid = sb ? sb.getProductId() : 1;
+            window.location.href = sb
+                ? sb.withProductId('/examples.html?function=apikey', pid)
+                : '/examples.html?function=apikey&id=' + pid;
         });
         document.getElementById('viewDocumentationBtn').addEventListener('click', () => {
-            window.location.href = '/playground-documentation.html#api-key';
+            const sb = window.PlaygroundSidebar;
+            const pid = sb ? sb.getProductId() : 1;
+            window.location.href = (sb
+                ? sb.withProductId('/playground-documentation.html', pid)
+                : '/playground-documentation.html?id=' + pid) + '#api-key';
         });
 
         // Generate API Key â€” first validates the form, then asks the user

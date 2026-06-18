@@ -39,7 +39,7 @@
             <div class="pg-docs-inner">
                 <header class="pg-doc-header">
                     <h1>Developer documentation</h1>
-                    <p>API reference for the playground. <a href="/examples.html">Code examples</a> &middot; <a href="/kyc-documentation.html">KYC docs</a></p>
+                    <p id="docProductSubtitle">API reference for the playground. <a href="/examples.html" id="docExamplesLink">Code examples</a> &middot; <a href="/kyc-documentation.html">KYC docs</a></p>
                 </header>
 
                 <div class="doc-filter-bar">
@@ -47,26 +47,22 @@
                         <label for="docFunctionSelect">Show documentation for</label>
                         <select id="docFunctionSelect" aria-label="Function type">
                             <option value="all">All functions</option>
-                            <option value="api-key">API key</option>
-                            <option value="form-details">Form Details</option>
-                            <option value="subform-details">SubForm Details</option>
-                            <option value="subform-fields">SubForm Fields</option>
-                            <option value="generate-pdf">Generate PDF</option>
-                            <option value="getdata-from-salesforce">Get Data From Salesforce</option>
+                            <option value="api-key" data-product-ids="1,2">API key</option>
+                            <option value="form-details" data-product-ids="1">Form Details</option>
+                            <option value="subform-details" data-product-ids="1">SubForm Details</option>
+                            <option value="subform-fields" data-product-ids="1">SubForm Fields</option>
+                            <option value="generate-pdf" data-product-ids="1">Generate PDF</option>
+                            <option value="getdata-from-salesforce" data-product-ids="1">Get Data From Salesforce</option>
+                            <option value="access2pay-insert" data-product-ids="2">Access2Pay Connector Insert</option>
+                            <option value="access2pay-get" data-product-ids="2">Access2Pay Get</option>
+                            <option value="access2pay-update" data-product-ids="2">Access2Pay Update</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="docQuickJumpWrap" class="doc-jump-bar">
                     <p class="doc-jump-label">Jump to section</p>
-                    <div class="doc-jump-pills">
-                        <a class="doc-jump-pill" href="#api-key">API key</a>
-                        <a class="doc-jump-pill" href="#form-details">Form Details</a>
-                        <a class="doc-jump-pill" href="#subform-details">SubForm Details</a>
-                        <a class="doc-jump-pill" href="#subform-fields">SubForm Fields</a>
-                        <a class="doc-jump-pill" href="#generate-pdf">Generate PDF</a>
-                        <a class="doc-jump-pill" href="#getdata-from-salesforce">Salesforce</a>
-                    </div>
+                    <div id="docQuickJumpPills" class="doc-jump-pills"></div>
                 </div>
 
                 <div id="docSections">
@@ -98,7 +94,7 @@
                         </article>
                     </section>
 
-                    <section id="form-details" data-doc-function="form-details" class="doc-section anchor">
+                    <section id="form-details" data-doc-function="form-details" data-product-id="1" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
                                 <h2>Form Details</h2>
@@ -127,7 +123,7 @@
                         </article>
                     </section>
 
-                    <section id="subform-details" data-doc-function="subform-details" class="doc-section anchor">
+                    <section id="subform-details" data-doc-function="subform-details" data-product-id="1" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
                                 <h2>SubForm Details</h2>
@@ -147,7 +143,7 @@
                         </article>
                     </section>
 
-                    <section id="subform-fields" data-doc-function="subform-fields" class="doc-section anchor">
+                    <section id="subform-fields" data-doc-function="subform-fields" data-product-id="1" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
                                 <h2>SubForm Fields</h2>
@@ -169,7 +165,7 @@
                         </article>
                     </section>
 
-                    <section id="generate-pdf" data-doc-function="generate-pdf" class="doc-section anchor">
+                    <section id="generate-pdf" data-doc-function="generate-pdf" data-product-id="1" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
                                 <h2>Generate PDF</h2>
@@ -197,7 +193,7 @@
                         </article>
                     </section>
 
-                    <section id="getdata-from-salesforce" data-doc-function="getdata-from-salesforce" class="doc-section anchor">
+                    <section id="getdata-from-salesforce" data-doc-function="getdata-from-salesforce" data-product-id="1" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
                                 <h2>Get Data From Salesforce</h2>
@@ -223,6 +219,103 @@
                             </div>
                         </article>
                     </section>
+
+                    <section id="access2pay-insert" data-doc-function="access2pay-insert" data-product-id="2" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>Access2Pay Connector Insert</h2>
+                                <p class="doc-lead">Insert a connector payload into Access2Pay. Only <code>X-API-Key</code> is required from the client; tenant token is applied server-side.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/Access2Pay/connectorInsert</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                </ul>
+                                <div class="doc-code-wrap">
+                                    <span class="doc-code-label">Sample body</span>
+                                    <pre>{
+  "connectorId": 89,
+  "payload": {
+    "processId": 26,
+    "workflowId": 104,
+    "transactionId": 26,
+    "formId": 141,
+    "transactionStatus": "Pending",
+    "formentryId": 27,
+    "requestPayLoad": {
+      "referenceNo": "REQ-28",
+      "submission": { "submittedFrom": "muthu.perumal@ezofis.com", "emailSubject": "..." },
+      "sourceDocument": { "fileName": "_20260604140429723.pdf", "mimeType": "application/pdf", "location": "https://..." },
+      "Vendor": { "company": "Maple Leaf Logistics Inc." },
+      "Invoice": {
+        "invoiceNumber": "INV-2026-004",
+        "currency": "CAD",
+        "lineItems": [{ "lineNumber": 1, "description": "...", "lineAmount": "1495.00" }]
+      }
+    }
+  }
+}</pre>
+                                </div>
+                                <p class="doc-note">The playground proxies to Ezofis with the connector body sent as a JSON-encoded string.</p>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section id="access2pay-get" data-doc-function="access2pay-get" data-product-id="2" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>Access2Pay Get</h2>
+                                <p class="doc-lead">Browse Access2Pay records with sorting, pagination, and filters.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/Access2Pay/get</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                </ul>
+                                <div class="doc-code-wrap">
+                                    <span class="doc-code-label">Sample body</span>
+                                    <pre>{
+  "sortBy": { "criteria": "id", "order": "DESC" },
+  "filterBy": [
+    {
+      "groupCondition": "",
+      "filters": [
+        { "criteria": "referenceNo", "condition": "IS_EQUALS_TO", "value": "EZ-00012" }
+      ]
+    }
+  ],
+  "currentPage": 1,
+  "itemsPerPage": 0,
+  "mode": "browse"
+}</pre>
+                                </div>
+                                <p class="doc-note">Use <code>filterBy</code> to search records. Leave <code>filterBy</code> as <code>[]</code> to return all rows for the current page.</p>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section id="access2pay-update" data-doc-function="access2pay-update" data-product-id="2" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>Access2Pay Update</h2>
+                                <p class="doc-lead">Update an existing Access2Pay record by ID.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>PUT /api/Access2Pay/update/{id}</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                </ul>
+                                <div class="doc-code-wrap">
+                                    <span class="doc-code-label">Sample body</span>
+                                    <pre>{
+  "referenceNo": "EZ-00012",
+  "transactionStatus": "processed"
+}</pre>
+                                </div>
+                                <p class="doc-note">The update payload is sent as a JSON-encoded string to the upstream API.</p>
+                            </div>
+                        </article>
+                    </section>
                 </div>
             </div>
         </main>
@@ -233,30 +326,126 @@
             const select = document.getElementById('docFunctionSelect');
             const sections = Array.from(document.querySelectorAll('.doc-section'));
             const quickJump = document.getElementById('docQuickJumpWrap');
+            const quickJumpPills = document.getElementById('docQuickJumpPills');
             const mainScroller = document.querySelector('main.flex-1');
-            const valid = new Set(['all', 'api-key', 'form-details', 'subform-details', 'subform-fields', 'generate-pdf', 'getdata-from-salesforce']);
+
+            const PRODUCT_DOCS = {
+                1: {
+                    label: 'Daimler Benz',
+                    functions: ['api-key', 'form-details', 'subform-details', 'subform-fields', 'generate-pdf', 'getdata-from-salesforce'],
+                    jumpLabels: {
+                        'api-key': 'API key',
+                        'form-details': 'Form Details',
+                        'subform-details': 'SubForm Details',
+                        'subform-fields': 'SubForm Fields',
+                        'generate-pdf': 'Generate PDF',
+                        'getdata-from-salesforce': 'Salesforce'
+                    }
+                },
+                2: {
+                    label: 'Access2Pay',
+                    functions: ['api-key', 'access2pay-insert', 'access2pay-get', 'access2pay-update'],
+                    jumpLabels: {
+                        'api-key': 'API key',
+                        'access2pay-insert': 'Connector Insert',
+                        'access2pay-get': 'Get',
+                        'access2pay-update': 'Update'
+                    }
+                }
+            };
+
             const functionAlias = {
                 apikey: 'api-key',
                 formdetails: 'form-details',
                 subformdetails: 'subform-details',
                 subformfields: 'subform-fields',
                 generatepdf: 'generate-pdf',
-                getdatafromsalesforce: 'getdata-from-salesforce'
+                getdatafromsalesforce: 'getdata-from-salesforce',
+                access2payinsert: 'access2pay-insert',
+                access2payget: 'access2pay-get',
+                access2payupdate: 'access2pay-update'
             };
 
+            function getProductId() {
+                if (window.PlaygroundSidebar && PlaygroundSidebar.getProductId) {
+                    return PlaygroundSidebar.getProductId();
+                }
+                return new URLSearchParams(window.location.search).get('id') === '2' ? 2 : 1;
+            }
+
+            function productFunctions(productId) {
+                return new Set(PRODUCT_DOCS[productId].functions);
+            }
+
+            function sectionVisibleForProduct(section, productId) {
+                const sectionProduct = section.getAttribute('data-product-id');
+                return !sectionProduct || sectionProduct === String(productId);
+            }
+
+            function docsPageUrl(functionKey) {
+                const id = getProductId();
+                let url = '/playground-documentation.html?id=' + id;
+                if (functionKey && functionKey !== 'all') {
+                    url += '&function=' + encodeURIComponent(functionKey);
+                }
+                return url;
+            }
+
+            function syncProductUi() {
+                const productId = getProductId();
+                const config = PRODUCT_DOCS[productId];
+                const subtitle = document.getElementById('docProductSubtitle');
+                const examplesLink = document.getElementById('docExamplesLink');
+
+                if (subtitle) {
+                    subtitle.innerHTML =
+                        'API reference for <strong>' + config.label + '</strong>. ' +
+                        '<a href="/examples.html?id=' + productId + '" id="docExamplesLink">Code examples</a> &middot; ' +
+                        '<a href="/kyc-documentation.html">KYC docs</a>';
+                } else if (examplesLink) {
+                    examplesLink.href = '/examples.html?id=' + productId;
+                }
+
+                Array.from(select.options).forEach(function (opt) {
+                    if (opt.value === 'all') {
+                        opt.hidden = false;
+                        opt.disabled = false;
+                        return;
+                    }
+                    const ids = (opt.getAttribute('data-product-ids') || '').split(',').map(function (s) { return s.trim(); });
+                    const show = ids.indexOf(String(productId)) >= 0;
+                    opt.hidden = !show;
+                    opt.disabled = !show;
+                });
+
+                if (quickJumpPills) {
+                    quickJumpPills.innerHTML = config.functions.map(function (fn) {
+                        const label = config.jumpLabels[fn] || fn;
+                        return '<a class="doc-jump-pill" href="#' + fn + '">' + label + '</a>';
+                    }).join('');
+                }
+            }
+
             function applyFilter(value, updateUrl) {
-                const selected = valid.has(value) ? value : 'all';
+                const productId = getProductId();
+                const allowed = productFunctions(productId);
+                let selected = value;
+                if (selected !== 'all' && !allowed.has(selected)) {
+                    selected = 'all';
+                }
+
                 select.value = selected;
                 if (quickJump) quickJump.classList.toggle('hidden', selected !== 'all');
+
                 sections.forEach(function (section) {
                     const key = section.getAttribute('data-doc-function');
-                    section.classList.toggle('hidden', selected !== 'all' && key !== selected);
+                    const visibleForProduct = sectionVisibleForProduct(section, productId);
+                    const visibleForFilter = selected === 'all' || key === selected;
+                    section.classList.toggle('hidden', !visibleForProduct || !visibleForFilter);
                 });
+
                 if (updateUrl) {
-                    const url = selected === 'all'
-                        ? '/playground-documentation.html'
-                        : '/playground-documentation.html?function=' + selected;
-                    history.replaceState(null, '', url);
+                    history.replaceState(null, '', docsPageUrl(selected === 'all' ? null : selected));
                 }
                 if (mainScroller) mainScroller.scrollTop = 0;
                 window.scrollTo(0, 0);
@@ -266,15 +455,17 @@
                 applyFilter(this.value, true);
             });
 
+            syncProductUi();
+
             const params = new URLSearchParams(window.location.search);
             const fromQuery = params.get('function');
             const fromHash = window.location.hash ? window.location.hash.slice(1) : '';
             const mapped = functionAlias[(fromQuery || '').toLowerCase()] || fromQuery;
-            const initial = valid.has(fromHash) ? fromHash : (valid.has(mapped) ? mapped : 'all');
-            applyFilter(initial, false);
-            if (initial !== 'all') {
-                history.replaceState(null, '', '/playground-documentation.html?function=' + initial);
-            }
+            const allowed = productFunctions(getProductId());
+            let initial = 'all';
+            if (allowed.has(fromHash)) initial = fromHash;
+            else if (mapped && allowed.has(mapped)) initial = mapped;
+            applyFilter(initial, true);
         })();
     </script>
     <script src="/js/playground-shell.js"></script>

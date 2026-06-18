@@ -184,7 +184,9 @@ public class ApiKeyService
                   GROUP BY ApiKeyId
               ) u ON u.ApiKeyId = k.id
               WHERE k.username=@u AND k.password=@p
-              ORDER BY k.createdat DESC", connection);
+              ORDER BY
+                CASE WHEN k.ExpiresAt IS NULL OR k.ExpiresAt > GETUTCDATE() THEN 0 ELSE 1 END,
+                k.createdat DESC", connection);
         cmd.Parameters.AddWithValue("@u", userName);
         cmd.Parameters.AddWithValue("@p", password);
 
@@ -226,7 +228,9 @@ public class ApiKeyService
                   GROUP BY ApiKeyId
               ) u ON u.ApiKeyId = k.id
               WHERE k.username=@u
-              ORDER BY k.createdat DESC", connection);
+              ORDER BY
+                CASE WHEN k.ExpiresAt IS NULL OR k.ExpiresAt > GETUTCDATE() THEN 0 ELSE 1 END,
+                k.createdat DESC", connection);
         cmd.Parameters.AddWithValue("@u", userName);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -282,6 +286,51 @@ public class ApiKeyService
         cmd.Parameters.AddWithValue("@id", apiKeyId);
         cmd.Parameters.AddWithValue("@u", userName);
         return await cmd.ExecuteNonQueryAsync() > 0;
+    }
+
+    public async Task<bool> DeleteApiKeyAsync(string userName, string password, int apiKeyId)
+    {
+        var cs = GetConnectionString();
+        if (string.IsNullOrEmpty(cs)) return false;
+
+        await using var connection = new SqlConnection(cs);
+        await connection.OpenAsync();
+
+        if (!await UserOwnsApiKeyAsync(userName, password, apiKeyId, connection))
+            return false;
+
+        return await DeleteApiKeyCoreAsync(apiKeyId, connection);
+    }
+
+    public async Task<bool> DeleteApiKeyByEmailAsync(string userName, int apiKeyId)
+    {
+        var cs = GetConnectionString();
+        if (string.IsNullOrEmpty(cs)) return false;
+
+        await using var connection = new SqlConnection(cs);
+        await connection.OpenAsync();
+
+        using var check = new SqlCommand(
+            "SELECT COUNT(1) FROM tenantuserApiKey WHERE id=@id AND username=@u", connection);
+        check.Parameters.AddWithValue("@id", apiKeyId);
+        check.Parameters.AddWithValue("@u", userName);
+        if (Convert.ToInt32(await check.ExecuteScalarAsync() ?? 0) == 0)
+            return false;
+
+        return await DeleteApiKeyCoreAsync(apiKeyId, connection);
+    }
+
+    private static async Task<bool> DeleteApiKeyCoreAsync(int apiKeyId, SqlConnection connection)
+    {
+        using (var delLogs = new SqlCommand("DELETE FROM tenantApiKeyUsageLog WHERE ApiKeyId=@id", connection))
+        {
+            delLogs.Parameters.AddWithValue("@id", apiKeyId);
+            await delLogs.ExecuteNonQueryAsync();
+        }
+
+        using var del = new SqlCommand("DELETE FROM tenantuserApiKey WHERE id=@id", connection);
+        del.Parameters.AddWithValue("@id", apiKeyId);
+        return await del.ExecuteNonQueryAsync() > 0;
     }
 
     public async Task<(bool Valid, string? Message, int ApiKeyId)> ValidateApiKeyAsync(string apiKey)

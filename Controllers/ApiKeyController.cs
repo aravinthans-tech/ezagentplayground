@@ -158,6 +158,29 @@ public class ApiKeyController : ControllerBase
         }
     }
 
+    /// <summary>Delete an API key and its usage history.</summary>
+    [HttpDelete("apiKey/{id:int}")]
+    public async Task<IActionResult> DeleteApiKey(
+        int id,
+        [FromQuery] string userName,
+        [FromQuery] string password)
+    {
+        if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(password))
+            return BadRequest("UserName and Password are required");
+
+        try
+        {
+            var ok = await _apiKeyService.DeleteApiKeyAsync(userName, password, id);
+            if (!ok) return NotFound("API key not found for this user");
+            return Ok(new { id, message = "API key deleted." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting API key");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
     /// <summary>Usage history for this user's API keys.</summary>
     [HttpGet("apiKey/usage")]
     public async Task<IActionResult> GetApiKeyUsage(
@@ -267,6 +290,28 @@ public class ApiKeyController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating demo API key status");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    [HttpDelete("playground-demo/apiKey/{id:int}")]
+    public async Task<IActionResult> DeleteApiKeyDemo(int id)
+    {
+        var config = GetDemoConfig();
+        if (config == null)
+            return NotFound(new { message = "Playground demo is disabled." });
+
+        try
+        {
+            var ok = string.IsNullOrEmpty(config.Value.Password)
+                ? await _apiKeyService.DeleteApiKeyByEmailAsync(config.Value.Email, id)
+                : await _apiKeyService.DeleteApiKeyAsync(config.Value.Email, config.Value.Password, id);
+            if (!ok) return NotFound("API key not found for this user");
+            return Ok(new { id, message = "API key deleted." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting demo API key");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }

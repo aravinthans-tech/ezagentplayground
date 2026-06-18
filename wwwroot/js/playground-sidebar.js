@@ -3,6 +3,8 @@
  * URL ?id=1 → Daimler Benz functions | ?id=2 → Access2Pay functions
  */
 (function () {
+    const PRODUCT_ID_STORAGE_KEY = 'playgroundProductId';
+
     const ICONS = {
         key: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>',
         shield: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>',
@@ -61,9 +63,54 @@
         return p;
     }
 
-    function getProductId() {
+    const PRODUCT_AWARE_PAGES = new Set([
+        '/apikey.html',
+        '/my-api-keys.html',
+        '/examples.html',
+        '/usage-report.html',
+        '/playground-documentation.html',
+        '/formdetails.html',
+        '/subformdetails.html',
+        '/subformfields.html',
+        '/subformsubmitarchive.html',
+        '/getdatafromsalesforce.html',
+        '/access2pay.html'
+    ]);
+
+    function readUrlProductId() {
         const id = new URLSearchParams(window.location.search).get('id');
-        return id === '2' ? 2 : 1;
+        if (id === '2') return 2;
+        if (id === '1') return 1;
+        return null;
+    }
+
+    function getProductId() {
+        const fromUrl = readUrlProductId();
+        if (fromUrl !== null) {
+            try { sessionStorage.setItem(PRODUCT_ID_STORAGE_KEY, String(fromUrl)); } catch (_) {}
+            return fromUrl;
+        }
+        try {
+            const stored = sessionStorage.getItem(PRODUCT_ID_STORAGE_KEY);
+            if (stored === '2') return 2;
+            if (stored === '1') return 1;
+        } catch (_) {}
+        return 1;
+    }
+
+    function setProductId(productId) {
+        const id = productId === 2 ? 2 : 1;
+        try { sessionStorage.setItem(PRODUCT_ID_STORAGE_KEY, String(id)); } catch (_) {}
+        return id;
+    }
+
+    function ensureProductIdInUrl() {
+        const productId = getProductId();
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('id') === String(productId)) return;
+        params.set('id', String(productId));
+        const hash = window.location.hash || '';
+        history.replaceState(null, '', window.location.pathname + '?' + params.toString() + hash);
     }
 
     function withProductId(href, productId) {
@@ -108,6 +155,34 @@
                 a.setAttribute('href', target);
             }
         });
+    }
+
+    function wireDocsNavLinks() {
+        wireProductAwareLinks();
+    }
+
+    function wireProductNavLinks() {
+        wireProductAwareLinks();
+    }
+
+    function wireProductAwareLinks() {
+        const productId = getProductId();
+        document.querySelectorAll('a[href]').forEach(function (a) {
+            const raw = a.getAttribute('href') || '';
+            if (!raw || raw.charAt(0) !== '/' || raw.startsWith('//')) return;
+            const hashIdx = raw.indexOf('#');
+            const beforeHash = hashIdx >= 0 ? raw.slice(0, hashIdx) : raw;
+            const base = beforeHash.split('?')[0];
+            if (!PRODUCT_AWARE_PAGES.has(base)) return;
+            const hashPart = hashIdx >= 0 ? raw.slice(hashIdx) : '';
+            a.setAttribute('href', withProductId(base, productId) + hashPart);
+        });
+    }
+
+    function wireBrandLink() {
+        const brand = document.querySelector('nav a.pg-brand');
+        if (!brand) return;
+        brand.setAttribute('href', withProductId('/apikey.html', getProductId()));
     }
 
     function ensureProductRoute() {
@@ -181,6 +256,7 @@
     }
 
     function mount(activeHref) {
+        ensureProductIdInUrl();
         ensureProductRoute();
 
         const root = document.getElementById('sidebar');
@@ -193,6 +269,9 @@
             rememberCurrentApi(pagePath);
             wireExamplesNavLinks(pagePath);
         }
+        wireDocsNavLinks();
+        wireProductNavLinks();
+        wireBrandLink();
     }
 
     window.PlaygroundSidebar = {
@@ -202,7 +281,9 @@
         normalizePath,
         functionForPage,
         getProductId,
+        setProductId,
         withProductId,
+        ensureProductIdInUrl,
         PRODUCT
     };
 })();

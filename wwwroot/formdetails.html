@@ -240,6 +240,10 @@
         });
 
         window.addEventListener('load', () => {
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload(['formdetails_data']);
+                if (!window.PlaygroundFormStorage.shouldRestore()) return;
+            }
             try {
                 const saved = JSON.parse(localStorage.getItem('formdetails_data') || 'null');
                 if (saved) {

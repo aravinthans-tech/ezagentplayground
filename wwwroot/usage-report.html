@@ -352,11 +352,20 @@
     </div>
 
     <script>
-        // ---------- Sample data (no backend) — filtered by ?id=1 (Daimler Benz) or ?id=2 (Access2Pay) ----------
+        // ---------- Live usage from playground API logs (tenant DB via demo endpoint) ----------
         const PRODUCT_META = {
-            1: { label: 'Daimler Benz', subtitle: 'Usage for Daimler Benz playground APIs.' },
-            2: { label: 'Access2Pay', subtitle: 'Usage for Access2Pay playground APIs.' }
+            1: {
+                label: 'Daimler Benz',
+                subtitle: 'Live usage from playground API calls.',
+                sampleSubtitle: 'Sample preview — make API calls with your key to see real usage here.'
+            },
+            2: {
+                label: 'Access2Pay',
+                subtitle: 'Live usage from Access2Pay playground API calls.',
+                sampleSubtitle: 'Sample preview — call Access2Pay APIs with your key to see real usage here.'
+            }
         };
+        const API_BASE_URL = window.location.origin;
         const ALL_FUNCTIONS = [
             { name: 'Form Details',             endpoint: '/api/FormDetails',                    method: 'POST', productId: 1 },
             { name: 'SubForm Details',          endpoint: '/api/SubFormDetails',                 method: 'POST', productId: 1 },
@@ -388,26 +397,139 @@
                 fns.map(f => `<option>${f.name}</option>`).join('');
         }
 
-        function updateUsageHeader() {
+        const DUMMY_CALL_COUNT = 20;
+        const PREVIEW_CALL_COUNT = 260;
+
+        let usageDataMode = 'sample';
+
+        function setUsageDataMode(mode) {
+            usageDataMode = mode;
             const meta = PRODUCT_META[getProductId()] || PRODUCT_META[1];
             const sub = document.getElementById('usageSubtitle');
             const badge = document.getElementById('usageProductLabel');
-            if (sub) sub.textContent = meta.subtitle;
-            if (badge) {
-                badge.textContent = meta.label;
-                badge.classList.remove('hidden');
+            if (mode === 'mixed') {
+                if (sub) sub.textContent = meta.subtitle + ' Includes ' + DUMMY_CALL_COUNT + ' sample calls plus your live API calls.';
+                if (badge) badge.textContent = meta.label + ' · Live + sample';
+            } else if (mode === 'sample') {
+                if (sub) sub.textContent = meta.sampleSubtitle;
+                if (badge) badge.textContent = meta.label + ' · Sample preview';
+            } else {
+                if (sub) sub.textContent = meta.subtitle;
+                if (badge) badge.textContent = meta.label + ' · Live data';
             }
+            if (badge) badge.classList.remove('hidden');
             document.title = 'API Usage — ' + meta.label;
         }
+
+        function updateUsageHeader() {
+            setUsageDataMode(usageDataMode);
+        }
+
+        function normalizeEndpoint(path) {
+            return (path || '').toLowerCase().split('?')[0];
+        }
+
+        function matchFunctionForEndpoint(endpoint) {
+            const p = normalizeEndpoint(endpoint);
+            for (const fn of ALL_FUNCTIONS) {
+                const ep = fn.endpoint.toLowerCase();
+                if (ep.endsWith('/update') && p.startsWith(ep)) return fn;
+                if (p === ep || p.startsWith(ep + '/')) return fn;
+            }
+            return null;
+        }
+
+        function productIdForEndpoint(endpoint) {
+            const fn = matchFunctionForEndpoint(endpoint);
+            return fn ? fn.productId : null;
+        }
+
+        function mapLogToRecord(log) {
+            const endpoint = log.endpoint || '';
+            const matched = matchFunctionForEndpoint(endpoint);
+            const name = matched ? matched.name : (log.functionName || 'Unknown');
+            const method = matched ? matched.method : (log.httpMethod || 'POST');
+            return {
+                id: log.id,
+                isSample: false,
+                time: new Date(log.calledAt),
+                name: name,
+                endpoint: endpoint,
+                method: method,
+                status: log.statusCode,
+                latency: log.latencyMs,
+                client: 'API Playground',
+                ip: log.clientIp || '—',
+                inputs: {
+                    endpoint: endpoint,
+                    method: method,
+                    statusCode: log.statusCode,
+                    latencyMs: log.latencyMs,
+                    apiKeyId: log.apiKeyId,
+                    note: 'Request body is not stored — only call metadata is logged.'
+                }
+            };
+        }
+
+        async function loadLiveUsage() {
+            const pid = getProductId();
+            const res = await fetch(API_BASE_URL + '/api/Client/playground-demo/apiKey/usage?days=0');
+            if (!res.ok) {
+                let msg = 'Could not load usage data.';
+                try {
+                    const err = await res.json();
+                    if (err?.message) msg = err.message;
+                } catch (_) {}
+                throw new Error(msg);
+            }
+            const data = await res.json();
+            const seen = new Set();
+            return (data.logs || [])
+                .filter(l => productIdForEndpoint(l.endpoint) === pid)
+                .filter(l => {
+                    const key = String(l.id);
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                })
+                .map(mapLogToRecord)
+                .sort((a, b) => b.time - a.time);
+        }
+
+        async function loadUsageData() {
+            let live = [];
+            try {
+                live = await loadLiveUsage();
+            } catch (_) {}
+
+            const dummy = buildSample(DUMMY_CALL_COUNT, 'dummy-');
+
+            if (live.length > 0) {
+                setUsageDataMode('mixed');
+                return [...live, ...dummy].sort((a, b) => b.time - a.time);
+            }
+
+            const pool = getActiveFunctions();
+            const previewCount = pool.length <= 3 ? 45 : PREVIEW_CALL_COUNT;
+            setUsageDataMode('sample');
+            return buildSample(previewCount, 'sample-');
+        }
+
         const CLIENTS = ['Postman/10.21', 'curl/8.4.0', 'axios/1.6.7', 'PythonRequests/2.31', 'Browser-JS/fetch', 'NodeFetch/3.3'];
-        function randIp() { return [10, 192, 172, 8, 13, 64][Math.floor(Math.random()*6)] + '.' + (Math.floor(Math.random()*255)) + '.' + (Math.floor(Math.random()*255)) + '.' + (Math.floor(Math.random()*255)); }
-        function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+        function randIp() {
+            return [10, 192, 172, 8, 13, 64][Math.floor(Math.random() * 6)] + '.' +
+                Math.floor(Math.random() * 255) + '.' +
+                Math.floor(Math.random() * 255) + '.' +
+                Math.floor(Math.random() * 255);
+        }
+        function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
         function randStatus() {
             const r = Math.random();
             if (r < 0.86) return pick([200, 200, 200, 201, 200]);
             if (r < 0.95) return pick([400, 401, 403, 404, 422]);
             return pick([500, 502, 503]);
         }
+
         function statusClass(code) {
             if (code >= 200 && code < 300) return 'text-green-700';
             if (code >= 400 && code < 500) return 'text-amber-700';
@@ -517,7 +639,7 @@
                     return {
                         apiKey: maskedKey(),
                         id: String(pick([12, 24, 36, 48])),
-                        body: pick(['Pending', 'Approved', 'Rejected'])
+                        body: { referenceNo: 'EZ-00012', transactionStatus: 'processed' }
                     };
                 default:
                     return {};
@@ -532,34 +654,36 @@
             return fn.endpoint;
         }
 
-        function buildSample() {
+        function buildSample(count, idPrefix) {
             const out = [];
             const pool = getActiveFunctions();
             if (!pool.length) return out;
             const now = Date.now();
             const thirtyDays = 30 * 24 * 3600 * 1000;
-            for (let i = 0; i < 260; i++) {
+            const sampleCount = count || (pool.length <= 3 ? 45 : PREVIEW_CALL_COUNT);
+            const prefix = idPrefix || 'sample-';
+            for (let i = 0; i < sampleCount; i++) {
                 const fn = pick(pool);
-                // 60% of records fall inside the last 7 days, 40% in the prior 23
                 const inRecent = Math.random() < 0.6;
                 const span = inRecent ? 7 * 24 * 3600 * 1000 : thirtyDays;
                 const offset = inRecent ? 0 : 7 * 24 * 3600 * 1000;
                 const t = new Date(now - offset - Math.floor(Math.random() * span));
                 const code = randStatus();
                 out.push({
-                    id: i,
+                    id: prefix + i,
+                    isSample: true,
                     time: t,
                     name: fn.name,
                     endpoint: endpointForSample(fn),
                     method: fn.method,
                     status: code,
-                    latency: Math.floor(40 + Math.random()*420 + (code >= 500 ? 600 : 0)),
+                    latency: Math.floor(40 + Math.random() * 420 + (code >= 500 ? 600 : 0)),
                     client: pick(CLIENTS),
                     ip: randIp(),
                     inputs: sampleInputs(fn.name)
                 });
             }
-            return out.sort((a,b) => b.time - a.time);
+            return out.sort((a, b) => b.time - a.time);
         }
 
         let ALL = [];
@@ -647,20 +771,31 @@
             usageLoading = true;
             setRefreshBusy(true);
             setDashboardLoading(true);
+            document.getElementById('filterFunction').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterSearch').value = '';
+            document.getElementById('filterDate').value = '7';
             const dash = document.getElementById('usageDashboard');
             if (dash) dash.classList.add('usage-dashboard-refreshing');
             if (typeof closeInputsModal === 'function') closeInputsModal();
             clearDashboardUi();
 
-            window.setTimeout(() => {
-                ALL = buildSample();
-                usageLoading = false;
-                setRefreshBusy(false);
-                setDashboardLoading(false);
-                if (dash) dash.classList.remove('usage-dashboard-refreshing');
-                renderDashboard();
-                requestAnimationFrame(() => replayDashboardAnimations());
-            }, 380);
+            loadUsageData()
+                .then(rows => {
+                    ALL = rows;
+                })
+                .catch(() => {
+                    ALL = buildSample(getActiveFunctions().length <= 3 ? 45 : PREVIEW_CALL_COUNT, 'sample-');
+                    setUsageDataMode('sample');
+                })
+                .finally(() => {
+                    usageLoading = false;
+                    setRefreshBusy(false);
+                    setDashboardLoading(false);
+                    if (dash) dash.classList.remove('usage-dashboard-refreshing');
+                    renderDashboard();
+                    requestAnimationFrame(() => replayDashboardAnimations());
+                });
         }
 
         // ---------- KPIs ----------
@@ -865,11 +1000,15 @@
         }
 
         // ---------- Toast ----------
-        function showToast(msg) {
+        function showToast(msg, ok = true) {
             const t = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
+            const m = document.getElementById('toastMessage');
+            if (m) {
+                m.textContent = msg;
+                m.className = 'font-medium text-sm ' + (ok ? 'text-cyan-800' : 'text-red-800');
+            }
             t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 2500);
+            setTimeout(() => t.classList.add('hidden'), 2800);
         }
 
         // ---------- Export ----------
@@ -913,8 +1052,8 @@
         document.getElementById('tableBody').addEventListener('click', (e) => {
             const btn = e.target.closest('button[data-inputs-id]');
             if (!btn) return;
-            const id = parseInt(btn.getAttribute('data-inputs-id'), 10);
-            const rec = ALL.find(r => r.id === id);
+            const id = btn.getAttribute('data-inputs-id');
+            const rec = ALL.find(r => String(r.id) === String(id));
             openInputsModal(rec);
         });
 

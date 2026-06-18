@@ -1354,13 +1354,13 @@
         
         // Load data on page load (only if not refreshed)
         window.addEventListener('load', () => {
-            // Check if this is a refresh (F5, Ctrl+R, or browser refresh button)
-            const navigationEntries = performance.getEntriesByType('navigation');
-            const isRefresh = navigationEntries.length > 0 && navigationEntries[0].type === 'reload';
-            
-            if (!isRefresh) {
-                // Restore KYC Agent verification form data if exists
-                const kycagentData = loadFromLocalStorage('kycagent');
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload(['lastApiCall', 'qrcode_data', 'filesummary_data', 'kycagent_data']);
+                if (!window.PlaygroundFormStorage.shouldRestore()) return;
+            }
+
+            // Restore KYC Agent verification form data if exists
+            const kycagentData = loadFromLocalStorage('kycagent');
                 if (kycagentData) {
                     // Restore form fields
                     const apiKeyInput = document.getElementById('apiKey');
@@ -1431,13 +1431,6 @@
                         if (codeExamplesButton) codeExamplesButton.classList.remove('hidden');
                     }
                 }
-            } else {
-                // Clear on refresh (F5, Ctrl+R, or browser refresh button)
-                localStorage.removeItem('lastApiCall');
-                localStorage.removeItem('qrcode_data');
-                localStorage.removeItem('filesummary_data');
-                localStorage.removeItem('kycagent_data');
-            }
         });
 
         // KYC Verification Form Handler

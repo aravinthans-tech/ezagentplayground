@@ -190,6 +190,10 @@
         });
 
         window.addEventListener('load', () => {
+            if (window.PlaygroundFormStorage) {
+                window.PlaygroundFormStorage.clearOnReload(['subformfields_data']);
+                if (!window.PlaygroundFormStorage.shouldRestore()) return;
+            }
             try {
                 const saved = JSON.parse(localStorage.getItem('subformfields_data') || 'null');
                 if (saved) {
