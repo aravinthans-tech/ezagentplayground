@@ -636,6 +636,9 @@ public class ApiKeyService
         if (p.Contains("/access2pay/connectorinsert")) return "Access2Pay Connector Insert";
         if (p.Contains("/access2pay/get")) return "Access2Pay Get";
         if (p.Contains("/access2pay/update")) return "Access2Pay Update";
+        if (p.Contains("/invoiceocr/insert")) return "Invoice OCR Insert";
+        if (p.Contains("/invoiceocr/get")) return "Invoice OCR Get";
+        if (p.Contains("/invoiceocr/update")) return "Invoice OCR Update";
         if (p.Contains("/filesummary")) return "File Summary";
         if (p.Contains("/kycagent")) return "KYC Agent";
         if (p.Contains("/qrcode")) return "Generate QR Code";

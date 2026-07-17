@@ -47,7 +47,7 @@
                         <label for="docFunctionSelect">Show documentation for</label>
                         <select id="docFunctionSelect" aria-label="Function type">
                             <option value="all">All functions</option>
-                            <option value="api-key" data-product-ids="1,2">API key</option>
+                            <option value="api-key" data-product-ids="1,2,3">API key</option>
                             <option value="form-details" data-product-ids="1">Form Details</option>
                             <option value="subform-details" data-product-ids="1">SubForm Details</option>
                             <option value="subform-fields" data-product-ids="1">SubForm Fields</option>
@@ -56,6 +56,9 @@
                             <option value="access2pay-insert" data-product-ids="2">Access2Pay Connector Insert</option>
                             <option value="access2pay-get" data-product-ids="2">Access2Pay Get</option>
                             <option value="access2pay-update" data-product-ids="2">Access2Pay Update</option>
+                            <option value="invoiceocr-insert" data-product-ids="3">Invoice OCR Insert</option>
+                            <option value="invoiceocr-get" data-product-ids="3">Invoice OCR Get</option>
+                            <option value="invoiceocr-update" data-product-ids="3">Invoice OCR Update</option>
                         </select>
                     </div>
                 </div>
@@ -242,7 +245,7 @@
     "formId": 141,
     "transactionStatus": "Pending",
     "formentryId": 27,
-    "requestPayLoad": {
+    "requestPayload": {
       "referenceNo": "REQ-28",
       "submission": { "submittedFrom": "muthu.perumal@ezofis.com", "emailSubject": "..." },
       "sourceDocument": { "fileName": "_20260604140429723.pdf", "mimeType": "application/pdf", "location": "https://..." },
@@ -316,6 +319,103 @@
                             </div>
                         </article>
                     </section>
+
+                    <section id="invoiceocr-insert" data-doc-function="invoiceocr-insert" data-product-id="3" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>Invoice OCR Insert</h2>
+                                <p class="doc-lead">Insert an invoice OCR payload. Only <code>X-API-Key</code> is required from the client; tenant token is applied server-side.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/InvoiceOcr/insert</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                </ul>
+                                <div class="doc-code-wrap">
+                                    <span class="doc-code-label">Sample body</span>
+                                    <pre>{
+  "connectorId": 89,
+  "payload": {
+    "processId": 26,
+    "workflowId": 104,
+    "transactionId": 26,
+    "formId": 141,
+    "transactionStatus": "Pending",
+    "formentryId": 27,
+    "requestPayload": {
+      "referenceNo": "REQ-28",
+      "submission": { "submittedFrom": "muthu.perumal@ezofis.com", "emailSubject": "..." },
+      "sourceDocument": { "fileName": "_20260604140429723.pdf", "mimeType": "application/pdf", "location": "https://..." },
+      "Vendor": { "company": "Maple Leaf Logistics Inc." },
+      "Invoice": {
+        "invoiceNumber": "INV-2026-004",
+        "currency": "CAD",
+        "lineItems": [{ "lineNumber": 1, "description": "...", "lineAmount": "1495.00" }]
+      }
+    }
+  }
+}</pre>
+                                </div>
+                                <p class="doc-note">Same payload shape as Access2Pay Connector Insert; playground route name is Invoice OCR.</p>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section id="invoiceocr-get" data-doc-function="invoiceocr-get" data-product-id="3" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>Invoice OCR Get</h2>
+                                <p class="doc-lead">Browse Invoice OCR records with sorting, pagination, and filters.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/InvoiceOcr/get</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                </ul>
+                                <div class="doc-code-wrap">
+                                    <span class="doc-code-label">Sample body</span>
+                                    <pre>{
+  "sortBy": { "criteria": "id", "order": "DESC" },
+  "filterBy": [
+    {
+      "groupCondition": "",
+      "filters": [
+        { "criteria": "referenceNo", "condition": "IS_EQUALS_TO", "value": "EZ-00012" }
+      ]
+    }
+  ],
+  "currentPage": 1,
+  "itemsPerPage": 0,
+  "mode": "browse"
+}</pre>
+                                </div>
+                                <p class="doc-note">Use <code>filterBy</code> to search records. Leave <code>filterBy</code> as <code>[]</code> to return all rows for the current page.</p>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section id="invoiceocr-update" data-doc-function="invoiceocr-update" data-product-id="3" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>Invoice OCR Update</h2>
+                                <p class="doc-lead">Update an existing Invoice OCR record by ID.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>PUT /api/InvoiceOcr/update/{id}</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                </ul>
+                                <div class="doc-code-wrap">
+                                    <span class="doc-code-label">Sample body</span>
+                                    <pre>{
+  "referenceNo": "EZ-00012",
+  "transactionStatus": "processed"
+}</pre>
+                                </div>
+                                <p class="doc-note">The update payload is sent as a JSON-encoded string to the upstream API.</p>
+                            </div>
+                        </article>
+                    </section>
                 </div>
             </div>
         </main>
@@ -351,6 +451,16 @@
                         'access2pay-get': 'Get',
                         'access2pay-update': 'Update'
                     }
+                },
+                3: {
+                    label: 'Invoice OCR Agent',
+                    functions: ['api-key', 'invoiceocr-insert', 'invoiceocr-get', 'invoiceocr-update'],
+                    jumpLabels: {
+                        'api-key': 'API key',
+                        'invoiceocr-insert': 'Insert',
+                        'invoiceocr-get': 'Get',
+                        'invoiceocr-update': 'Update'
+                    }
                 }
             };
 
@@ -363,14 +473,20 @@
                 getdatafromsalesforce: 'getdata-from-salesforce',
                 access2payinsert: 'access2pay-insert',
                 access2payget: 'access2pay-get',
-                access2payupdate: 'access2pay-update'
+                access2payupdate: 'access2pay-update',
+                invoiceocrinsert: 'invoiceocr-insert',
+                invoiceocrget: 'invoiceocr-get',
+                invoiceocrupdate: 'invoiceocr-update'
             };
 
             function getProductId() {
                 if (window.PlaygroundSidebar && PlaygroundSidebar.getProductId) {
                     return PlaygroundSidebar.getProductId();
                 }
-                return new URLSearchParams(window.location.search).get('id') === '2' ? 2 : 1;
+                const id = new URLSearchParams(window.location.search).get('id');
+                if (id === '3') return 3;
+                if (id === '2') return 2;
+                return 1;
             }
 
             function productFunctions(productId) {

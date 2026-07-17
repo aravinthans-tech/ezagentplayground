@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access2Pay - API Playground</title>
+    <title>Invoice OCR Agent - API Playground</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
         </a>
         <div class="flex space-x-4 flex-1 justify-end text-sm">
             <a href="/examples.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
-            <a href="/playground-documentation.html#access2pay-insert" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="/playground-documentation.html#invoiceocr-insert" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
             <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
             <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
         </div>
@@ -33,13 +33,13 @@
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
         <script src="/js/playground-sidebar.js"></script>
-        <script>PlaygroundSidebar.mount('/access2pay.html');</script>
+        <script>PlaygroundSidebar.mount('/invoiceocr.html');</script>
 
         <main class="flex-1 overflow-y-auto p-4">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-4 animate-fadeInUp py-1">
-                    <h2 id="pageTitle" class="text-xl font-semibold text-gray-900">Access2Pay Connector Insert</h2>
-                    <p id="pageDesc" class="text-xs text-gray-600 mt-1">Call <code class="bg-gray-100 px-1 rounded">POST /api/Access2Pay/connectorInsert</code></p>
+                    <h2 id="pageTitle" class="text-xl font-semibold text-gray-900">Invoice OCR Insert</h2>
+                    <p id="pageDesc" class="text-xs text-gray-600 mt-1">Call <code class="bg-gray-100 px-1 rounded">POST /api/InvoiceOcr/insert</code></p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -170,22 +170,22 @@
         const errBox = document.getElementById('errBox');
         const OP_META = {
             insert: {
-                title: 'Access2Pay Connector Insert',
-                desc: 'Call <code class="bg-gray-100 px-1 rounded">POST /api/Access2Pay/connectorInsert</code>',
-                btn: 'Connector Insert',
-                examplesFn: 'access2payinsert'
+                title: 'Invoice OCR Insert',
+                desc: 'Call <code class="bg-gray-100 px-1 rounded">POST /api/InvoiceOcr/insert</code>',
+                btn: 'Insert',
+                examplesFn: 'invoiceocrinsert'
             },
             get: {
-                title: 'Access2Pay Get',
-                desc: 'Call <code class="bg-gray-100 px-1 rounded">POST /api/Access2Pay/get</code>',
+                title: 'Invoice OCR Get',
+                desc: 'Call <code class="bg-gray-100 px-1 rounded">POST /api/InvoiceOcr/get</code>',
                 btn: 'Get',
-                examplesFn: 'access2payget'
+                examplesFn: 'invoiceocrget'
             },
             update: {
-                title: 'Access2Pay Update',
-                desc: 'Call <code class="bg-gray-100 px-1 rounded">PUT /api/Access2Pay/update/{id}</code>',
+                title: 'Invoice OCR Update',
+                desc: 'Call <code class="bg-gray-100 px-1 rounded">PUT /api/InvoiceOcr/update/{id}</code>',
                 btn: 'Update',
-                examplesFn: 'access2payupdate'
+                examplesFn: 'invoiceocrupdate'
             }
         };
 
@@ -229,7 +229,7 @@
 
         window.addEventListener('hashchange', () => {
             applyOp();
-            if (window.PlaygroundSidebar) PlaygroundSidebar.mount('/access2pay.html');
+            if (window.PlaygroundSidebar) PlaygroundSidebar.mount('/invoiceocr.html');
         });
         applyOp();
 
@@ -263,7 +263,7 @@
                 let body;
                 try { body = JSON.parse(document.getElementById('insertJson').value); }
                 catch (e) { errBox.textContent = 'Invalid connector JSON: ' + e.message; errBox.classList.remove('hidden'); return; }
-                url = `${API_BASE}/api/Access2Pay/connectorInsert`;
+                url = `${API_BASE}/api/InvoiceOcr/insert`;
                 options.method = 'POST';
                 options.headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(body);
@@ -271,7 +271,7 @@
                 let body;
                 try { body = JSON.parse(document.getElementById('getJson').value); }
                 catch (e) { errBox.textContent = 'Invalid query JSON: ' + e.message; errBox.classList.remove('hidden'); return; }
-                url = `${API_BASE}/api/Access2Pay/get`;
+                url = `${API_BASE}/api/InvoiceOcr/get`;
                 options.method = 'POST';
                 options.headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(body);
@@ -279,7 +279,7 @@
                 const id = document.getElementById('updateId').value.trim();
                 const bodyStr = document.getElementById('updateBody').value;
                 if (!id) { errBox.textContent = 'Record ID is required'; errBox.classList.remove('hidden'); return; }
-                url = `${API_BASE}/api/Access2Pay/update/${encodeURIComponent(id)}`;
+                url = `${API_BASE}/api/InvoiceOcr/update/${encodeURIComponent(id)}`;
                 options.method = 'PUT';
                 options.headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(bodyStr);
@@ -308,7 +308,7 @@
                     };
                     showResponse(responsesByOp[op]);
                     try {
-                        localStorage.setItem('access2pay_data', JSON.stringify({
+                        localStorage.setItem('invoiceocr_data', JSON.stringify({
                             apiKey,
                             op,
                             insertJson: document.getElementById('insertJson').value,
@@ -331,16 +331,16 @@
         document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => {
             const pid = (window.PlaygroundSidebar && PlaygroundSidebar.getProductId)
                 ? PlaygroundSidebar.getProductId()
-                : (new URLSearchParams(window.location.search).get('id') || '2');
+                : (new URLSearchParams(window.location.search).get('id') || '3');
             window.location.href = '/examples.html?function=' + encodeURIComponent(OP_META[currentOp()].examplesFn) + '&id=' + encodeURIComponent(pid);
         });
 
         if (window.PlaygroundFormStorage) {
-            window.PlaygroundFormStorage.clearOnReload(['access2pay_data', 'lastApiCall']);
+            window.PlaygroundFormStorage.clearOnReload(['invoiceocr_data', 'lastApiCall']);
         }
         if (!window.PlaygroundFormStorage || window.PlaygroundFormStorage.shouldRestore()) {
             try {
-                const saved = JSON.parse(localStorage.getItem('access2pay_data') || 'null');
+                const saved = JSON.parse(localStorage.getItem('invoiceocr_data') || 'null');
                 if (saved) {
                     if (saved.apiKey) document.getElementById('apiKey').value = saved.apiKey;
                     if (saved.insertJson) document.getElementById('insertJson').value = saved.insertJson;

@@ -1,6 +1,6 @@
 /**
  * Shared sidebar — V6 design + full API KEY section (Generate + My API Keys).
- * URL ?id=1 → Daimler Benz functions | ?id=2 → Access2Pay functions
+ * URL ?id=1 → Daimler Benz | ?id=2 → Access2Pay | ?id=3 → Invoice OCR Agent
  */
 (function () {
     const PRODUCT_ID_STORAGE_KEY = 'playgroundProductId';
@@ -14,12 +14,14 @@
         doc: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>',
         cloud: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>',
         payment: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>',
+        scan: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>',
         chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>'
     };
 
     const PRODUCT = {
         1: { label: 'Daimler Benz', defaultPath: '/formdetails.html' },
-        2: { label: 'Access2Pay', defaultPath: '/access2pay.html#insert' }
+        2: { label: 'Access2Pay', defaultPath: '/access2pay.html#insert' },
+        3: { label: 'Invoice OCR Agent', defaultPath: '/invoiceocr.html#insert' }
     };
 
     const FUNCTION_ITEMS = [
@@ -30,7 +32,10 @@
         { href: '/getdatafromsalesforce.html', label: 'Get Data From Salesforce', icon: 'cloud', productId: 1 },
         { href: '/access2pay.html#insert', label: 'Access2Pay Connector Insert', icon: 'payment', productId: 2 },
         { href: '/access2pay.html#get', label: 'Access2Pay Get', icon: 'payment', productId: 2 },
-        { href: '/access2pay.html#update', label: 'Access2Pay Update', icon: 'payment', productId: 2 }
+        { href: '/access2pay.html#update', label: 'Access2Pay Update', icon: 'payment', productId: 2 },
+        { href: '/invoiceocr.html#insert', label: 'Invoice OCR Insert', icon: 'scan', productId: 3 },
+        { href: '/invoiceocr.html#get', label: 'Invoice OCR Get', icon: 'scan', productId: 3 },
+        { href: '/invoiceocr.html#update', label: 'Invoice OCR Update', icon: 'scan', productId: 3 }
     ];
 
     const PAGE_TO_FUNCTION = {
@@ -41,6 +46,7 @@
         '/subformsubmitarchive.html': 'generatepdf',
         '/getdatafromsalesforce.html': 'getdatafromsalesforce',
         '/access2pay.html': 'access2payinsert',
+        '/invoiceocr.html': 'invoiceocrinsert',
         '/apikey.html': 'apikey',
         '/filesummary.html': 'filesummary',
         '/kycagent.html': 'kycagent'
@@ -52,7 +58,8 @@
         '/subformfields.html': 1,
         '/subformsubmitarchive.html': 1,
         '/getdatafromsalesforce.html': 1,
-        '/access2pay.html': 2
+        '/access2pay.html': 2,
+        '/invoiceocr.html': 3
     };
 
     function normalizePath(path) {
@@ -74,11 +81,13 @@
         '/subformfields.html',
         '/subformsubmitarchive.html',
         '/getdatafromsalesforce.html',
-        '/access2pay.html'
+        '/access2pay.html',
+        '/invoiceocr.html'
     ]);
 
     function readUrlProductId() {
         const id = new URLSearchParams(window.location.search).get('id');
+        if (id === '3') return 3;
         if (id === '2') return 2;
         if (id === '1') return 1;
         return null;
@@ -92,6 +101,7 @@
         }
         try {
             const stored = sessionStorage.getItem(PRODUCT_ID_STORAGE_KEY);
+            if (stored === '3') return 3;
             if (stored === '2') return 2;
             if (stored === '1') return 1;
         } catch (_) {}
@@ -99,7 +109,7 @@
     }
 
     function setProductId(productId) {
-        const id = productId === 2 ? 2 : 1;
+        const id = (productId === 3 || productId === 2) ? productId : 1;
         try { sessionStorage.setItem(PRODUCT_ID_STORAGE_KEY, String(id)); } catch (_) {}
         return id;
     }
@@ -134,6 +144,12 @@
             if (hash === 'get') return 'access2payget';
             if (hash === 'update') return 'access2payupdate';
             return 'access2payinsert';
+        }
+        if (normalized === '/invoiceocr.html') {
+            const hash = (window.location.hash || '#insert').replace('#', '').toLowerCase();
+            if (hash === 'get') return 'invoiceocrget';
+            if (hash === 'update') return 'invoiceocrupdate';
+            return 'invoiceocrinsert';
         }
         return PAGE_TO_FUNCTION[normalized] || null;
     }

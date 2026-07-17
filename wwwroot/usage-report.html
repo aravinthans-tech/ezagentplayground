@@ -363,6 +363,11 @@
                 label: 'Access2Pay',
                 subtitle: 'Live usage from Access2Pay playground API calls.',
                 sampleSubtitle: 'Sample preview — call Access2Pay APIs with your key to see real usage here.'
+            },
+            3: {
+                label: 'Invoice OCR Agent',
+                subtitle: 'Live usage from Invoice OCR playground API calls.',
+                sampleSubtitle: 'Sample preview — call Invoice OCR APIs with your key to see real usage here.'
             }
         };
         const API_BASE_URL = window.location.origin;
@@ -374,14 +379,20 @@
             { name: 'Get Data From Salesforce', endpoint: '/api/GetDataFromSalesforce',            method: 'POST', productId: 1 },
             { name: 'Access2Pay Connector Insert', endpoint: '/api/Access2Pay/connectorInsert', method: 'POST', productId: 2 },
             { name: 'Access2Pay Get',           endpoint: '/api/Access2Pay/get',                 method: 'POST', productId: 2 },
-            { name: 'Access2Pay Update',        endpoint: '/api/Access2Pay/update',              method: 'PUT',  productId: 2 }
+            { name: 'Access2Pay Update',        endpoint: '/api/Access2Pay/update',              method: 'PUT',  productId: 2 },
+            { name: 'Invoice OCR Insert',       endpoint: '/api/InvoiceOcr/insert',              method: 'POST', productId: 3 },
+            { name: 'Invoice OCR Get',          endpoint: '/api/InvoiceOcr/get',                 method: 'POST', productId: 3 },
+            { name: 'Invoice OCR Update',       endpoint: '/api/InvoiceOcr/update',              method: 'PUT',  productId: 3 }
         ];
 
         function getProductId() {
             if (window.PlaygroundSidebar && typeof window.PlaygroundSidebar.getProductId === 'function') {
                 return window.PlaygroundSidebar.getProductId();
             }
-            return new URLSearchParams(window.location.search).get('id') === '2' ? 2 : 1;
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (id === '3') return 3;
+            if (id === '2') return 2;
+            return 1;
         }
 
         function getActiveFunctions() {
@@ -615,6 +626,7 @@
                         payload: { searchText: pick(SAMPLE_SEARCH) }
                     };
                 case 'Access2Pay Connector Insert':
+                case 'Invoice OCR Insert':
                     return {
                         apiKey: maskedKey(),
                         connectorId: pick([89, 90, 91]),
@@ -627,6 +639,7 @@
                         }
                     };
                 case 'Access2Pay Get':
+                case 'Invoice OCR Get':
                     return {
                         apiKey: maskedKey(),
                         sortBy: { criteria: 'id', order: 'DESC' },
@@ -636,6 +649,7 @@
                         mode: 'browse'
                     };
                 case 'Access2Pay Update':
+                case 'Invoice OCR Update':
                     return {
                         apiKey: maskedKey(),
                         id: String(pick([12, 24, 36, 48])),
@@ -647,9 +661,9 @@
         }
 
         function endpointForSample(fn) {
-            if (fn.name === 'Access2Pay Update') {
+            if (fn.name === 'Access2Pay Update' || fn.name === 'Invoice OCR Update') {
                 const id = pick([12, 24, 36, 48, 88]);
-                return '/api/Access2Pay/update/' + id;
+                return fn.endpoint + '/' + id;
             }
             return fn.endpoint;
         }
