@@ -1,0 +1,331 @@
+:root {
+  --primary: #7c5cfc;
+  --primary-hover: #6a48eb;
+  --primary-rgb: 124, 92, 252;
+  --surface-primary: #fdfcfd;
+  --surface-raised: #ffffff;
+  --surface-muted: #faf9fb;
+  --border-color: #f2eff3;
+  --text-primary: #211f26;
+  --text-secondary: #65636d;
+  --text-muted: #84828e;
+  --code-bg: #faf9fb;
+  --code-text: #211f26;
+  --focus-ring: rgba(124, 92, 252, 0.12);
+  --active-bg: rgba(124, 92, 252, 0.08);
+  --active-shadow: 0 10px 25px -5px rgba(124, 92, 252, 0.15);
+}
+
+html[data-theme="dark"] {
+  --primary: #8b72fc;
+  --primary-hover: #7c5cfc;
+  --surface-primary: #15131a;
+  --surface-raised: #1d1a24;
+  --surface-muted: #25212d;
+  --border-color: #2f2a38;
+  --text-primary: #f8f7fb;
+  --text-secondary: #d4cfdd;
+  --text-muted: #aaa5b5;
+  --code-bg: #111015;
+  --code-text: #f8f7fb;
+  --focus-ring: rgba(139, 114, 252, 0.16);
+  --active-bg: rgba(139, 114, 252, 0.16);
+  --active-shadow: 0 10px 25px -5px rgba(139, 114, 252, 0.24);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+body,
+.bg-gradient-to-br,
+.from-gray-50,
+.via-blue-50,
+.to-purple-50 {
+  background: var(--surface-primary) !important;
+  background-image: none !important;
+}
+
+nav,
+aside,
+#sidebar,
+.bg-white {
+  background: var(--surface-raised) !important;
+}
+
+nav {
+  border-bottom: 1px solid var(--border-color) !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+aside,
+#sidebar {
+  border-right-color: var(--border-color) !important;
+}
+
+aside .text-transparent,
+#sidebar .text-transparent {
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+.bg-gray-50,
+.bg-gray-100,
+.bg-purple-50,
+.bg-blue-50,
+.from-purple-50,
+.to-blue-50 {
+  background: var(--surface-muted) !important;
+  background-image: none !important;
+}
+
+.border,
+.border-gray-100,
+.border-gray-200,
+.border-gray-300,
+.border-gray-800 {
+  border-color: var(--border-color) !important;
+}
+
+.text-gray-900,
+.text-gray-800,
+.text-gray-700,
+.text-black {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-500,
+.text-gray-400,
+.text-gray-300 {
+  color: var(--text-secondary) !important;
+}
+
+label,
+p {
+  color: var(--text-secondary) !important;
+}
+
+input,
+textarea,
+select,
+.input-focus {
+  background: var(--surface-raised) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.input-focus:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--focus-ring) !important;
+  outline: none !important;
+}
+
+code,
+pre {
+  background: var(--code-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--code-text) !important;
+}
+
+.card-hover,
+.card-base,
+.shadow-md,
+.shadow-lg {
+  border-color: var(--border-color) !important;
+}
+
+.api-nav,
+.api-function-btn,
+.sidebar-btn,
+aside a.block,
+#sidebar button {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.api-nav:hover,
+.api-function-btn:hover,
+.sidebar-btn:hover,
+aside a.block:hover,
+#sidebar button:hover {
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--primary) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.api-nav.bg-gradient-to-r,
+.api-nav.active,
+.api-nav.border-purple-600,
+.api-function-btn.bg-gradient-to-r,
+.api-function-btn.active,
+.sidebar-btn.bg-gradient-to-r,
+.sidebar-btn.active,
+aside a.block.bg-gradient-to-r,
+#sidebar button.bg-gradient-to-r,
+#sidebar button.active {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--primary) !important;
+}
+
+.api-nav.button-hover.bg-gradient-to-r,
+.api-function-btn.button-hover.bg-gradient-to-r,
+.sidebar-btn.block.bg-gradient-to-r,
+aside a.block.bg-gradient-to-r {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--primary) !important;
+}
+
+nav a,
+nav a.bg-gradient-to-r,
+nav a:hover,
+nav a.theme-nav-active:not(.pg-brand),
+nav a.theme-nav-active:not(.pg-brand):hover {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  transform: none !important;
+}
+
+nav a.theme-nav-active:not(.pg-brand),
+nav a.bg-gradient-to-r:not(.pg-brand) {
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+
+nav a.pg-brand,
+nav a.pg-brand.theme-nav-active,
+nav a.pg-brand:hover {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+button:not(.api-nav):not(.api-function-btn):not(.pg-nav-item):not(.key-icon-btn):not(.key-header-icon-btn):not(.key-copy-btn):not(.usage-export-btn):not(.usage-fn-link):not(.key-toggle-track):not(.theme-toggle):not(#togglePasswordBtn):not(#copyShowKeyBtn):not(.tab-button):not(.pg-lang-tab):not(.pg-social-btn):not(.pg-account-item):not(#accountPickerCancel),
+button.bg-gradient-to-r:not(.api-nav):not(.api-function-btn),
+.button-hover.bg-gradient-to-r:not(.api-nav):not(.api-function-btn),
+.btn-primary,
+.button-hover:not(.api-nav):not(.api-function-btn):not(.pg-nav-item):not(.tab-button):not(.pg-lang-tab):not(.key-header-icon-btn):not(.key-copy-btn):not(.usage-export-btn):not(.usage-fn-link):not(.pg-social-btn):not(.pg-account-item),
+button[class*="from-cyan"],
+button[class*="from-green"],
+button[class*="from-purple"],
+button.bg-white.border:not(.pg-social-btn),
+button.border-gray-300:not(.pg-social-btn) {
+  background: var(--primary) !important;
+  background-image: none !important;
+  border: 1px solid var(--primary) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+button:not(.api-nav):not(.api-function-btn):not(.pg-nav-item):not(.key-icon-btn):not(.key-header-icon-btn):not(.key-copy-btn):not(.usage-export-btn):not(.usage-fn-link):not(.key-toggle-track):not(.theme-toggle):not(#togglePasswordBtn):not(#copyShowKeyBtn):not(.tab-button):not(.pg-lang-tab):not(.pg-social-btn):not(.pg-account-item):not(#accountPickerCancel):hover:not(:disabled),
+button.bg-gradient-to-r:not(.api-nav):not(.api-function-btn):hover,
+.button-hover.bg-gradient-to-r:not(.api-nav):not(.api-function-btn):hover,
+.btn-primary:hover,
+.button-hover:not(.api-nav):not(.api-function-btn):not(.pg-nav-item):not(.tab-button):not(.pg-lang-tab):not(.key-header-icon-btn):not(.key-copy-btn):not(.usage-export-btn):not(.usage-fn-link):not(.pg-social-btn):not(.pg-account-item):hover:not(:disabled),
+button[class*="from-cyan"]:hover,
+button[class*="from-green"]:hover,
+button.bg-white.border:not(.pg-social-btn):hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  color: #ffffff !important;
+}
+
+button.pg-social-btn,
+#googleLoginBtn,
+#microsoftLoginBtn {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #d1d5db !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+}
+
+button.pg-social-btn:hover:not(:disabled),
+#googleLoginBtn:hover:not(:disabled),
+#microsoftLoginBtn:hover:not(:disabled) {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  color: #1e293b !important;
+}
+
+button:not(.api-nav):not(.pg-nav-item):not(.key-icon-btn):not(.key-toggle-track):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.theme-toggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  color: var(--text-primary);
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  margin-right: 8px;
+  padding: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  width: 32px;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-muted);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.theme-toggle-icon {
+  color: var(--primary);
+  fill: none;
+  height: 18px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 18px;
+}
+
+nav .absolute.left-1\/2 {
+  max-width: 28vw !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+nav:has(#docPrevBtn) .absolute.left-1\/2 {
+  position: static !important;
+  transform: none !important;
+  max-width: none !important;
+  margin-left: auto;
+  margin-right: auto;
+}

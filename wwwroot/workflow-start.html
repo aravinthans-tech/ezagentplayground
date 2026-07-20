@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initiate Request - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="css/playground-animations.css">
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-shell.js" defer></script>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 text-sm">
+            <a href="examples.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div id="toast" class="hidden fixed top-14 right-4 z-50 bg-white shadow-lg rounded-lg p-3 border-l-4 border-cyan-500 max-w-md">
+        <p id="toastMessage" class="text-sm font-medium text-cyan-900"></p>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="sidebar"></aside>
+        <script src="js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/workflow-start.html');</script>
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-4 py-1">
+                    <h2 class="text-xl font-semibold text-gray-900">Initiate Request</h2>
+                    <p class="text-xs text-gray-600 mt-1">Send <code class="bg-gray-100 px-1 rounded">workflowName</code> — playground resolves the ID, then calls <code class="bg-gray-100 px-1 rounded">POST /api/v6/workflows/start</code></p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 space-y-3">
+                        <h3 class="text-base font-semibold text-gray-900">Request</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
+                            <input type="text" id="apiKey" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono" placeholder="X-API-Key value" autocomplete="off">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Workflow name <span class="text-red-500">*</span></label>
+                            <input type="text" id="workflowName" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="Exact workflow name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">File</label>
+                            <input type="file" id="uploadFile" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">context</label>
+                            <input type="text" id="context" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="context">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">envType</label>
+                            <input type="text" id="envType" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="envType">
+                        </div>
+                        <p class="text-[11px] text-gray-500">Form fields: <code>workflowName</code>, <code>file</code>, <code>context</code>, <code>envType</code>.</p>
+                        <button type="button" id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium pg-btn-primary flex items-center justify-center gap-2">
+                            <span id="btnLabel">Initiate Request</span>
+                            <svg id="spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        </button>
+                        <div id="errBox" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-md p-2.5"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="text-base font-semibold text-gray-900 mb-2">Response</h3>
+                        <div id="emptyHint" class="text-gray-500 text-xs text-center py-10">Submit to see initiate response.</div>
+                        <pre id="response" class="hidden bg-gray-50 border rounded p-3 text-xs overflow-auto max-h-[75vh]"></pre>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-end">
+                            <a href="examples.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-purple-600 hover:bg-purple-700">Code examples</a>
+                            <a href="playground-documentation.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">Docs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/playground-common.js"></script>
+    <script>
+        const PC = window.PlaygroundCommon;
+        PC.restoreFields();
+        document.getElementById('submitBtn').onclick = async () => {
+            const err = document.getElementById('errBox');
+            err.classList.add('hidden');
+            const workflowName = document.getElementById('workflowName').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) { err.textContent = 'API key is required.'; err.classList.remove('hidden'); return; }
+            if (!workflowName) { err.textContent = 'Workflow name is required.'; err.classList.remove('hidden'); return; }
+            document.getElementById('btnLabel').textContent = 'Initiating...';
+            document.getElementById('spinner').classList.remove('hidden');
+            try {
+                const form = new FormData();
+                form.append('workflowName', workflowName);
+                const file = document.getElementById('uploadFile').files[0];
+                if (file) form.append('file', file, file.name);
+                form.append('context', document.getElementById('context').value || '');
+                form.append('envType', document.getElementById('envType').value || '');
+                const url = window.PlaygroundBase
+                    ? PlaygroundBase.apiUrl('/api/v6/workflows/start')
+                    : '/api/v6/workflows/start';
+                const resRaw = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey },
+                    body: form
+                });
+                const resText = await resRaw.text();
+                let data;
+                try { data = JSON.parse(resText); } catch (_) { data = resText; }
+                document.getElementById('emptyHint').classList.add('hidden');
+                const out = document.getElementById('response');
+                out.classList.remove('hidden');
+                out.textContent = PC.prettyJson(data);
+                document.getElementById('postOutputActions').classList.remove('hidden');
+                if (!resRaw.ok) { err.textContent = typeof data === 'string' ? data : PC.prettyJson(data); err.classList.remove('hidden'); }
+            } finally {
+                document.getElementById('btnLabel').textContent = 'Initiate Request';
+                document.getElementById('spinner').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

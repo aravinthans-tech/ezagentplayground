@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Docs - API Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-docs.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+</head>
+<body class="pg-app pg-docs-page flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 text-sm">
+            <a href="examples.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html" class="px-3 py-1 rounded text-white bg-gradient-to-r from-purple-600 to-blue-600">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="sidebar"></aside>
+        <script src="js/playground-base.js"></script>
+    <script src="js/playground-sidebar.js"></script><script>PlaygroundSidebar.mount('/playground-documentation.html');</script>
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 min-w-0">
+            <div class="pg-docs-inner">
+                <header class="pg-doc-header">
+                    <h1>Developer documentation</h1>
+                    <p>External V6 wrapper API reference. Use the generated <code>X-API-Key</code> on all workflow wrapper routes.</p>
+                    <p class="text-xs text-gray-600 mt-2">Connected V6 API: <code id="v6ApiBaseUrl">https://demo.ezofis.com/v6api</code></p>
+                </header>
+                <div class="doc-jump-bar">
+                    <p class="doc-jump-label">Jump to section</p>
+                    <div class="doc-jump-pills">
+                        <a href="#api-key">API Key</a>
+                        <a href="#workflow-list">Workflow List</a>
+                        <a href="#initiate-request">Initiate Request</a>
+                        <a href="#advance-workflow">Advance Workflow</a>
+                    </div>
+                </div>
+                <div id="docSections">
+                    <section id="api-key" class="doc-section anchor">
+                        <article class="doc-card">
+                            <header class="doc-card-header">
+                                <h2>API key</h2>
+                                <p class="doc-lead">Generate a single customer API key. JWT stays internal.</p>
+                            </header>
+                            <div class="doc-card-body">
+                                <ul class="doc-meta">
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoints</span><span class="doc-meta-v"><code>POST /api/Client/apiKey</code>, <code>GET /api/Client/apiKey</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Query</span><span class="doc-meta-v"><code>userName</code>, <code>password</code>, optional <code>tenantId</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Response</span><span class="doc-meta-v"><code>tenantName</code>, <code>apiKey</code>, <code>expiresAt</code></span></li>
+                                </ul>
+                            </div>
+                        </article>
+                    </section>
+                    <section id="workflow-list" class="doc-section anchor">
+                        <article class="doc-card"><header class="doc-card-header"><h2>Workflow List</h2><p class="doc-lead">List all workflows available in the selected tenant.</p></header><div class="doc-card-body"><ul class="doc-meta"><li class="doc-meta-row"><span class="doc-meta-k">Wrapper</span><span class="doc-meta-v"><code>GET /api/v6/workflows</code></span></li><li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li></ul></div></article>
+                    </section>
+                    <section id="initiate-request" class="doc-section anchor">
+                        <article class="doc-card"><header class="doc-card-header"><h2>Initiate Request</h2><p class="doc-lead">Client sends <code>workflowName</code>. Playground resolves the workflow ID, then starts the ticket (multipart).</p></header><div class="doc-card-body"><ul class="doc-meta"><li class="doc-meta-row"><span class="doc-meta-k">Wrapper</span><span class="doc-meta-v"><code>POST /api/v6/workflows/start</code></span></li><li class="doc-meta-row"><span class="doc-meta-k">Fields</span><span class="doc-meta-v"><code>workflowName</code>, <code>file</code>, <code>context</code>, <code>envType</code></span></li></ul></div></article>
+                    </section>
+                    <section id="advance-workflow" class="doc-section anchor">
+                        <article class="doc-card"><header class="doc-card-header"><h2>Advance Workflow</h2><p class="doc-lead">Client sends <code>workflowName</code>. Playground resolves <code>workflowId</code> and moves the ticket to the next step.</p></header><div class="doc-card-body"><ul class="doc-meta"><li class="doc-meta-row"><span class="doc-meta-k">Wrapper</span><span class="doc-meta-v"><code>POST /api/v6/workflows/instances/{instanceId}/move-next</code></span></li><li class="doc-meta-row"><span class="doc-meta-k">Body</span><span class="doc-meta-v"><code>workflowName</code>, <code>activityid</code>, optional <code>review</code> / <code>comments</code></span></li></ul></div></article>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        fetch((window.PlaygroundBase ? PlaygroundBase.apiUrl('/api/Client/info') : '/api/Client/info')).then(r => r.json()).then(d => {
+            if (d && d.v6ApiBaseUrl) document.getElementById('v6ApiBaseUrl').textContent = d.v6ApiBaseUrl;
+        }).catch(() => {});
+    </script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My API Keys - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="css/playground-animations.css">
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <style>
+        .key-toggle-track { position: relative; width: 2.75rem; height: 1.375rem; padding: 0; border: 1px solid #c4c0cc; border-radius: 9999px; background: #e5e7eb; cursor: default; flex-shrink: 0; }
+        .key-toggle-track.on { background: var(--primary, #7c5cfc); border-color: var(--primary-hover, #6a48eb); }
+        .key-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 1.0625rem; height: 1.0625rem; border-radius: 9999px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .22s cubic-bezier(.4,0,.2,1); }
+        .key-toggle-track.on .key-toggle-thumb { transform: translateX(1.25rem); }
+        .my-keys-table { border-collapse: collapse; }
+        .my-keys-table th, .my-keys-table td { padding: .75rem 1rem; vertical-align: middle; line-height: 1.25; }
+        .my-keys-table th { font-size: .6875rem; }
+        .my-keys-table td { font-size: .8125rem; }
+        .my-keys-table .col-calls { width: 4.25rem; text-align: center; }
+        .my-keys-table .col-status { width: 5.75rem; }
+        .my-keys-table .col-enabled { min-width: 8.75rem; }
+        .my-keys-table .col-api-key { min-width: 11.75rem; width: 11.75rem; }
+        .my-keys-table .col-actions { width: 5.5rem; text-align: center; }
+        .key-api-cell { display: grid; grid-template-columns: 9.5rem 1.5rem; align-items: center; column-gap: .125rem; }
+        .key-api-cell .key-api-mask { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .8125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .key-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border: none; background: transparent; color: #6b7280; cursor: pointer; border-radius: .25rem; }
+        .key-icon-btn:hover { color: #7c5cfc; background: #f4f4f5; }
+        .key-summary-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+        .key-summary-pill { display: inline-flex; align-items: center; padding: .25rem .75rem; border-radius: 9999px; font-size: .6875rem; font-weight: 600; background: #f4f4f5; border: 1px solid #e4e4e7; color: #3f3f46; }
+        .key-header-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border: 1px solid #e5e7eb; border-radius: .375rem; background: #fff; color: #374151; }
+        .key-header-icon-btn:hover { background: #f9fafb; }
+        .key-header-icon-btn svg { width: 1rem; height: 1rem; }
+        .key-enable-cell-inner { display: inline-flex; align-items: center; gap: .5rem; }
+    </style>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 text-sm">
+            <a href="examples.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded text-white bg-gradient-to-r from-purple-600 to-blue-600">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div id="toast" class="hidden fixed top-16 right-4 z-[60]"><div id="toastContent" class="bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500 max-w-sm"><p id="toastMessage" class="text-sm font-medium text-cyan-900"></p></div></div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="sidebar"></aside>
+        <script src="js/playground-base.js"></script>
+    <script src="js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/my-api-keys.html');</script>
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-6xl mx-auto w-full space-y-4">
+                <div class="text-center mb-2">
+                    <h2 class="text-xl font-semibold text-gray-900">My API Keys</h2>
+                    <p class="text-xs text-gray-600 mt-1">Keys for your logged-in account. Use the eye icon to reveal a key.</p>
+                </div>
+
+                <div id="needLogin" class="hidden bg-white rounded-lg shadow-md p-6 max-w-md mx-auto text-center">
+                    <p class="text-sm text-gray-700 mb-3">Generate an API key first so we can load your tenant keys automatically.</p>
+                    <a href="apikey.html" class="inline-block px-4 py-2 rounded-md text-white text-sm pg-btn-primary">Generate API Key</a>
+                </div>
+
+                <div id="keysPanel" class="hidden space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2 bg-white rounded-lg shadow-sm px-4 py-3 border border-gray-100">
+                        <div>
+                            <p id="signedInAs" class="text-sm font-medium text-gray-800"></p>
+                            <div id="myKeysSummary" class="key-summary-row">
+                                <span class="key-summary-pill" data-stat="keys">0 key(s)</span>
+                                <span class="key-summary-pill" data-stat="enabled">0 active</span>
+                                <span class="key-summary-pill" data-stat="calls">0 total API calls</span>
+                            </div>
+                        </div>
+                        <button type="button" id="refreshKeysBtn" class="key-header-icon-btn" title="Refresh keys">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div id="myKeysLoading" class="text-center py-10">
+                            <svg class="animate-spin h-8 w-8 mx-auto text-cyan-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <p class="text-xs text-gray-500 mt-3">Loading keys...</p>
+                        </div>
+                        <div id="myKeysEmpty" class="hidden text-center py-10 text-xs text-gray-500">No API keys yet. <a href="apikey.html" class="text-purple-700 hover:underline font-medium">Generate your first key</a>.</div>
+                        <div id="myKeysError" class="hidden text-center py-6 text-sm text-red-600"></div>
+                        <div class="overflow-x-auto">
+                            <table id="myKeysTable" class="my-keys-table min-w-full divide-y divide-gray-200 hidden">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide">Label</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-api-key">API Key</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide">Created</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide">Expires</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-calls">Calls</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-status">Status</th>
+                                        <th class="text-left font-semibold text-gray-500 uppercase tracking-wide col-enabled">Enabled</th>
+                                        <th class="col-actions"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myKeysBody" class="divide-y divide-gray-100 bg-white"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="showKeyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-lg w-full p-4">
+            <h4 class="text-base font-semibold text-gray-900 mb-2">API key</h4>
+            <p id="showKeyLabel" class="text-xs text-gray-600 mb-2"></p>
+            <div class="relative mb-3">
+                <input id="showKeyValue" readonly class="w-full pl-3 pr-10 py-2 text-sm font-mono border border-gray-300 rounded-md" />
+                <button type="button" id="copyShowKeyBtn" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-purple-600" title="Copy">Copy</button>
+            </div>
+            <div class="flex justify-end"><button type="button" id="showKeyCloseBtn" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 text-white">Close</button></div>
+        </div>
+    </div>
+
+    <script src="js/playground-common.js"></script>
+    <script>
+        const fmt = (v) => v ? new Date(v).toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'Never';
+        const mask = (k) => (!k || k.length < 8) ? '••••••••' : k.slice(0, 4) + '••••' + k.slice(-4);
+        let cachedKeys = [];
+
+        function showToast(msg, ok = true) {
+            const t = document.getElementById('toast');
+            const tc = document.getElementById('toastContent');
+            const m = document.getElementById('toastMessage');
+            m.textContent = msg;
+            tc.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 max-w-sm ' + (ok ? 'border-cyan-500' : 'border-red-500');
+            m.className = 'text-sm font-medium ' + (ok ? 'text-cyan-900' : 'text-red-900');
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 2500);
+        }
+
+        function session() {
+            return (window.PlaygroundCommon && PlaygroundCommon.getSession) ? PlaygroundCommon.getSession() : {
+                email: localStorage.getItem('v6PgLastEmail') || '',
+                tenantId: localStorage.getItem('v6PgTenantId') || ''
+            };
+        }
+
+        function renderKeys(keys, callMap, totalCalls) {
+            const body = document.getElementById('myKeysBody');
+            const table = document.getElementById('myKeysTable');
+            const empty = document.getElementById('myKeysEmpty');
+            const loading = document.getElementById('myKeysLoading');
+            loading.classList.add('hidden');
+            body.innerHTML = '';
+            cachedKeys = keys || [];
+
+            const active = cachedKeys.filter(k => !k.isExpired).length;
+            document.querySelector('[data-stat="keys"]').textContent = cachedKeys.length + ' key(s)';
+            document.querySelector('[data-stat="enabled"]').textContent = active + ' active';
+            document.querySelector('[data-stat="calls"]').textContent = totalCalls + ' total API calls';
+
+            if (!cachedKeys.length) {
+                table.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            table.classList.remove('hidden');
+
+            cachedKeys.forEach(k => {
+                const expired = !!k.isExpired;
+                const calls = callMap[k.id] || callMap[k.apiKeyFull] || callMap[k.apiKey] || 0;
+                const full = k.apiKeyFull || k.apiKey || '';
+                body.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="font-medium text-gray-800">${k.keyLabel || 'Playground key'}</td>
+                        <td class="col-api-key">
+                            <div class="key-api-cell">
+                                <span class="key-api-mask">${mask(full)}</span>
+                                <button type="button" class="key-icon-btn" data-show-key="${full}" data-label="${k.keyLabel || 'Playground key'}" title="Show key">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="text-gray-600 whitespace-nowrap">${fmt(k.createdAt)}</td>
+                        <td class="text-gray-600 whitespace-nowrap">${fmt(k.expiresAt)}</td>
+                        <td class="col-calls font-semibold text-gray-800">${calls}</td>
+                        <td class="col-status"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${expired ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${expired ? 'Expired' : 'Active'}</span></td>
+                        <td class="col-enabled">
+                            <div class="key-enable-cell-inner">
+                                <span class="key-toggle-track ${expired ? '' : 'on'}" title="${expired ? 'Expired' : 'Enabled'}"><span class="key-toggle-thumb"></span></span>
+                                <span class="text-xs ${expired ? 'text-gray-400' : 'text-purple-700 font-medium'}">${expired ? 'Expired' : 'Enabled'}</span>
+                            </div>
+                        </td>
+                        <td class="col-actions"></td>
+                    </tr>`);
+            });
+
+            body.querySelectorAll('[data-show-key]').forEach(btn => {
+                btn.onclick = () => {
+                    document.getElementById('showKeyLabel').textContent = btn.getAttribute('data-label') || '';
+                    document.getElementById('showKeyValue').value = btn.getAttribute('data-show-key') || '';
+                    document.getElementById('showKeyModal').classList.remove('hidden');
+                };
+            });
+        }
+
+        async function ensureSession() {
+            const s = session();
+            if (s.email && s.tenantId) return s;
+            if (s.apiKey) {
+                try {
+                    const res = await fetch((window.PlaygroundBase ? PlaygroundBase.apiUrl('/api/Client/info') : '/api/Client/info'));
+                    // Resolve via hosted lookup through a dedicated helper if available
+                } catch (_) {}
+            }
+            // If only tenant is missing but email exists, try tenants API
+            if (s.email && !s.tenantId) {
+                try {
+                    const res = await fetch((window.PlaygroundBase ? PlaygroundBase.apiUrl('/api/Client/tenants?userName=' + encodeURIComponent(s.email)) : ('/api/Client/tenants?userName=' + encodeURIComponent(s.email))));
+                    const data = await res.json();
+                    const tenants = data.tenants || [];
+                    if (tenants.length === 1) {
+                        localStorage.setItem('v6PgTenantId', tenants[0].tenantId);
+                        s.tenantId = tenants[0].tenantId;
+                    }
+                } catch (_) {}
+            }
+            return session();
+        }
+
+        async function loadKeys() {
+            const s = await ensureSession();
+            const needLogin = document.getElementById('needLogin');
+            const keysPanel = document.getElementById('keysPanel');
+            const loading = document.getElementById('myKeysLoading');
+            const err = document.getElementById('myKeysError');
+
+            if (!s.email || !s.tenantId) {
+                needLogin.classList.remove('hidden');
+                keysPanel.classList.add('hidden');
+                return;
+            }
+
+            needLogin.classList.add('hidden');
+            keysPanel.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            document.getElementById('myKeysTable').classList.add('hidden');
+            document.getElementById('myKeysEmpty').classList.add('hidden');
+            err.classList.add('hidden');
+            document.getElementById('signedInAs').textContent = 'Keys for ' + s.email;
+
+            try {
+                const [keysRes, usageRes] = await Promise.all([
+                    fetch((window.PlaygroundBase ? PlaygroundBase.apiUrl('/api/Client/apiKeys?userName=' + encodeURIComponent(s.email) + '&tenantId=' + encodeURIComponent(s.tenantId)) : ('/api/Client/apiKeys?userName=' + encodeURIComponent(s.email) + '&tenantId=' + encodeURIComponent(s.tenantId)))),
+                    fetch((window.PlaygroundBase ? PlaygroundBase.apiUrl('/api/Client/apiUsage?userName=' + encodeURIComponent(s.email) + '&tenantId=' + encodeURIComponent(s.tenantId)) : ('/api/Client/apiUsage?userName=' + encodeURIComponent(s.email) + '&tenantId=' + encodeURIComponent(s.tenantId))))
+                ]);
+                const keysData = await keysRes.json();
+                const usageData = await usageRes.json();
+                if (!keysRes.ok) throw new Error(keysData.error || keysData.message || 'Failed to load keys');
+
+                const callMap = {};
+                (usageData.recentRequests || []).forEach(r => {
+                    const id = r.apiKeyId || r.ApiKeyId;
+                    const key = r.apiKey || r.ApiKey;
+                    if (id) callMap[id] = (callMap[id] || 0) + 1;
+                    if (key) callMap[key] = (callMap[key] || 0) + 1;
+                });
+                renderKeys(keysData.keys || [], callMap, usageData.totalRequests || 0);
+            } catch (e) {
+                loading.classList.add('hidden');
+                err.textContent = e.message || 'Failed to load keys';
+                err.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('refreshKeysBtn').onclick = loadKeys;
+        document.getElementById('showKeyCloseBtn').onclick = () => document.getElementById('showKeyModal').classList.add('hidden');
+        document.getElementById('showKeyModal').onclick = (e) => { if (e.target.id === 'showKeyModal') e.target.classList.add('hidden'); };
+        document.getElementById('copyShowKeyBtn').onclick = async () => {
+            await navigator.clipboard.writeText(document.getElementById('showKeyValue').value || '');
+            showToast('API key copied!');
+        };
+
+        loadKeys();
+    </script>
+</body>
+</html>

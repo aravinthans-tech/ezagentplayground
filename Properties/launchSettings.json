@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "V6Playground": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "apikey.html",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:5180;http://localhost:5181"
+    }
+  }
+}

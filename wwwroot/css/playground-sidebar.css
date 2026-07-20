@@ -1,0 +1,38 @@
+/* Shared sidebar layout — V6 active states come from playground-v6.css + theme.css */
+#sidebar,
+aside#sidebar {
+    display: flex !important;
+    flex-direction: column;
+    width: 16rem !important;
+    min-width: 16rem !important;
+    max-width: 16rem !important;
+    flex-shrink: 0;
+    animation: none !important;
+}
+
+#sidebar *,
+#sidebar {
+    animation: none !important;
+}
+
+#sidebar .pg-nav-item:hover,
+#sidebar .api-nav:hover,
+#sidebar .button-hover:hover,
+#sidebar .button-hover:active {
+    transform: none !important;
+}
+
+/* Visible hover when v6 rules are not loaded on a page */
+#sidebar a.pg-nav-item:not(.pg-nav-item--active):hover,
+#sidebar a.api-nav:not(.pg-nav-item--active):hover {
+    background: #f0edff !important;
+    border-color: rgba(124, 92, 252, 0.45) !important;
+    color: #6a48eb !important;
+    box-shadow: 0 1px 4px rgba(124, 92, 252, 0.15) !important;
+}
+
+#sidebar a.pg-nav-item--active:hover {
+    background: rgba(124, 92, 252, 0.14) !important;
+    border-color: #7c5cfc !important;
+    color: #7c5cfc !important;
+}

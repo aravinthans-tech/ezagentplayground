@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate API Key - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="css/playground-animations.css">
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-shell.js" defer></script>
+    <style>
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px);} to { opacity: 1; transform: translateY(0);} }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px);} to { opacity: 1; transform: translateX(0);} }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px);} to { opacity: 1; transform: translateX(0);} }
+        .animate-spin { animation: spin 1s linear infinite; }
+        .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-slideInLeft { animation: slideInLeft 0.6s ease-out forwards; }
+        .animate-slideInRight { animation: slideInRight 0.6s ease-out forwards; }
+        .toast { transition: all 0.3s ease-in-out; }
+        html, body { overflow-x: hidden; height: 100%; margin: 0; padding: 0; }
+        body { display: flex; flex-direction: column; }
+        #sidebar { display: flex !important; visibility: visible !important; opacity: 1 !important; width: 256px !important; min-width: 256px !important; max-width: 256px !important; background-color: white !important; position: relative !important; z-index: 10 !important; }
+        code, pre { font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace; }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
+        .button-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .button-hover:hover { transform: scale(1.02); }
+        .button-hover:active { transform: scale(0.98); }
+        .input-focus { transition: all 0.3s ease; }
+        .input-focus:focus { transform: scale(1.01); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); }
+        .delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-300 { animation-delay: 0.3s; opacity: 0; }
+        .delay-400 { animation-delay: 0.4s; opacity: 0; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9);} to { opacity: 1; transform: scale(1);} }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        .modal-content { animation: modalFadeIn 0.3s ease-out; }
+        #sidebar, aside#sidebar { animation: none !important; }
+        #sidebar .sidebar-btn, #sidebar .api-function-btn, #sidebar .api-nav { transition: background-color 0.15s ease, color 0.15s ease !important; }
+        #sidebar .sidebar-btn:hover, #sidebar .api-function-btn:hover, #sidebar .api-nav:hover, #sidebar .button-hover:hover, #sidebar .button-hover:active { transform: none !important; }
+        .key-copy-btn { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 0.375rem; border: 1px solid #111827; background: #111827; color: #fff; }
+        .key-copy-btn:hover { background: #1f2937; }
+    </style>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height: 100vh; margin: 0; padding: 0; overflow: hidden; ">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 flex-shrink-0 relative sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 flex-1 justify-end">
+            <a href="examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html#api-key" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div id="toast" class="hidden fixed top-16 right-4 z-[60] toast">
+        <div class="bg-white rounded-lg shadow-xl p-3 border-l-4" id="toastContent">
+            <p id="toastMessage" class="font-medium text-sm"></p>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
+        <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
+        <script src="js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount((window.PlaygroundBase && PlaygroundBase.withBase('/apikey.html')) || '/apikey.html');</script>
+        <div class="flex-1 overflow-y-auto p-4 pb-8 flex flex-col">
+            <div class="max-w-4xl w-full mx-auto my-auto">
+                <div class="text-center mb-4 animate-fadeInUp">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-1">Generate API Key</h2>
+                    <p class="text-xs text-gray-600">Generate a secure API key for accessing the external V6 wrapper APIs</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-base font-semibold text-gray-900 mb-3">User Credentials</h3>
+                        <form id="apiKeyForm" class="space-y-4">
+                            <div>
+                                <label for="userEmail" class="block text-xs font-semibold text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                                <input type="email" id="userEmail" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus" placeholder="admin@ezofis.com" autocomplete="username" required />
+                                <p id="emailError" class="hidden text-[11px] text-red-600 mt-1"></p>
+                                <p class="text-[11px] text-gray-500 mt-1">Enter the email registered in your tenant</p>
+                            </div>
+                            <div>
+                                <label for="userPassword" class="block text-xs font-semibold text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <input type="password" id="userPassword" class="w-full pl-3 pr-10 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 input-focus" placeholder="Enter password" autocomplete="current-password" />
+                                    <button type="button" id="togglePasswordBtn" title="Show password" aria-label="Show password" aria-pressed="false" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                                        <svg id="eyeIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        <svg id="eyeOffIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908A3 3 0 1115 12m-7.5-2.121a9.97 9.97 0 014.121-4.121m4.243 4.243a9.97 9.97 0 014.121 4.121M3 3l18 18"></path></svg>
+                                    </button>
+                                </div>
+                                <p id="passwordError" class="hidden text-[11px] text-red-600 mt-1"></p>
+                                <p class="text-[11px] text-gray-500 mt-1">Tenant will be detected from email automatically</p>
+                            </div>
+                            <div>
+                                <label for="tenantIdInput" class="block text-xs font-semibold text-gray-700 mb-1">Tenant</label>
+                                <select id="tenantIdInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus">
+                                    <option value="">Auto detect from email</option>
+                                </select>
+                                <p class="text-[11px] text-gray-500 mt-1">If multiple organizations exist for this email, choose one.</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button type="button" id="generateApiKeyBtn" class="flex-1 pg-btn-primary text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover">
+                                    <span id="btnText">Generate API Key</span>
+                                    <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </button>
+                                <button type="button" id="viewApiKeyBtn" class="flex-1 pg-btn-primary text-white font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center shadow-sm hover:shadow-md button-hover">
+                                    <span id="viewBtnText">View API Key</span>
+                                    <svg id="viewLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </button>
+                            </div>
+
+                            <div class="relative py-1">
+                                <div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-200"></div></div>
+                                <div class="relative flex justify-center"><span class="bg-white px-3 text-xs text-gray-500">Or</span></div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" id="googleLoginBtn" class="pg-social-btn w-full flex items-center justify-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg">
+                                    <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                                    <span>Continue with Google</span>
+                                </button>
+                                <button type="button" id="microsoftLoginBtn" class="pg-social-btn w-full flex items-center justify-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg">
+                                    <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 23 23" aria-hidden="true"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#00a4ef" d="M12 1h10v10H12z"/><path fill="#7fba00" d="M1 12h10v10H1z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>
+                                    <span>Continue with Microsoft</span>
+                                </button>
+                            </div>
+                        </form>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-center">
+                            <button type="button" id="viewCodeExamplesBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-purple-600 hover:bg-purple-700 border border-purple-800/20 shadow-sm">Code examples</button>
+                            <button type="button" id="viewDocumentationBtn" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm">Docs</button>
+                        </div>
+                        <div id="errorSection" class="hidden mt-6">
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded animate-fadeInUp">
+                                <h4 class="text-sm font-semibold text-red-800 mb-2">Error</h4>
+                                <p id="errorMessage" class="text-sm text-red-700"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="expiryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                        <div class="modal-content bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4">
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-lg px-4 py-3 border-b border-purple-200">
+                                <h4 class="text-base font-semibold text-gray-900">Set API Key Expiry</h4>
+                                <p class="text-[11px] text-gray-600 mt-0.5">Choose how long this API key should remain valid.</p>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <div>
+                                    <label for="apiKeyExpiry" class="block text-xs font-semibold text-gray-700 mb-1">Expires after</label>
+                                    <select id="apiKeyExpiry" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus">
+                                        <option value="1">1 day</option>
+                                        <option value="2" selected>2 days</option>
+                                        <option value="7">7 days</option>
+                                        <option value="30">30 days</option>
+                                        <option value="90">90 days</option>
+                                        <option value="0">Never expires</option>
+                                        <option value="custom">Custom...</option>
+                                    </select>
+                                </div>
+                                <div id="apiKeyExpiryCustomWrap" class="hidden">
+                                    <label for="apiKeyExpiryCustom" class="block text-xs font-semibold text-gray-700 mb-1">Custom (days)</label>
+                                    <input type="number" id="apiKeyExpiryCustom" min="1" max="3650" placeholder="e.g. 14" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus" />
+                                    <p id="apiKeyExpiryCustomError" class="hidden text-[11px] text-red-600 mt-1">Enter a number of days between 1 and 3650.</p>
+                                </div>
+                                <p class="text-[11px] text-gray-500">This controls external API key validity.</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-b-lg px-4 py-3 flex justify-end items-center space-x-2">
+                                <button id="expiryCancelBtn" type="button" class="text-xs px-3 py-1.5 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 button-hover">Cancel</button>
+                                <button id="expiryConfirmBtn" type="button" class="text-xs px-3 py-1.5 rounded-md text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 button-hover">Generate</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="apiKeyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                        <div class="modal-content bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 relative">
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-t-lg px-4 py-3 border-b border-purple-200">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h4 class="text-base font-semibold text-gray-900">Your API Key Details</h4>
+                                    <div id="apiKeyStatus" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap"></div>
+                                </div>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <input type="hidden" id="tenantId" />
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">API Key</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" id="generatedApiKey" readonly class="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md font-mono" />
+                                        <button type="button" id="copyApiKeyBtn" title="Copy API key" aria-label="Copy API key" class="key-copy-btn">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Expires</label>
+                                    <input type="text" id="apiKeyExpiresAt" readonly class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md" />
+                                    <p id="apiKeyExpiryHint" class="text-[11px] text-gray-500 mt-1"></p>
+                                </div>
+                                <div id="expiredBanner" class="hidden bg-red-50 border-l-4 border-red-500 p-2.5 rounded">
+                                    <p class="text-xs font-semibold text-red-700">This API key has expired</p>
+                                    <p class="text-[11px] text-red-600 mt-0.5">Generate a new key to continue using the API.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 rounded-b-lg px-4 py-3 flex justify-end items-center">
+                                <button id="closeModalBtnFooter" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium text-xs py-1.5 px-4 rounded-md button-hover">Close</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-base font-semibold text-gray-900 mb-3">API Key Information</h3>
+                        <div class="space-y-3 text-xs">
+                            <div class="border-l-4 border-purple-500 pl-3">
+                                <div class="font-semibold text-gray-700 mb-1 text-xs">Generate API Key</div>
+                                <code class="text-xs font-mono text-gray-800">POST /api/Client/apiKey</code>
+                                <div class="text-xs text-gray-600 mt-1">Password: ?userName=&amp;password=</div>
+                                <div class="text-xs text-gray-600">Social: ?userName=&amp;provider=google|microsoft</div>
+                            </div>
+                            <div class="border-l-4 border-purple-500 pl-3">
+                                <div class="font-semibold text-gray-700 mb-1 text-xs">View API Key</div>
+                                <code class="text-xs font-mono text-gray-800">GET /api/Client/apiKey</code>
+                                <div class="text-xs text-gray-600 mt-1">Same query params as generate</div>
+                            </div>
+                            <div class="border-l-4 border-purple-500 pl-3">
+                                <div class="font-semibold text-gray-700 mb-1 text-xs">Authentication</div>
+                                <div class="text-xs text-gray-600">No X-API-Key header needed on this route</div>
+                            </div>
+                            <div class="border-l-4 border-purple-500 pl-3">
+                                <div class="font-semibold text-gray-700 mb-1 text-xs">Response Format</div>
+                                <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto mt-1">{
+  "tenantName": "string",
+  "apiKey": "string",
+  "expiresAt": "2026-05-14T11:11:00Z"
+}</pre>
+                            </div>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <div class="ml-2">
+                                        <h4 class="text-xs font-semibold text-yellow-800">Security Notice</h4>
+                                        <div class="mt-1 text-xs text-yellow-700">
+                                            <p>Customer needs only this API key. JWT stays internal and is refreshed automatically by the backend.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/playground-common.js"></script>
+    <script>
+        const API_BASE_URL = (window.PlaygroundBase && PlaygroundBase.base) ? (window.location.origin + PlaygroundBase.base) : window.location.origin;
+        const PC = window.PlaygroundCommon;
+        const generateApiKeyBtn = document.getElementById('generateApiKeyBtn');
+        const viewApiKeyBtn = document.getElementById('viewApiKeyBtn');
+        const btnText = document.getElementById('btnText');
+        const viewBtnText = document.getElementById('viewBtnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const viewLoadingSpinner = document.getElementById('viewLoadingSpinner');
+        const apiKeyModal = document.getElementById('apiKeyModal');
+        const errorSection = document.getElementById('errorSection');
+        const closeModalBtnFooter = document.getElementById('closeModalBtnFooter');
+        const generatedApiKey = document.getElementById('generatedApiKey');
+        const tenantIdModalInput = document.getElementById('tenantId');
+        const copyApiKeyBtn = document.getElementById('copyApiKeyBtn');
+        const userEmail = document.getElementById('userEmail');
+        const userPassword = document.getElementById('userPassword');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const apiKeyStatus = document.getElementById('apiKeyStatus');
+        const apiKeyExpiry = document.getElementById('apiKeyExpiry');
+        const apiKeyExpiryCustom = document.getElementById('apiKeyExpiryCustom');
+        const apiKeyExpiryCustomWrap = document.getElementById('apiKeyExpiryCustomWrap');
+        const apiKeyExpiryCustomError = document.getElementById('apiKeyExpiryCustomError');
+        const apiKeyExpiresAt = document.getElementById('apiKeyExpiresAt');
+        const apiKeyExpiryHint = document.getElementById('apiKeyExpiryHint');
+        const expiredBanner = document.getElementById('expiredBanner');
+        const expiryModal = document.getElementById('expiryModal');
+        const expiryCancelBtn = document.getElementById('expiryCancelBtn');
+        const expiryConfirmBtn = document.getElementById('expiryConfirmBtn');
+        const tenantSelect = document.getElementById('tenantIdInput');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const microsoftLoginBtn = document.getElementById('microsoftLoginBtn');
+        let pendingAuthMode = 'password';
+        let socialConfig = { googleClientId: '', msalClientId: '' };
+        let msalInstance = null;
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toastContent');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toastContent.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 ' + (type === 'error' ? 'border-red-500' : 'border-green-500');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3200);
+        }
+
+        async function lookupTenants() {
+            const email = userEmail.value.trim();
+            if (!email) return;
+            const res = await fetch(API_BASE_URL + '/api/Client/tenants?userName=' + encodeURIComponent(email));
+            const text = await res.text();
+            if (!res.ok) return;
+            const data = JSON.parse(text);
+            tenantSelect.innerHTML = '<option value="">Auto detect from email</option>';
+            (data.tenants || []).forEach(function (t) {
+                const opt = document.createElement('option');
+                opt.value = t.tenantId;
+                opt.textContent = t.name + (t.role ? ' (' + t.role + ')' : '');
+                tenantSelect.appendChild(opt);
+            });
+            if (data.tenants && data.tenants.length === 1) tenantSelect.value = data.tenants[0].tenantId;
+        }
+
+        function fmtDateTime(ts) {
+            return new Date(ts).toLocaleString();
+        }
+        function humanizeDuration(ms) {
+            const sec = Math.floor(ms / 1000);
+            const days = Math.floor(sec / 86400);
+            const hrs = Math.floor((sec % 86400) / 3600);
+            const mins = Math.floor((sec % 3600) / 60);
+            if (days > 0) return days + 'd ' + hrs + 'h';
+            if (hrs > 0) return hrs + 'h ' + mins + 'm';
+            if (mins > 0) return mins + 'm';
+            return sec + 's';
+        }
+        function applyExpiryToModal(expiresAtValue) {
+            if (!expiresAtValue) {
+                apiKeyExpiresAt.value = 'Never expires';
+                apiKeyExpiryHint.textContent = 'No expiry was set when this key was generated.';
+                expiredBanner.classList.add('hidden');
+                return;
+            }
+            const expiresAt = new Date(expiresAtValue).getTime();
+            apiKeyExpiresAt.value = fmtDateTime(expiresAt);
+            const msLeft = expiresAt - Date.now();
+            if (msLeft <= 0) {
+                expiredBanner.classList.remove('hidden');
+                apiKeyExpiryHint.textContent = 'Expired ' + humanizeDuration(-msLeft) + ' ago.';
+                apiKeyStatus.textContent = 'EXPIRED';
+                apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700 whitespace-nowrap';
+            } else {
+                expiredBanner.classList.add('hidden');
+                apiKeyExpiryHint.textContent = 'Expires in ' + humanizeDuration(msLeft) + '.';
+            }
+        }
+        function selectedExpiryDays() {
+            const v = apiKeyExpiry.value;
+            if (v === 'custom') {
+                const n = parseInt(apiKeyExpiryCustom.value, 10);
+                return (Number.isFinite(n) && n > 0) ? n : 0;
+            }
+            return parseInt(v, 10) || 0;
+        }
+        apiKeyExpiry.addEventListener('change', () => {
+            if (apiKeyExpiry.value === 'custom') {
+                apiKeyExpiryCustomWrap.classList.remove('hidden');
+                apiKeyExpiryCustom.focus();
+            } else {
+                apiKeyExpiryCustomWrap.classList.add('hidden');
+                apiKeyExpiryCustomError.classList.add('hidden');
+            }
+        });
+
+        let proceedWithGeneration = null;
+        function openExpiryModal(onConfirm) {
+            proceedWithGeneration = onConfirm;
+            apiKeyExpiryCustomError.classList.add('hidden');
+            apiKeyExpiryCustomWrap.classList.toggle('hidden', apiKeyExpiry.value !== 'custom');
+            expiryModal.classList.remove('hidden');
+        }
+        function closeExpiryModal() {
+            expiryModal.classList.add('hidden');
+            proceedWithGeneration = null;
+        }
+        expiryCancelBtn.addEventListener('click', closeExpiryModal);
+        expiryModal.addEventListener('click', (e) => { if (e.target === expiryModal) closeExpiryModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !expiryModal.classList.contains('hidden')) closeExpiryModal();
+            if (e.key === 'Escape' && !apiKeyModal.classList.contains('hidden')) apiKeyModal.classList.add('hidden');
+        });
+        expiryConfirmBtn.addEventListener('click', async () => {
+            if (apiKeyExpiry.value === 'custom') {
+                const n = parseInt(apiKeyExpiryCustom.value, 10);
+                if (!Number.isFinite(n) || n < 1 || n > 3650) {
+                    apiKeyExpiryCustomError.classList.remove('hidden');
+                    apiKeyExpiryCustom.focus();
+                    return;
+                }
+            }
+            if (typeof proceedWithGeneration === 'function') await proceedWithGeneration();
+            closeExpiryModal();
+        });
+
+        function validateEmail(email) {
+            if (!email) return 'Email is required';
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Please enter a valid email address';
+        }
+        function validatePassword(password) {
+            if (!password) return 'Password is required';
+            return '';
+        }
+
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const eyeIcon = document.getElementById('eyeIcon');
+        const eyeOffIcon = document.getElementById('eyeOffIcon');
+        togglePasswordBtn.addEventListener('click', () => {
+            const willShow = userPassword.type === 'password';
+            userPassword.type = willShow ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', !willShow);
+            eyeOffIcon.classList.toggle('hidden', willShow);
+            togglePasswordBtn.setAttribute('aria-pressed', String(willShow));
+        });
+
+        closeModalBtnFooter.addEventListener('click', () => apiKeyModal.classList.add('hidden'));
+        apiKeyModal.addEventListener('click', (e) => { if (e.target === apiKeyModal) apiKeyModal.classList.add('hidden'); });
+        document.getElementById('viewCodeExamplesBtn').addEventListener('click', () => window.location.href = '/examples.html');
+        document.getElementById('viewDocumentationBtn').addEventListener('click', () => window.location.href = '/playground-documentation.html#api-key');
+
+        async function runApi(method, authMode) {
+            const mode = authMode || 'password';
+            errorSection.classList.add('hidden');
+            apiKeyModal.classList.add('hidden');
+            document.getElementById('postOutputActions').classList.add('hidden');
+
+            const emailErr = validateEmail(userEmail.value);
+            const passErr = mode === 'password' ? validatePassword(userPassword.value) : '';
+            emailError.textContent = emailErr; emailError.classList.toggle('hidden', !emailErr);
+            passwordError.textContent = passErr; passwordError.classList.toggle('hidden', !passErr);
+            if (emailErr || passErr) return false;
+
+            const userName = userEmail.value.trim();
+            const tenantId = tenantSelect.value.trim();
+            const days = selectedExpiryDays();
+            const qs = new URLSearchParams({ userName, daysValid: String(days) });
+            if (tenantId) qs.set('tenantId', tenantId);
+            if (mode === 'password') qs.set('password', userPassword.value);
+            else qs.set('provider', mode);
+
+            const res = await fetch(API_BASE_URL + '/api/Client/apiKey?' + qs.toString(), { method });
+            const text = await res.text();
+            if (!res.ok) {
+                document.getElementById('errorMessage').textContent = text;
+                errorSection.classList.remove('hidden');
+                showToast('Request failed', 'error');
+                return false;
+            }
+            const data = JSON.parse(text);
+            tenantIdModalInput.value = data.tenantId || '';
+            generatedApiKey.value = data.apiKey || '';
+            apiKeyStatus.textContent = method === 'POST' ? 'Newly Generated API Key' : 'Existing API Key Retrieved';
+            apiKeyStatus.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-800 whitespace-nowrap';
+            applyExpiryToModal(data.expiresAt || null);
+            apiKeyModal.classList.remove('hidden');
+            document.getElementById('postOutputActions').classList.remove('hidden');
+            PC.saveSession({ apiKey: data.apiKey, tenantId: data.tenantId, email: userName });
+            if (data.tenantName) localStorage.setItem('v6PgTenantName', data.tenantName);
+            showToast(method === 'POST' ? 'API key generated successfully!' : 'API key retrieved successfully!', 'success');
+            return true;
+        }
+
+        generateApiKeyBtn.addEventListener('click', () => {
+            pendingAuthMode = 'password';
+            openExpiryModal(async () => {
+                generateApiKeyBtn.disabled = true; btnText.textContent = 'Generating...'; loadingSpinner.classList.remove('hidden');
+                try { await runApi('POST', 'password'); } finally { generateApiKeyBtn.disabled = false; btnText.textContent = 'Generate API Key'; loadingSpinner.classList.add('hidden'); }
+            });
+        });
+
+        viewApiKeyBtn.addEventListener('click', async () => {
+            viewApiKeyBtn.disabled = true; viewBtnText.textContent = 'Loading...'; viewLoadingSpinner.classList.remove('hidden');
+            try { await runApi('GET', 'password'); } finally { viewApiKeyBtn.disabled = false; viewBtnText.textContent = 'View API Key'; viewLoadingSpinner.classList.add('hidden'); }
+        });
+
+        async function loadSocialConfig() {
+            try {
+                const res = await fetch(API_BASE_URL + '/api/Client/info');
+                if (!res.ok) return;
+                const data = await res.json();
+                socialConfig.googleClientId = (data.socialAuth && data.socialAuth.googleClientId) || '';
+                socialConfig.msalClientId = (data.socialAuth && data.socialAuth.msalClientId) || '';
+            } catch (e) { /* ignore */ }
+        }
+
+        function waitForGoogle() {
+            return new Promise(function (resolve, reject) {
+                let tries = 0;
+                (function tick() {
+                    if (window.google && google.accounts && google.accounts.oauth2) return resolve();
+                    if (++tries > 80) return reject(new Error('Google Sign-In failed to load.'));
+                    setTimeout(tick, 100);
+                })();
+            });
+        }
+
+        function waitForMsal() {
+            return new Promise(function (resolve, reject) {
+                let tries = 0;
+                (function tick() {
+                    if (window.msal && msal.PublicClientApplication) return resolve();
+                    if (++tries > 80) return reject(new Error('Microsoft Sign-In failed to load.'));
+                    setTimeout(tick, 100);
+                })();
+            });
+        }
+
+        async function afterSocialEmail(email, provider) {
+            userEmail.value = email;
+            passwordError.classList.add('hidden');
+            emailError.classList.add('hidden');
+            await lookupTenants();
+            if (!tenantSelect.value) {
+                for (let i = 0; i < tenantSelect.options.length; i++) {
+                    if (tenantSelect.options[i].value) { tenantSelect.value = tenantSelect.options[i].value; break; }
+                }
+            }
+            if (!tenantSelect.value) {
+                document.getElementById('errorMessage').textContent = 'No tenant found for ' + email + '. Ensure this Google/Microsoft user exists in the catalog.';
+                errorSection.classList.remove('hidden');
+                showToast('Tenant required', 'error');
+                return;
+            }
+            pendingAuthMode = provider;
+            openExpiryModal(async () => {
+                const btn = provider === 'google' ? googleLoginBtn : microsoftLoginBtn;
+                btn.disabled = true;
+                try { await runApi('POST', provider); }
+                finally { btn.disabled = false; }
+            });
+        }
+
+        async function signInWithGoogle() {
+            if (!socialConfig.googleClientId) throw new Error('Google Client ID is not configured.');
+            await waitForGoogle();
+            return new Promise(function (resolve, reject) {
+                const client = google.accounts.oauth2.initTokenClient({
+                    client_id: socialConfig.googleClientId,
+                    scope: 'openid email profile',
+                    prompt: 'select_account',
+                    callback: async function (tokenResponse) {
+                        try {
+                            if (!tokenResponse || !tokenResponse.access_token) {
+                                throw new Error((tokenResponse && tokenResponse.error_description) || 'Google sign-in cancelled.');
+                            }
+                            const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                headers: { Authorization: 'Bearer ' + tokenResponse.access_token }
+                            });
+                            const profile = await profileRes.json();
+                            if (!profile.email) throw new Error('Google did not return an email.');
+                            await afterSocialEmail(profile.email, 'google');
+                            resolve();
+                        } catch (err) { reject(err); }
+                    },
+                    error_callback: function (err) {
+                        reject(new Error((err && (err.message || err.type)) || 'Google sign-in failed.'));
+                    }
+                });
+                client.requestAccessToken();
+            });
+        }
+
+        async function ensureMsal() {
+            await waitForMsal();
+            if (msalInstance) return msalInstance;
+            if (!socialConfig.msalClientId) throw new Error('Microsoft Client ID is not configured.');
+            msalInstance = new msal.PublicClientApplication({
+                auth: {
+                    clientId: socialConfig.msalClientId,
+                    authority: 'https://login.microsoftonline.com/common',
+                    redirectUri: API_BASE_URL + '/apikey.html'
+                },
+                cache: { cacheLocation: 'sessionStorage' }
+            });
+            await msalInstance.initialize();
+            return msalInstance;
+        }
+
+        async function signInWithMicrosoft() {
+            const pca = await ensureMsal();
+            const result = await pca.loginPopup({
+                scopes: ['openid', 'profile', 'email', 'User.Read'],
+                prompt: 'select_account'
+            });
+            const email = (result.account && result.account.username) || '';
+            if (!email || email.indexOf('@') < 0) throw new Error('Microsoft did not return an email.');
+            await afterSocialEmail(email, 'microsoft');
+        }
+
+        googleLoginBtn.addEventListener('click', async () => {
+            googleLoginBtn.disabled = true;
+            try {
+                await signInWithGoogle();
+            } catch (err) {
+                const msg = (err && err.message) || 'Google sign-in failed';
+                if (/cancel|closed|popup/i.test(msg)) showToast('Google sign-in cancelled', 'error');
+                else {
+                    document.getElementById('errorMessage').textContent = msg;
+                    errorSection.classList.remove('hidden');
+                    showToast('Google sign-in failed', 'error');
+                }
+            } finally { googleLoginBtn.disabled = false; }
+        });
+
+        microsoftLoginBtn.addEventListener('click', async () => {
+            microsoftLoginBtn.disabled = true;
+            try {
+                await signInWithMicrosoft();
+            } catch (err) {
+                const msg = (err && (err.message || err.errorMessage || err.errorCode)) || 'Microsoft sign-in failed';
+                if (/user_cancelled|cancelled|closed/i.test(String(msg))) showToast('Microsoft sign-in cancelled', 'error');
+                else {
+                    document.getElementById('errorMessage').textContent = msg;
+                    errorSection.classList.remove('hidden');
+                    showToast('Microsoft sign-in failed', 'error');
+                }
+            } finally { microsoftLoginBtn.disabled = false; }
+        });
+
+        copyApiKeyBtn.addEventListener('click', async () => {
+            await navigator.clipboard.writeText(generatedApiKey.value || '');
+            showToast('API key copied!', 'success');
+        });
+
+        userEmail.addEventListener('blur', lookupTenants);
+        loadSocialConfig();
+    </script>
+</body>
+</html>

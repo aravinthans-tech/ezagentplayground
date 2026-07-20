@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Usage - API Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="css/playground-sidebar.css">
+  <link rel="stylesheet" href="css/playground-animations.css">
+  <link rel="stylesheet" href="css/playground-v6.css">
+  <link rel="stylesheet" href="css/playground-dark.css">
+  <style>
+    .usage-dashboard-loading { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.82); border-radius: .5rem; }
+    .usage-dashboard-loading.hidden { display: none; }
+    .usage-dashboard-loading-text { font-size: .8125rem; font-weight: 600; color: #374151; padding: .5rem 1rem; border-radius: 9999px; background: #fff; border: 1px solid #e5e7eb; }
+    #chart .usage-chart-bar { transform-origin: bottom center; animation: usageBarGrow .55s cubic-bezier(.34,1.2,.64,1) forwards; opacity: 0; }
+    @keyframes usageBarGrow { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+    .usage-export-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .75rem; border-radius: .375rem; border: 1px solid #e5e7eb; background: #fff; font-size: .75rem; font-weight: 600; color: #374151; }
+    .usage-export-btn:hover { background: #f9fafb; }
+    .key-header-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border: 1px solid #e5e7eb; border-radius: .375rem; background: #fff; color: #374151; }
+    .key-header-icon-btn svg { width: 1rem; height: 1rem; }
+  </style>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+  <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+    <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+      <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+      
+      <h1 class="pg-brand-title">API Playground</h1>
+    </a>
+    <div class="flex space-x-4 text-sm">
+      <a href="examples.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Code Examples</a>
+      <a href="playground-documentation.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Developer Docs</a>
+      <a href="my-api-keys.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">My API Keys</a>
+      <a href="usage-report.html" class="px-3 py-1 rounded text-white bg-gradient-to-r from-purple-600 to-blue-600">API Usage</a>
+    </div>
+  </nav>
+
+  <div class="flex flex-1 overflow-hidden">
+    <aside id="sidebar"></aside>
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-sidebar.js"></script>
+    <script>PlaygroundSidebar.mount('/usage-report.html');</script>
+    <main class="flex-1 overflow-y-auto p-4 pb-8">
+      <div class="max-w-7xl mx-auto">
+        <div id="needLogin" class="hidden bg-white rounded-lg shadow-md p-6 max-w-md mx-auto text-center mt-8">
+          <p class="text-sm text-gray-700 mb-3">Generate an API key first so usage loads automatically for your tenant.</p>
+          <a href="apikey.html" class="inline-block px-4 py-2 rounded-md text-white text-sm pg-btn-primary">Generate API Key</a>
+        </div>
+
+        <div id="usageRoot" class="hidden">
+          <div class="mb-4 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">API Usage</h2>
+              <p id="usageSubtitle" class="text-xs text-gray-600 mt-1">Live usage from playground API calls.</p>
+              <p id="usageProductLabel" class="text-[11px] font-semibold text-purple-700 mt-0.5"></p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" id="refreshBtn" class="key-header-icon-btn" title="Refresh">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              </button>
+              <button type="button" id="exportBtn" class="usage-export-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div id="usageDashboard" class="relative min-h-[200px]">
+            <div id="usageDashboardLoading" class="usage-dashboard-loading hidden"><span class="usage-dashboard-loading-text">Refreshing dashboard…</span></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+              <div class="bg-white rounded-lg shadow-md p-4">
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total Calls</p>
+                <p id="kpiTotal" class="mt-1 text-xl font-semibold text-gray-900">0</p>
+                <p id="kpiTotalDelta" class="text-[11px] mt-0.5 font-medium text-gray-500">—</p>
+              </div>
+              <div class="bg-white rounded-lg shadow-md p-4">
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Success Rate</p>
+                <p id="kpiSuccess" class="mt-1 text-xl font-semibold text-green-600">0%</p>
+                <p class="text-[11px] text-gray-500 mt-0.5 font-medium"><span id="kpiSuccessCount">0</span> successful</p>
+              </div>
+              <div class="bg-white rounded-lg shadow-md p-4">
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Avg Response</p>
+                <p id="kpiLatency" class="mt-1 text-xl font-semibold text-cyan-600">0 ms</p>
+                <p class="text-[11px] text-gray-500 mt-0.5 font-medium">p95 <span id="kpiP95">0 ms</span></p>
+              </div>
+              <div class="bg-white rounded-lg shadow-md p-4">
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Failed Calls</p>
+                <p id="kpiFailed" class="mt-1 text-xl font-semibold text-red-600">0</p>
+                <p class="text-[11px] text-red-500 mt-0.5 font-medium"><span id="kpiFailedRate">0%</span> error rate</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+              <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-sm font-semibold text-gray-900">Calls — Last 7 days</h3>
+                  <div class="flex items-center space-x-3 text-[11px]">
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Total</span>
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-red-400 mr-1"></span>Failed</span>
+                  </div>
+                </div>
+                <div id="chart" class="flex items-end h-40 space-x-3 pl-1 pr-1"></div>
+                <div id="chartLabels" class="flex justify-between text-[11px] text-gray-500 mt-2 pl-1 pr-1"></div>
+              </div>
+              <div class="bg-white rounded-lg shadow-md p-4">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Top Functions</h3>
+                <div id="topFunctions" class="space-y-2.5"></div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-3 mb-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 mb-1">Function</label>
+                  <select id="filterFunction" class="w-full border rounded px-3 py-2 text-sm bg-white"><option value="">All Functions</option></select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 mb-1">Status</label>
+                  <select id="filterStatus" class="w-full border rounded px-3 py-2 text-sm bg-white">
+                    <option value="">All</option>
+                    <option value="2xx">Success</option>
+                    <option value="4xx">Client Error</option>
+                    <option value="5xx">Server Error</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 mb-1">Date Range</label>
+                  <select id="filterDays" class="w-full border rounded px-3 py-2 text-sm bg-white">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="0">All time</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 mb-1">Search</label>
+                  <input id="filterSearch" class="w-full border rounded px-3 py-2 text-sm" placeholder="endpoint, method...">
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase">
+                    <tr>
+                      <th class="py-3 px-4">Time</th>
+                      <th class="py-3 px-4">Function</th>
+                      <th class="py-3 px-4">Endpoint</th>
+                      <th class="py-3 px-4">Method</th>
+                      <th class="py-3 px-4">Status</th>
+                      <th class="py-3 px-4">Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usageBody"></tbody>
+                </table>
+              </div>
+              <p id="emptyUsage" class="hidden text-sm text-gray-500 py-8 text-center">No usage found yet. Call workflow APIs with your key.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/playground-common.js"></script>
+  <script>
+    const FUNCTIONS = [
+      { name: 'Workflow List', match: (p) => /\/api\/v6\/workflows\/?$/.test(p) || p === '/api/workflows' },
+      { name: 'Initiate Request', match: (p) => /\/start(\?|$)/.test(p) },
+      { name: 'Advance Workflow', match: (p) => /move-next/.test(p) },
+      { name: 'Generate API Key', match: (p) => /api-keys|apiKey/.test(p) }
+    ];
+
+    let allRecords = [];
+    let tenantLabel = '';
+
+    function session() {
+      return (window.PlaygroundCommon && PlaygroundCommon.getSession) ? PlaygroundCommon.getSession() : {
+        email: localStorage.getItem('v6PgLastEmail') || '',
+        tenantId: localStorage.getItem('v6PgTenantId') || ''
+      };
+    }
+
+    function fnName(endpoint) {
+      const p = (endpoint || '').toLowerCase().split('?')[0];
+      for (const f of FUNCTIONS) if (f.match(p)) return f.name;
+      return 'Other';
+    }
+
+    function mapLog(r) {
+      const endpoint = r.endpoint || '';
+      return {
+        time: new Date(r.requestedAtUtc),
+        name: fnName(endpoint),
+        endpoint,
+        method: r.method || r.httpMethod || 'GET',
+        status: r.statusCode,
+        latency: r.durationMs || 0
+      };
+    }
+
+    function percentile(sorted, p) {
+      if (!sorted.length) return 0;
+      const idx = Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1);
+      return sorted[idx];
+    }
+
+    function filtered() {
+      const fn = document.getElementById('filterFunction').value;
+      const status = document.getElementById('filterStatus').value;
+      const days = parseInt(document.getElementById('filterDays').value, 10);
+      const q = (document.getElementById('filterSearch').value || '').toLowerCase().trim();
+      const cutoff = days > 0 ? Date.now() - days * 86400000 : 0;
+      return allRecords.filter(r => {
+        if (fn && r.name !== fn) return false;
+        if (status === '2xx' && !(r.status >= 200 && r.status < 300)) return false;
+        if (status === '4xx' && !(r.status >= 400 && r.status < 500)) return false;
+        if (status === '5xx' && !(r.status >= 500)) return false;
+        if (cutoff && r.time.getTime() < cutoff) return false;
+        if (q && !(r.endpoint.toLowerCase().includes(q) || r.method.toLowerCase().includes(q) || r.name.toLowerCase().includes(q))) return false;
+        return true;
+      });
+    }
+
+    function renderDashboard() {
+      const rows = filtered();
+      const total = rows.length;
+      const success = rows.filter(r => r.status >= 200 && r.status < 300).length;
+      const failed = rows.filter(r => r.status >= 400).length;
+      const latencies = rows.map(r => r.latency).sort((a, b) => a - b);
+      const avg = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
+      const p95 = percentile(latencies, 95);
+
+      document.getElementById('kpiTotal').textContent = String(total);
+      document.getElementById('kpiSuccess').textContent = (total ? Math.round((success / total) * 100) : 0) + '%';
+      document.getElementById('kpiSuccessCount').textContent = String(success);
+      document.getElementById('kpiLatency').textContent = avg + ' ms';
+      document.getElementById('kpiP95').textContent = p95 + ' ms';
+      document.getElementById('kpiFailed').textContent = String(failed);
+      document.getElementById('kpiFailedRate').textContent = (total ? ((failed / total) * 100).toFixed(1) : 0) + '%';
+      document.getElementById('kpiTotalDelta').textContent = 'Playground calls';
+
+      // 7-day chart
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - i);
+        days.push(d);
+      }
+      const dayStats = days.map(d => {
+        const next = new Date(d); next.setDate(next.getDate() + 1);
+        const inDay = rows.filter(r => r.time >= d && r.time < next);
+        return {
+          label: d.toLocaleDateString(undefined, { weekday: 'short' }),
+          total: inDay.length,
+          failed: inDay.filter(r => r.status >= 400).length
+        };
+      });
+      const max = Math.max(1, ...dayStats.map(d => d.total));
+      const chart = document.getElementById('chart');
+      chart.innerHTML = dayStats.map(d => {
+        const h = Math.max(4, Math.round((d.total / max) * 140));
+        const fh = d.total ? Math.round((d.failed / d.total) * h) : 0;
+        return `<div class="flex-1 flex flex-col justify-end items-center h-full">
+          <div class="usage-chart-bar w-full max-w-[28px] rounded-t bg-purple-500 relative" style="height:${h}px">
+            ${fh ? `<div class="absolute bottom-0 left-0 right-0 rounded-t bg-red-400" style="height:${fh}px"></div>` : ''}
+          </div>
+          <div class="text-[10px] text-gray-500 mt-1">${d.total}</div>
+        </div>`;
+      }).join('');
+      document.getElementById('chartLabels').innerHTML = dayStats.map(d => `<span>${d.label}</span>`).join('');
+
+      // Top functions
+      const counts = {};
+      rows.forEach(r => { counts[r.name] = (counts[r.name] || 0) + 1; });
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const topMax = Math.max(1, ...top.map(x => x[1]));
+      document.getElementById('topFunctions').innerHTML = top.length
+        ? top.map(([name, c]) => `<div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-gray-700">${name}</span><span class="font-semibold">${c}</span></div>
+            <div class="h-2 bg-gray-100 rounded"><div class="h-2 rounded bg-purple-500" style="width:${Math.round((c / topMax) * 100)}%"></div></div>
+          </div>`).join('')
+        : '<p class="text-xs text-gray-500">No function usage yet.</p>';
+
+      // Table
+      const body = document.getElementById('usageBody');
+      const empty = document.getElementById('emptyUsage');
+      if (!rows.length) {
+        body.innerHTML = '';
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+        body.innerHTML = rows.slice(0, 200).map(r => {
+          const ok = r.status >= 200 && r.status < 300;
+          return `<tr class="border-b border-gray-100">
+            <td class="py-3 px-4 text-xs whitespace-nowrap">${r.time.toLocaleString()}</td>
+            <td class="py-3 px-4 text-xs">${r.name}</td>
+            <td class="py-3 px-4 text-xs font-mono">${r.endpoint}</td>
+            <td class="py-3 px-4 text-xs">${r.method}</td>
+            <td class="py-3 px-4 text-xs"><span class="font-semibold ${ok ? 'text-green-600' : 'text-red-600'}">${r.status}${ok ? ' OK' : ''}</span></td>
+            <td class="py-3 px-4 text-xs">${r.latency} ms</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    async function loadUsage() {
+      const s = session();
+      const needLogin = document.getElementById('needLogin');
+      const root = document.getElementById('usageRoot');
+      if (!s.email || !s.tenantId) {
+        needLogin.classList.remove('hidden');
+        root.classList.add('hidden');
+        return;
+      }
+      needLogin.classList.add('hidden');
+      root.classList.remove('hidden');
+      document.getElementById('usageDashboardLoading').classList.remove('hidden');
+
+      try {
+        const res = await fetch((window.PlaygroundBase ? PlaygroundBase.apiUrl('/api/Client/apiUsage?userName=' + encodeURIComponent(s.email) + '&tenantId=' + encodeURIComponent(s.tenantId)) : ('/api/Client/apiUsage?userName=' + encodeURIComponent(s.email) + '&tenantId=' + encodeURIComponent(s.tenantId))));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Failed to load usage');
+
+        const name = (data.tenantName || '').trim();
+        const looksLikeGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(name);
+        tenantLabel = (!looksLikeGuid && name) ? name : '';
+        document.getElementById('usageProductLabel').textContent = tenantLabel
+          ? (tenantLabel + ' · Live data')
+          : 'Live data';
+        document.getElementById('usageSubtitle').textContent = 'Live usage from playground API calls for ' + s.email + '.';
+
+        allRecords = (data.recentRequests || []).map(mapLog).sort((a, b) => b.time - a.time);
+        const names = [...new Set(allRecords.map(r => r.name))].sort();
+        const sel = document.getElementById('filterFunction');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">All Functions</option>' + names.map(n => `<option>${n}</option>`).join('');
+        sel.value = current;
+        renderDashboard();
+      } catch (e) {
+        document.getElementById('usageSubtitle').textContent = e.message || 'Failed to load usage';
+      } finally {
+        document.getElementById('usageDashboardLoading').classList.add('hidden');
+      }
+    }
+
+    document.getElementById('refreshBtn').onclick = loadUsage;
+    ['filterFunction', 'filterStatus', 'filterDays'].forEach(id => document.getElementById(id).onchange = renderDashboard);
+    document.getElementById('filterSearch').oninput = renderDashboard;
+    document.getElementById('exportBtn').onclick = () => {
+      const rows = filtered();
+      const csv = ['Time,Function,Endpoint,Method,Status,LatencyMs']
+        .concat(rows.map(r => `"${r.time.toISOString()}","${r.name}","${r.endpoint}","${r.method}",${r.status},${r.latency}`))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'api-usage.csv';
+      a.click();
+    };
+
+    loadUsage();
+  </script>
+</body>
+</html>

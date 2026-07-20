@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.user
+logs/
+Data/keys.json
+Data/tenants/
+iis-setup.log
+iis-setup.ps1
+recycle.ps1
+stop-pool.ps1
+start-pool.ps1
+_build*/

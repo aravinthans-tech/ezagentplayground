@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Examples - API Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="css/playground-sidebar.css">
+  <link rel="stylesheet" href="css/playground-v6.css">
+  <link rel="stylesheet" href="css/playground-dark.css">
+  <link rel="stylesheet" href="css/playground-examples.css">
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+  <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+    <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+      <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+      
+      <h1 class="pg-brand-title">API Playground</h1>
+    </a>
+    <div class="flex space-x-4 text-sm">
+      <a href="examples.html" class="px-3 py-1 rounded text-white bg-gradient-to-r from-purple-600 to-blue-600">Code Examples</a>
+      <a href="playground-documentation.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Developer Docs</a>
+      <a href="my-api-keys.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">My API Keys</a>
+      <a href="usage-report.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">API Usage</a>
+    </div>
+  </nav>
+  <div class="flex flex-1 overflow-hidden">
+    <aside id="sidebar"></aside>
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-sidebar.js"></script><script>PlaygroundSidebar.mount('/examples.html');</script>
+    <main class="flex-1 overflow-y-auto p-4 pb-8">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">Code Examples</h2>
+          <p class="text-xs text-gray-600">Pick a wrapper function and copy a ready-to-use sample request.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <h3 class="text-base font-semibold mb-3">Configuration</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold mb-1">Function Type</label>
+                <select id="functionType" class="w-full border rounded px-3 py-2 text-sm">
+                  <option value="apikey">Generate API Key</option>
+                  <option value="workflows">Workflow List</option>
+                  <option value="start">Initiate Request</option>
+                  <option value="moveNext">Advance Workflow</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1">API Key</label>
+                <input id="apiKey" class="w-full border rounded px-3 py-2 text-sm font-mono" placeholder="your-api-key">
+              </div>
+              <div id="workflowNameWrap" class="hidden">
+                <label class="block text-xs font-semibold mb-1">Workflow name</label>
+                <input id="workflowName" class="w-full border rounded px-3 py-2 text-sm" value="My Ticket Workflow">
+              </div>
+              <div id="instanceIdWrap" class="hidden">
+                <label class="block text-xs font-semibold mb-1">Instance ID</label>
+                <input id="instanceId" class="w-full border rounded px-3 py-2 text-sm font-mono" value="00000000-0000-0000-0000-000000000000">
+              </div>
+            </div>
+          </div>
+          <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-base font-semibold">Sample request</h3>
+              <div class="flex gap-2 text-xs">
+                <button id="tabCurl" class="px-3 py-1 rounded bg-purple-600 text-white">cURL</button>
+                <button id="tabPython" class="px-3 py-1 rounded border">Python</button>
+                <button id="copyBtn" class="px-3 py-1 rounded border">Copy</button>
+              </div>
+            </div>
+            <pre id="codeBlock" class="bg-gray-50 border rounded p-3 text-xs overflow-auto min-h-[420px]"></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    const state = { lang: 'curl' };
+    const block = document.getElementById('codeBlock');
+    const tabs = { curl: document.getElementById('tabCurl'), python: document.getElementById('tabPython') };
+    function activeTab() {
+      Object.keys(tabs).forEach(k => tabs[k].className = 'px-3 py-1 rounded ' + (state.lang === k ? 'bg-purple-600 text-white' : 'border'));
+    }
+    function buildCode() {
+      const fn = document.getElementById('functionType').value;
+      const apiKey = document.getElementById('apiKey').value || 'your-api-key';
+      const workflowName = document.getElementById('workflowName').value || 'My Ticket Workflow';
+      const instanceId = document.getElementById('instanceId').value || 'instance-guid';
+      const base = (window.PlaygroundBase && PlaygroundBase.base) ? (window.location.origin + PlaygroundBase.base) : window.location.origin;
+      document.getElementById('workflowNameWrap').classList.toggle('hidden', !(fn === 'start' || fn === 'moveNext'));
+      document.getElementById('instanceIdWrap').classList.toggle('hidden', fn !== 'moveNext');
+      const curlMap = {
+        apikey: `curl -X POST "${base}/api/Client/apiKey?userName=user@example.com&password=YourPassword"`,
+        workflows: `curl -X GET "${base}/api/v6/workflows" \\\n  -H "X-API-Key: ${apiKey}"`,
+        start: `curl -X POST "${base}/api/v6/workflows/start" \\\n  -H "X-API-Key: ${apiKey}" \\\n  -F "workflowName=${workflowName}" \\\n  -F "file=@Archive_Sample.pdf;type=application/pdf" \\\n  -F "context=string" \\\n  -F "envType=string"`,
+        moveNext: `curl -X POST "${base}/api/v6/workflows/instances/${instanceId}/move-next" \\\n  -H "X-API-Key: ${apiKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n  "workflowName": "${workflowName}",\n  "activityid": "YOUR_ACTIVITY_ID",\n  "review": "approve",\n  "comments": "Approved via playground"\n}'`
+      };
+      const pyMap = {
+        apikey: `import requests\n\nresp = requests.post(\n    "${base}/api/Client/apiKey",\n    params={"userName": "user@example.com", "password": "YourPassword"}\n)\nprint(resp.json())`,
+        workflows: `import requests\n\nresp = requests.get(\n    "${base}/api/v6/workflows",\n    headers={"X-API-Key": "${apiKey}"}\n)\nprint(resp.json())`,
+        start: `import requests\n\nfiles = {"file": open("Archive_Sample.pdf", "rb")}\ndata = {"workflowName": "${workflowName}", "context": "string", "envType": "string"}\nresp = requests.post(\n    "${base}/api/v6/workflows/start",\n    headers={"X-API-Key": "${apiKey}"},\n    files=files,\n    data=data\n)\nprint(resp.json())`,
+        moveNext: `import requests\n\npayload = {"workflowName": "${workflowName}", "activityid": "YOUR_ACTIVITY_ID", "review": "approve", "comments": "Approved via playground"}\nresp = requests.post(\n    "${base}/api/v6/workflows/instances/${instanceId}/move-next",\n    headers={"X-API-Key": "${apiKey}", "Content-Type": "application/json"},\n    json=payload\n)\nprint(resp.json())`
+      };
+      block.textContent = state.lang === 'curl' ? curlMap[fn] : pyMap[fn];
+      activeTab();
+    }
+    document.getElementById('functionType').onchange = buildCode;
+    document.getElementById('apiKey').oninput = buildCode;
+    document.getElementById('workflowName').oninput = buildCode;
+    document.getElementById('instanceId').oninput = buildCode;
+    document.getElementById('tabCurl').onclick = () => { state.lang = 'curl'; buildCode(); };
+    document.getElementById('tabPython').onclick = () => { state.lang = 'python'; buildCode(); };
+    document.getElementById('copyBtn').onclick = async () => { await navigator.clipboard.writeText(block.textContent); };
+    buildCode();
+  </script>
+</body>
+</html>
