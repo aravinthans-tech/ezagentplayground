@@ -581,6 +581,25 @@
         const expiryCancelBtn = document.getElementById('expiryCancelBtn');
         const expiryConfirmBtn = document.getElementById('expiryConfirmBtn');
 
+        const PLAYGROUND_AUTH_KEY = 'playgroundAuth';
+        function savePlaygroundAuth(email, password) {
+            try {
+                sessionStorage.setItem(PLAYGROUND_AUTH_KEY, JSON.stringify({
+                    email: String(email || '').trim(),
+                    password: String(password || '')
+                }));
+            } catch (_) {}
+        }
+        function restorePlaygroundAuth() {
+            try {
+                const saved = JSON.parse(sessionStorage.getItem(PLAYGROUND_AUTH_KEY) || 'null');
+                if (!saved?.email) return;
+                if (userEmail && !userEmail.value) userEmail.value = saved.email;
+                if (userPassword && !userPassword.value && saved.password) userPassword.value = saved.password;
+            } catch (_) {}
+        }
+        restorePlaygroundAuth();
+
         // ---------- Expiry helpers (dummy / localStorage only) ----------
         const EXPIRY_STORAGE_KEY = 'apiKeyExpiryRecords';
         function loadExpiryRecords() {
@@ -903,6 +922,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                    savePlaygroundAuth(userName, password);
                     tenantIdInput.value = data.tenantId || '';
                     tokenInput.value = data.token || '';
                     generatedApiKey.value = data.apiKey || '';
@@ -992,6 +1012,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                    savePlaygroundAuth(userName, password);
                     tenantIdInput.value = data.tenantId || '';
                     tokenInput.value = data.token || '';
                     generatedApiKey.value = data.apiKey || '';

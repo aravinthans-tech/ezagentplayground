@@ -20,18 +20,49 @@ public class ApiKeyService
 
     public async Task<(string TenantId, string Token)?> GetTenantAndTokenAsync(string userName, SqlConnection connection)
     {
-        string tenantId;
-        using (var cmdTenant = new SqlCommand("SELECT TOP 1 id FROM tenant WHERE email=@email", connection))
-        {
-            cmdTenant.Parameters.AddWithValue("@email", userName);
-            var result = await cmdTenant.ExecuteScalarAsync();
-            if (result == null) return null;
-            tenantId = result.ToString() ?? "";
-        }
+        var tenantId = await ResolveTenantIdByEmailAsync(userName, connection);
+        if (string.IsNullOrWhiteSpace(tenantId)) return null;
 
         var token = await GetTokenByTenantIdAsync(tenantId, connection);
         if (token == null) return null;
         return (tenantId, token);
+    }
+
+    /// <summary>
+    /// Resolve tenant id from <c>tenant.email</c>, or if missing from <c>tenantUser.email</c>.
+    /// </summary>
+    public async Task<string?> ResolveTenantIdByEmailAsync(string email, SqlConnection connection)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return null;
+
+        using (var cmdTenant = new SqlCommand(
+            "SELECT TOP 1 id FROM tenant WHERE email=@email", connection))
+        {
+            cmdTenant.Parameters.AddWithValue("@email", email.Trim());
+            var result = await cmdTenant.ExecuteScalarAsync();
+            if (result != null && result != DBNull.Value)
+            {
+                var id = result.ToString();
+                if (!string.IsNullOrWhiteSpace(id)) return id;
+            }
+        }
+
+        // Tenant admins live in tenant; other users live in tenantUser with a tenantId FK.
+        using (var cmdTenantUser = new SqlCommand(
+            @"SELECT TOP 1 tenantId
+              FROM tenantUser
+              WHERE email=@email", connection))
+        {
+            cmdTenantUser.Parameters.AddWithValue("@email", email.Trim());
+            var result = await cmdTenantUser.ExecuteScalarAsync();
+            if (result != null && result != DBNull.Value)
+            {
+                var id = result.ToString();
+                if (!string.IsNullOrWhiteSpace(id)) return id;
+            }
+        }
+
+        return null;
     }
 
     public async Task<string?> GetTokenByTenantIdAsync(string tenantId, SqlConnection? existing = null)
@@ -40,12 +71,27 @@ public class ApiKeyService
 
         async Task<string?> Run(SqlConnection conn)
         {
-            using var cmdToken = new SqlCommand(
-                "SELECT TOP 1 token FROM authenticate WHERE userid=@uid AND tenantId=@tid", conn);
-            cmdToken.Parameters.AddWithValue("@uid", tenantId);
-            cmdToken.Parameters.AddWithValue("@tid", tenantId);
-            var tok = await cmdToken.ExecuteScalarAsync();
-            return tok?.ToString();
+            using (var cmdToken = new SqlCommand(
+                "SELECT TOP 1 token FROM authenticate WHERE userid=@uid AND tenantId=@tid", conn))
+            {
+                cmdToken.Parameters.AddWithValue("@uid", tenantId);
+                cmdToken.Parameters.AddWithValue("@tid", tenantId);
+                var tok = await cmdToken.ExecuteScalarAsync();
+                if (tok != null && tok != DBNull.Value)
+                {
+                    var value = tok.ToString();
+                    if (!string.IsNullOrWhiteSpace(value)) return value;
+                }
+            }
+
+            // Tenant users: authenticate.userid may be a user id, not the tenant id.
+            using (var cmdAny = new SqlCommand(
+                "SELECT TOP 1 token FROM authenticate WHERE tenantId=@tid ORDER BY id DESC", conn))
+            {
+                cmdAny.Parameters.AddWithValue("@tid", tenantId);
+                var tok = await cmdAny.ExecuteScalarAsync();
+                return tok?.ToString();
+            }
         }
 
         if (existing != null) return await Run(existing);
@@ -531,6 +577,100 @@ public class ApiKeyService
         catch (SqlException ex)
         {
             _logger.LogWarning(ex, "Usage log query failed.");
+        }
+
+        return list;
+    }
+
+    /// <summary>All usage logs (playground dashboard) — optional email filter via GetUsageLogsByEmailAsync.</summary>
+    public async Task<IReadOnlyList<ApiUsageLogDto>> GetAllUsageLogsAsync(int? apiKeyId, int days)
+    {
+        var list = new List<ApiUsageLogDto>();
+        var cs = GetConnectionString();
+        if (string.IsNullOrEmpty(cs)) return list;
+
+        await using var connection = new SqlConnection(cs);
+        await connection.OpenAsync();
+
+        var sql = @"SELECT l.Id, l.ApiKeyId, l.FunctionName, l.Endpoint, l.HttpMethod,
+                           l.StatusCode, l.LatencyMs, l.ClientIp, l.CalledAt
+                    FROM tenantApiKeyUsageLog l
+                    WHERE 1=1";
+
+        if (apiKeyId.HasValue)
+            sql += " AND l.ApiKeyId=@kid";
+        if (days > 0)
+            sql += " AND l.CalledAt >= DATEADD(day, -@days, GETUTCDATE())";
+
+        sql += " ORDER BY l.CalledAt DESC";
+
+        using var cmd = new SqlCommand(sql, connection);
+        if (apiKeyId.HasValue) cmd.Parameters.AddWithValue("@kid", apiKeyId.Value);
+        if (days > 0) cmd.Parameters.AddWithValue("@days", days);
+
+        try
+        {
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(new ApiUsageLogDto
+                {
+                    Id = Convert.ToInt64(reader["Id"]),
+                    ApiKeyId = Convert.ToInt32(reader["ApiKeyId"]),
+                    FunctionName = reader["FunctionName"]?.ToString() ?? "",
+                    Endpoint = reader["Endpoint"]?.ToString() ?? "",
+                    HttpMethod = reader["HttpMethod"]?.ToString() ?? "",
+                    StatusCode = Convert.ToInt32(reader["StatusCode"]),
+                    LatencyMs = Convert.ToInt32(reader["LatencyMs"]),
+                    ClientIp = reader["ClientIp"] == DBNull.Value ? null : reader["ClientIp"]?.ToString(),
+                    CalledAt = Convert.ToDateTime(reader["CalledAt"])
+                });
+            }
+        }
+        catch (SqlException ex)
+        {
+            _logger.LogWarning(ex, "Usage log query failed.");
+        }
+
+        return list;
+    }
+
+    public async Task<IReadOnlyList<ApiUsageSummaryDto>> GetAllUsageSummaryByFunctionAsync(int? apiKeyId, int days)
+    {
+        var list = new List<ApiUsageSummaryDto>();
+        var cs = GetConnectionString();
+        if (string.IsNullOrEmpty(cs)) return list;
+
+        await using var connection = new SqlConnection(cs);
+        await connection.OpenAsync();
+
+        var sql = @"SELECT l.FunctionName, COUNT(*) AS CallCount
+                    FROM tenantApiKeyUsageLog l
+                    WHERE 1=1";
+
+        if (apiKeyId.HasValue) sql += " AND l.ApiKeyId=@kid";
+        if (days > 0) sql += " AND l.CalledAt >= DATEADD(day, -@days, GETUTCDATE())";
+        sql += " GROUP BY l.FunctionName ORDER BY CallCount DESC";
+
+        using var cmd = new SqlCommand(sql, connection);
+        if (apiKeyId.HasValue) cmd.Parameters.AddWithValue("@kid", apiKeyId.Value);
+        if (days > 0) cmd.Parameters.AddWithValue("@days", days);
+
+        try
+        {
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(new ApiUsageSummaryDto
+                {
+                    FunctionName = reader["FunctionName"]?.ToString() ?? "",
+                    CallCount = Convert.ToInt32(reader["CallCount"])
+                });
+            }
+        }
+        catch (SqlException ex)
+        {
+            _logger.LogWarning(ex, "Usage summary query failed.");
         }
 
         return list;

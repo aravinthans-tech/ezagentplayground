@@ -459,11 +459,11 @@
     <script>
         const API_BASE_URL = window.location.origin;
         const SESSION_KEY = 'myApiKeysSession';
-        const forceSignIn = new URLSearchParams(window.location.search).get('signin') === '1';
+        const PLAYGROUND_AUTH_KEY = 'playgroundAuth';
 
         let cachedKeys = [];
         let signedIn = false;
-        let demoModeActive = false;
+        let demoModeActive = true;
         let demoEmail = '';
         let togglingKey = false;
         let expandedUsageKeyId = null;
@@ -473,6 +473,34 @@
         const userPassword = document.getElementById('userPassword');
         const signInCard = document.getElementById('signInCard');
         const keysPanel = document.getElementById('keysPanel');
+
+        function readCurrentEmail() {
+            try {
+                const auth = JSON.parse(sessionStorage.getItem(PLAYGROUND_AUTH_KEY) || 'null');
+                if (auth?.email) return String(auth.email).trim();
+            } catch (_) {}
+            try {
+                const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+                if (session?.email) return String(session.email).trim();
+            } catch (_) {}
+            if (userEmail?.value?.trim()) return userEmail.value.trim();
+            return '';
+        }
+
+        function saveCurrentEmail(email, password) {
+            const payload = {
+                email: String(email || '').trim(),
+                password: String(password || '')
+            };
+            if (!payload.email) return;
+            try { sessionStorage.setItem(PLAYGROUND_AUTH_KEY, JSON.stringify(payload)); } catch (_) {}
+            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload)); } catch (_) {}
+        }
+
+        function emailQuery() {
+            const email = demoEmail || readCurrentEmail();
+            return email ? `email=${encodeURIComponent(email)}` : '';
+        }
 
         function showToast(msg, ok = true) {
             const t = document.getElementById('toast');
@@ -487,32 +515,24 @@
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.classList.add('hidden'), 300); }, 2800);
         }
 
-        function authQuery() {
-            return `userName=${encodeURIComponent(userEmail.value)}&password=${encodeURIComponent(userPassword.value)}`;
-        }
-
         function keysListUrl() {
-            return demoModeActive
-                ? `${API_BASE_URL}/api/Client/playground-demo/apiKeys`
-                : `${API_BASE_URL}/api/Client/apiKeys?${authQuery()}`;
+            const q = emailQuery();
+            return `${API_BASE_URL}/api/Client/playground-demo/apiKeys${q ? '?' + q : ''}`;
         }
 
         function keyEnabledUrl(keyId, enabled) {
-            return demoModeActive
-                ? `${API_BASE_URL}/api/Client/playground-demo/apiKey/${keyId}/enabled?enabled=${enabled}`
-                : `${API_BASE_URL}/api/Client/apiKey/${keyId}/enabled?${authQuery()}&enabled=${enabled}`;
+            const q = emailQuery();
+            return `${API_BASE_URL}/api/Client/playground-demo/apiKey/${keyId}/enabled?enabled=${enabled}${q ? '&' + q : ''}`;
         }
 
         function keyUsageUrl(keyId) {
-            return demoModeActive
-                ? `${API_BASE_URL}/api/Client/playground-demo/apiKey/usage?apiKeyId=${keyId}&days=30`
-                : `${API_BASE_URL}/api/Client/apiKey/usage?${authQuery()}&apiKeyId=${keyId}&days=30`;
+            const q = emailQuery();
+            return `${API_BASE_URL}/api/Client/playground-demo/apiKey/usage?apiKeyId=${keyId}&days=30${q ? '&' + q : ''}`;
         }
 
         function keyDeleteUrl(keyId) {
-            return demoModeActive
-                ? `${API_BASE_URL}/api/Client/playground-demo/apiKey/${keyId}`
-                : `${API_BASE_URL}/api/Client/apiKey/${keyId}?${authQuery()}`;
+            const q = emailQuery();
+            return `${API_BASE_URL}/api/Client/playground-demo/apiKey/${keyId}${q ? '?' + q : ''}`;
         }
 
         function sortApiKeys(keys) {
@@ -666,33 +686,40 @@
         }
 
         function saveSession() {
-            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: userEmail.value })); } catch (_) {}
+            saveCurrentEmail(demoEmail || userEmail.value, userPassword?.value || '');
         }
 
-        function clearSession() {
-            try { sessionStorage.removeItem(SESSION_KEY); } catch (_) {}
-        }
-
-        function showKeysPanel() {
+        function showKeysPanel(email) {
             signedIn = true;
-            signInCard.classList.add('hidden');
+            demoModeActive = true;
+            demoEmail = String(email || '').trim();
+            if (userEmail) userEmail.value = demoEmail;
+            if (signInCard) signInCard.classList.add('hidden');
             keysPanel.classList.remove('hidden');
             keysPanel.classList.add('animate-fadeInUp');
-            const label = demoModeActive ? demoEmail : userEmail.value;
-            document.getElementById('signedInAs').textContent = demoModeActive
-                ? 'API keys for ' + label
-                : 'Signed in as ' + label;
-            if (!demoModeActive) saveSession();
+            document.getElementById('signedInAs').textContent = demoEmail
+                ? 'API keys for ' + demoEmail
+                : 'Your API keys';
+            document.getElementById('pageSubtitle').textContent = demoEmail
+                ? 'Keys for ' + demoEmail + '. Use the toggle in each row to enable or disable API access.'
+                : 'Generate an API key first, then your keys will appear here.';
+            saveSession();
         }
 
-        function showSignIn() {
+        function showNeedGenerate() {
             signedIn = false;
-            demoModeActive = false;
-            signInCard.classList.remove('hidden');
+            demoModeActive = true;
+            demoEmail = '';
+            if (signInCard) {
+                signInCard.classList.remove('hidden');
+                signInCard.innerHTML =
+                    '<h3 class="text-base font-semibold text-gray-900 mb-2">No login needed</h3>' +
+                    '<p class="text-sm text-gray-600 mb-4">Open <strong>Generate API Key</strong>, create or view a key with your email, then come back here. Your keys load automatically for that email.</p>' +
+                    '<a href="/apikey.html" class="inline-flex w-full justify-center py-2 rounded-md text-white text-sm font-medium pg-btn-primary button-hover shadow-sm no-underline">Go to Generate API Key</a>';
+            }
             keysPanel.classList.add('hidden');
-            clearSession();
             document.getElementById('pageSubtitle').textContent =
-                'Sign in to view keys. Use the toggle in each row to enable or disable API access.';
+                'Your API keys appear here after you generate one — no separate sign-in.';
         }
 
         function renderEnableCell(k) {
@@ -789,12 +816,10 @@
             try {
                 const res = await fetch(keysListUrl());
                 if (res.status === 401 || res.status === 400) {
-                    if (!demoModeActive) {
-                        showSignIn();
-                        document.getElementById('signInError').textContent = 'Invalid email or password.';
-                        document.getElementById('signInError').classList.remove('hidden');
-                    }
                     loading.classList.add('hidden');
+                    if (summary) {
+                        summary.innerHTML = '<span class="key-summary-pill">Generate an API key first, then refresh this page.</span>';
+                    }
                     return;
                 }
                 if (!res.ok) {
@@ -868,24 +893,17 @@
             }
         }
 
-        document.getElementById('signInBtn').addEventListener('click', async () => {
-            document.getElementById('signInError').classList.add('hidden');
-            if (!userEmail.value.trim() || !userPassword.value) {
-                document.getElementById('signInError').textContent = 'Email and password are required.';
-                document.getElementById('signInError').classList.remove('hidden');
-                return;
-            }
-            showKeysPanel();
-            await loadMyApiKeys();
+        document.getElementById('signInBtn')?.addEventListener('click', async () => {
+            window.location.href = '/apikey.html';
         });
 
         document.getElementById('refreshKeysBtn').addEventListener('click', () => loadMyApiKeys());
 
-        document.getElementById('togglePasswordBtn').addEventListener('click', () => {
+        document.getElementById('togglePasswordBtn')?.addEventListener('click', () => {
             const hidden = userPassword.type === 'password';
             userPassword.type = hidden ? 'text' : 'password';
-            document.getElementById('eyeIcon').classList.toggle('hidden', !hidden);
-            document.getElementById('eyeOffIcon').classList.toggle('hidden', hidden);
+            document.getElementById('eyeIcon')?.classList.toggle('hidden', !hidden);
+            document.getElementById('eyeOffIcon')?.classList.toggle('hidden', hidden);
         });
 
         document.getElementById('myKeysBody').addEventListener('click', async (e) => {
@@ -924,7 +942,7 @@
             try { await navigator.clipboard.writeText(document.getElementById('showKeyValue').value); showToast('Copied'); } catch { showToast('Copy failed', false); }
         });
 
-        userPassword.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('signInBtn').click(); });
+        userPassword?.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('signInBtn')?.click(); });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 closeAllUsagePanels();
@@ -938,16 +956,6 @@
             });
         });
 
-        async function startDemoView(email) {
-            demoModeActive = true;
-            demoEmail = email;
-            userEmail.value = email;
-            document.getElementById('pageSubtitle').textContent =
-                'Keys for ' + email + '. Use the toggle in each row to enable or disable API access.';
-            showKeysPanel();
-            await loadMyApiKeys();
-        }
-
         function endKeysBoot() {
             document.documentElement.classList.remove('my-keys-booting');
             const boot = document.getElementById('keysBootState');
@@ -956,24 +964,13 @@
 
         async function initPage() {
             try {
-                if (forceSignIn) {
-                    try {
-                        const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-                        if (s?.email) userEmail.value = s.email;
-                    } catch (_) {}
+                const email = readCurrentEmail();
+                if (!email) {
+                    showNeedGenerate();
                     return;
                 }
-
-                let email = 'seth@ezofis.com';
-                try {
-                    const res = await fetch(`${API_BASE_URL}/api/Client/playground-demo/info`);
-                    if (res.ok) {
-                        const info = await res.json();
-                        if (info.email) email = info.email;
-                    }
-                } catch (_) {}
-
-                await startDemoView(email);
+                showKeysPanel(email);
+                await loadMyApiKeys();
             } finally {
                 endKeysBoot();
             }

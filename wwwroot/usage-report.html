@@ -356,18 +356,15 @@
         const PRODUCT_META = {
             1: {
                 label: 'Daimler Benz',
-                subtitle: 'Live usage from playground API calls.',
-                sampleSubtitle: 'Sample preview — make API calls with your key to see real usage here.'
+                subtitle: 'Live usage from playground API calls.'
             },
             2: {
                 label: 'Access2Pay',
-                subtitle: 'Live usage from Access2Pay playground API calls.',
-                sampleSubtitle: 'Sample preview — call Access2Pay APIs with your key to see real usage here.'
+                subtitle: 'Live usage from Access2Pay playground API calls.'
             },
             3: {
                 label: 'Invoice OCR Agent',
-                subtitle: 'Live usage from Invoice OCR playground API calls.',
-                sampleSubtitle: 'Sample preview — call Invoice OCR APIs with your key to see real usage here.'
+                subtitle: 'Live usage from Invoice OCR playground API calls.'
             }
         };
         const API_BASE_URL = window.location.origin;
@@ -408,27 +405,18 @@
                 fns.map(f => `<option>${f.name}</option>`).join('');
         }
 
-        const DUMMY_CALL_COUNT = 20;
-        const PREVIEW_CALL_COUNT = 260;
-
-        let usageDataMode = 'sample';
+        let usageDataMode = 'live';
 
         function setUsageDataMode(mode) {
-            usageDataMode = mode;
+            usageDataMode = mode || 'live';
             const meta = PRODUCT_META[getProductId()] || PRODUCT_META[1];
             const sub = document.getElementById('usageSubtitle');
             const badge = document.getElementById('usageProductLabel');
-            if (mode === 'mixed') {
-                if (sub) sub.textContent = meta.subtitle + ' Includes ' + DUMMY_CALL_COUNT + ' sample calls plus your live API calls.';
-                if (badge) badge.textContent = meta.label + ' · Live + sample';
-            } else if (mode === 'sample') {
-                if (sub) sub.textContent = meta.sampleSubtitle;
-                if (badge) badge.textContent = meta.label + ' · Sample preview';
-            } else {
-                if (sub) sub.textContent = meta.subtitle;
-                if (badge) badge.textContent = meta.label + ' · Live data';
+            if (sub) sub.textContent = meta.subtitle;
+            if (badge) {
+                badge.textContent = meta.label + ' · Live data';
+                badge.classList.remove('hidden');
             }
-            if (badge) badge.classList.remove('hidden');
             document.title = 'API Usage — ' + meta.label;
         }
 
@@ -482,9 +470,25 @@
             };
         }
 
+        function readCurrentEmail() {
+            try {
+                const auth = JSON.parse(sessionStorage.getItem('playgroundAuth') || 'null');
+                if (auth?.email) return String(auth.email).trim();
+            } catch (_) {}
+            try {
+                const session = JSON.parse(sessionStorage.getItem('myApiKeysSession') || 'null');
+                if (session?.email) return String(session.email).trim();
+            } catch (_) {}
+            return '';
+        }
+
         async function loadLiveUsage() {
             const pid = getProductId();
-            const res = await fetch(API_BASE_URL + '/api/Client/playground-demo/apiKey/usage?days=0');
+            const email = readCurrentEmail();
+            let url = API_BASE_URL + '/api/Client/playground-demo/apiKey/usage?days=0';
+            if (email) url += '&email=' + encodeURIComponent(email);
+
+            const res = await fetch(url);
             if (!res.ok) {
                 let msg = 'Could not load usage data.';
                 try {
@@ -496,7 +500,14 @@
             const data = await res.json();
             const seen = new Set();
             return (data.logs || [])
-                .filter(l => productIdForEndpoint(l.endpoint) === pid)
+                .filter(l => {
+                    const ep = l.endpoint || '';
+                    const byEndpoint = productIdForEndpoint(ep);
+                    if (byEndpoint != null) return byEndpoint === pid;
+                    // Fallback: match by function name when endpoint shape differs
+                    const fn = ALL_FUNCTIONS.find(f => f.productId === pid && f.name === (l.functionName || ''));
+                    return !!fn;
+                })
                 .filter(l => {
                     const key = String(l.id);
                     if (seen.has(key)) return false;
@@ -512,33 +523,8 @@
             try {
                 live = await loadLiveUsage();
             } catch (_) {}
-
-            const dummy = buildSample(DUMMY_CALL_COUNT, 'dummy-');
-
-            if (live.length > 0) {
-                setUsageDataMode('mixed');
-                return [...live, ...dummy].sort((a, b) => b.time - a.time);
-            }
-
-            const pool = getActiveFunctions();
-            const previewCount = pool.length <= 3 ? 45 : PREVIEW_CALL_COUNT;
-            setUsageDataMode('sample');
-            return buildSample(previewCount, 'sample-');
-        }
-
-        const CLIENTS = ['Postman/10.21', 'curl/8.4.0', 'axios/1.6.7', 'PythonRequests/2.31', 'Browser-JS/fetch', 'NodeFetch/3.3'];
-        function randIp() {
-            return [10, 192, 172, 8, 13, 64][Math.floor(Math.random() * 6)] + '.' +
-                Math.floor(Math.random() * 255) + '.' +
-                Math.floor(Math.random() * 255) + '.' +
-                Math.floor(Math.random() * 255);
-        }
-        function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-        function randStatus() {
-            const r = Math.random();
-            if (r < 0.86) return pick([200, 200, 200, 201, 200]);
-            if (r < 0.95) return pick([400, 401, 403, 404, 422]);
-            return pick([500, 502, 503]);
+            setUsageDataMode('live');
+            return live;
         }
 
         function statusClass(code) {
@@ -554,150 +540,6 @@
         function fmtTime(d) {
             const pad = n => String(n).padStart(2,'0');
             return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-        }
-
-        // Generate ~260 sample records spread over the last 30 days so the
-        // KPI cards can compute meaningful period-over-period trends.
-        // The current 7-day window is biased to have a bit more traffic than
-        // the previous one so the "vs last period" line shows realistic deltas.
-        // Per-function sample request body factory. Each call returns a fresh
-        // randomised payload that mimics what the user would have sent to the
-        // endpoint, so the inputs popup feels like real history.
-        const SAMPLE_EMAILS = ['admin@ezofis.com', 'support@ezofis.com', 'demo@ezofis.com', 'qa@ezofis.com'];
-        const SAMPLE_PANELS = ['009 - Account Details', '010 - Dealer Credit Details', '012 - KYC Verification', '015 - Document Upload'];
-        const SAMPLE_SEARCH = ['ACC001', 'ACC042', 'ACC128', 'DLR_993', 'CUST-7821'];
-        function maskedKey() {
-            return 'WAP3' + Math.random().toString(36).slice(2, 10).toUpperCase() + '••••••••';
-        }
-        function maskedJwt() {
-            return 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOi••••••••';
-        }
-        function sampleInputs(fnName) {
-            switch (fnName) {
-                case 'Generate API Key':
-                    return {
-                        userName: pick(SAMPLE_EMAILS),
-                        password: '••••••••'
-                    };
-                case 'Form Details':
-                    return {
-                        apiKey: maskedKey(),
-                        ezofisToken: maskedJwt(),
-                        query: {
-                            sortBy: { criteria: '', order: 'DESC' },
-                            groupBy: '',
-                            filterBy: [
-                                { groupCondition: '', filters: [ { criteria: 'type', condition: 'IS_EQUALS_TO', value: 'MASTER' } ] }
-                            ],
-                            currentPage: 0,
-                            itemsPerPage: pick([10, 20, 50]),
-                            mode: 'BROWSE'
-                        }
-                    };
-                case 'SubForm Details':
-                    return {
-                        apiKey: maskedKey(),
-                        ezofisToken: maskedJwt(),
-                        formId: pick([1, 12, 24, 51, 139])
-                    };
-                case 'SubForm Fields':
-                    return {
-                        apiKey: maskedKey(),
-                        ezofisToken: maskedJwt(),
-                        formId: pick([1, 12, 24, 51, 139]),
-                        subFormTitles: [ pick(SAMPLE_PANELS) ]
-                    };
-                case 'Generate PDF':
-                    return {
-                        apiKey: maskedKey(),
-                        ezofisToken: maskedJwt(),
-                        formId: pick([139, 142, 158]),
-                        templateId: pick([132, 144, 161]),
-                        entryIdForFormEntry: 0,
-                        entryId: pick([0, 8821, 9013]),
-                        isMultiple: Math.random() < 0.3,
-                        panelName: pick(SAMPLE_PANELS),
-                        fields: { 'ed3dZq8mL_6QgGV26PAJj': String(Math.floor(100000 + Math.random()*900000)) }
-                    };
-                case 'Get Data From Salesforce':
-                    return {
-                        apiKey: maskedKey(),
-                        ezofisToken: maskedJwt(),
-                        payload: { searchText: pick(SAMPLE_SEARCH) }
-                    };
-                case 'Access2Pay Connector Insert':
-                case 'Invoice OCR Insert':
-                    return {
-                        apiKey: maskedKey(),
-                        connectorId: pick([89, 90, 91]),
-                        payload: {
-                            processId: 26,
-                            workflowId: 104,
-                            transactionId: pick([26, 27, 28]),
-                            formId: 141,
-                            transactionStatus: 'Pending'
-                        }
-                    };
-                case 'Access2Pay Get':
-                case 'Invoice OCR Get':
-                    return {
-                        apiKey: maskedKey(),
-                        sortBy: { criteria: 'id', order: 'DESC' },
-                        filterBy: [],
-                        currentPage: 1,
-                        itemsPerPage: pick([0, 10, 20]),
-                        mode: 'browse'
-                    };
-                case 'Access2Pay Update':
-                case 'Invoice OCR Update':
-                    return {
-                        apiKey: maskedKey(),
-                        id: String(pick([12, 24, 36, 48])),
-                        body: { referenceNo: 'EZ-00012', transactionStatus: 'processed' }
-                    };
-                default:
-                    return {};
-            }
-        }
-
-        function endpointForSample(fn) {
-            if (fn.name === 'Access2Pay Update' || fn.name === 'Invoice OCR Update') {
-                const id = pick([12, 24, 36, 48, 88]);
-                return fn.endpoint + '/' + id;
-            }
-            return fn.endpoint;
-        }
-
-        function buildSample(count, idPrefix) {
-            const out = [];
-            const pool = getActiveFunctions();
-            if (!pool.length) return out;
-            const now = Date.now();
-            const thirtyDays = 30 * 24 * 3600 * 1000;
-            const sampleCount = count || (pool.length <= 3 ? 45 : PREVIEW_CALL_COUNT);
-            const prefix = idPrefix || 'sample-';
-            for (let i = 0; i < sampleCount; i++) {
-                const fn = pick(pool);
-                const inRecent = Math.random() < 0.6;
-                const span = inRecent ? 7 * 24 * 3600 * 1000 : thirtyDays;
-                const offset = inRecent ? 0 : 7 * 24 * 3600 * 1000;
-                const t = new Date(now - offset - Math.floor(Math.random() * span));
-                const code = randStatus();
-                out.push({
-                    id: prefix + i,
-                    isSample: true,
-                    time: t,
-                    name: fn.name,
-                    endpoint: endpointForSample(fn),
-                    method: fn.method,
-                    status: code,
-                    latency: Math.floor(40 + Math.random() * 420 + (code >= 500 ? 600 : 0)),
-                    client: pick(CLIENTS),
-                    ip: randIp(),
-                    inputs: sampleInputs(fn.name)
-                });
-            }
-            return out.sort((a, b) => b.time - a.time);
         }
 
         let ALL = [];
@@ -799,8 +641,8 @@
                     ALL = rows;
                 })
                 .catch(() => {
-                    ALL = buildSample(getActiveFunctions().length <= 3 ? 45 : PREVIEW_CALL_COUNT, 'sample-');
-                    setUsageDataMode('sample');
+                    ALL = [];
+                    setUsageDataMode('live');
                 })
                 .finally(() => {
                     usageLoading = false;

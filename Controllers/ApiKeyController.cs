@@ -51,7 +51,7 @@ public class ApiKeyController : ControllerBase
         {
             var result = await _apiKeyService.GenerateApiKeyAsync(userName, password, daysValid, keyLabel);
             if (result == null)
-                return BadRequest("Tenant is not created so please create tenant");
+                return BadRequest("Email not found in tenant or tenantUser, or token is missing for that tenant");
 
             return Ok(new
             {
@@ -223,32 +223,40 @@ public class ApiKeyController : ControllerBase
         }
     }
 
+    private string? ResolveDemoEmail(string? emailOverride)
+    {
+        if (!string.IsNullOrWhiteSpace(emailOverride))
+            return emailOverride.Trim();
+
+        var config = GetDemoConfig();
+        return config?.Email;
+    }
+
     /// <summary>Demo playground: whether auto-load is configured (no password returned).</summary>
     [HttpGet("playground-demo/info")]
-    public IActionResult GetPlaygroundDemoInfo()
+    public IActionResult GetPlaygroundDemoInfo([FromQuery] string? email = null)
     {
-        var config = GetDemoConfig();
+        var resolved = ResolveDemoEmail(email);
         return Ok(new
         {
-            enabled = config != null,
-            email = config?.Email ?? _demoOptions.UserEmail ?? "seth@ezofis.com"
+            enabled = true,
+            email = resolved
         });
     }
 
     [HttpGet("playground-demo/apiKeys")]
-    public async Task<IActionResult> ListApiKeysDemo()
+    public async Task<IActionResult> ListApiKeysDemo([FromQuery] string? email = null)
     {
-        var config = GetDemoConfig();
-        if (config == null)
-            return NotFound(new { message = "Playground demo is disabled. Set PlaygroundDemo:Enabled to true in appsettings." });
+        var userEmail = ResolveDemoEmail(email);
+        if (string.IsNullOrWhiteSpace(userEmail))
+            return BadRequest(new { message = "Email is required. Generate an API key first, then open My API Keys." });
 
         try
         {
-            var keys = string.IsNullOrEmpty(config.Value.Password)
-                ? await _apiKeyService.ListApiKeysByEmailAsync(config.Value.Email)
-                : await _apiKeyService.ListApiKeysAsync(config.Value.Email, config.Value.Password);
+            var keys = await _apiKeyService.ListApiKeysByEmailAsync(userEmail);
             return Ok(new
             {
+                email = userEmail,
                 totalKeys = keys.Count,
                 keys = keys.Select(k => new
                 {
@@ -273,17 +281,15 @@ public class ApiKeyController : ControllerBase
     }
 
     [HttpPatch("playground-demo/apiKey/{id:int}/enabled")]
-    public async Task<IActionResult> SetApiKeyEnabledDemo(int id, [FromQuery] bool enabled = true)
+    public async Task<IActionResult> SetApiKeyEnabledDemo(int id, [FromQuery] bool enabled = true, [FromQuery] string? email = null)
     {
-        var config = GetDemoConfig();
-        if (config == null)
-            return NotFound(new { message = "Playground demo is disabled." });
+        var userEmail = ResolveDemoEmail(email);
+        if (string.IsNullOrWhiteSpace(userEmail))
+            return BadRequest(new { message = "Email is required." });
 
         try
         {
-            var ok = string.IsNullOrEmpty(config.Value.Password)
-                ? await _apiKeyService.SetApiKeyEnabledByEmailAsync(config.Value.Email, id, enabled)
-                : await _apiKeyService.SetApiKeyEnabledAsync(config.Value.Email, config.Value.Password, id, enabled);
+            var ok = await _apiKeyService.SetApiKeyEnabledByEmailAsync(userEmail, id, enabled);
             if (!ok) return NotFound("API key not found for this user");
             return Ok(new { id, enabled, message = enabled ? "API key enabled." : "API key disabled." });
         }
@@ -295,17 +301,15 @@ public class ApiKeyController : ControllerBase
     }
 
     [HttpDelete("playground-demo/apiKey/{id:int}")]
-    public async Task<IActionResult> DeleteApiKeyDemo(int id)
+    public async Task<IActionResult> DeleteApiKeyDemo(int id, [FromQuery] string? email = null)
     {
-        var config = GetDemoConfig();
-        if (config == null)
-            return NotFound(new { message = "Playground demo is disabled." });
+        var userEmail = ResolveDemoEmail(email);
+        if (string.IsNullOrWhiteSpace(userEmail))
+            return BadRequest(new { message = "Email is required." });
 
         try
         {
-            var ok = string.IsNullOrEmpty(config.Value.Password)
-                ? await _apiKeyService.DeleteApiKeyByEmailAsync(config.Value.Email, id)
-                : await _apiKeyService.DeleteApiKeyAsync(config.Value.Email, config.Value.Password, id);
+            var ok = await _apiKeyService.DeleteApiKeyByEmailAsync(userEmail, id);
             if (!ok) return NotFound("API key not found for this user");
             return Ok(new { id, message = "API key deleted." });
         }
@@ -317,38 +321,43 @@ public class ApiKeyController : ControllerBase
     }
 
     [HttpGet("playground-demo/apiKey/usage")]
-    public async Task<IActionResult> GetApiKeyUsageDemo([FromQuery] int? apiKeyId = null, [FromQuery] int days = 30)
+    public async Task<IActionResult> GetApiKeyUsageDemo(
+        [FromQuery] int? apiKeyId = null,
+        [FromQuery] int days = 30,
+        [FromQuery] string? email = null)
     {
-        var config = GetDemoConfig();
-        if (config == null)
-            return NotFound(new { message = "Playground demo is disabled." });
-
         try
         {
+            // Prefer current user email when provided; otherwise return all live logs
+            // (do not fall back to hardcoded demo email — that hid real calls).
             IReadOnlyList<ApiUsageLogDto> logs;
             IReadOnlyList<ApiUsageSummaryDto> summary;
-            if (string.IsNullOrEmpty(config.Value.Password))
+            var userEmail = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+
+            if (!string.IsNullOrWhiteSpace(userEmail))
             {
-                logs = await _apiKeyService.GetUsageLogsByEmailAsync(config.Value.Email, apiKeyId, days);
-                summary = await _apiKeyService.GetUsageSummaryByFunctionByEmailAsync(config.Value.Email, apiKeyId, days);
+                logs = await _apiKeyService.GetUsageLogsByEmailAsync(userEmail, apiKeyId, days);
+                summary = await _apiKeyService.GetUsageSummaryByFunctionByEmailAsync(userEmail, apiKeyId, days);
             }
             else
             {
-                logs = await _apiKeyService.GetUsageLogsAsync(config.Value.Email, config.Value.Password, apiKeyId, days);
-                summary = await _apiKeyService.GetUsageSummaryByFunctionAsync(config.Value.Email, config.Value.Password, apiKeyId, days);
+                logs = await _apiKeyService.GetAllUsageLogsAsync(apiKeyId, days);
+                summary = await _apiKeyService.GetAllUsageSummaryByFunctionAsync(apiKeyId, days);
             }
+
             return Ok(new
             {
                 apiKeyId,
                 days,
+                email = userEmail,
                 totalCalls = logs.Count,
                 byFunction = summary,
                 logs = logs.Select(l => new
                 {
-                    l.Id,
-                    l.ApiKeyId,
-                    l.FunctionName,
-                    l.Endpoint,
+                    id = l.Id,
+                    apiKeyId = l.ApiKeyId,
+                    functionName = l.FunctionName,
+                    endpoint = l.Endpoint,
                     httpMethod = l.HttpMethod,
                     statusCode = l.StatusCode,
                     latencyMs = l.LatencyMs,
