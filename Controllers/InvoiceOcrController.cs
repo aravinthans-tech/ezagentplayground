@@ -6,17 +6,51 @@ using QRCodeAPI.Services;
 namespace QRCodeAPI.Controllers;
 
 /// <summary>
-/// Invoice OCR Agent playground APIs — same upstream behavior as Access2Pay, renamed routes.
+/// Invoice OCR Agent playground APIs — Access2Pay proxy routes plus OCR→upload→transaction pipeline.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class InvoiceOcrController : ControllerBase
 {
     private readonly Access2PayService _access2PayService;
+    private readonly InvoiceOcrPipelineService _pipelineService;
 
-    public InvoiceOcrController(Access2PayService access2PayService)
+    public InvoiceOcrController(Access2PayService access2PayService, InvoiceOcrPipelineService pipelineService)
     {
         _access2PayService = access2PayService;
+        _pipelineService = pipelineService;
+    }
+
+    /// <summary>
+    /// One-input pipeline: OCR (uploadforStaticMetadata) → upload (repo 214) → transaction (form 141 / workflow 104).
+    /// Uses tenant 2 token from authenticate. Only the invoice file is required.
+    /// </summary>
+    [HttpPost("process")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(52_428_800)]
+    public async Task<ActionResult<ResultForHttpsCode>> Process(
+        [FromForm] InvoiceOcrProcessFormRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request?.File == null || request.File.Length == 0)
+        {
+            return BadRequest(new ResultForHttpsCode
+            {
+                id = 0,
+                EncryptOutput = "File is required"
+            });
+        }
+
+        var apiKey = Request.Headers["X-API-Key"].ToString();
+        var result = await _pipelineService.ProcessInvoiceAsync(
+            request.File,
+            apiKey,
+            request.StorageCallbackUrl,
+            cancellationToken);
+        if (result.id == 0)
+            return BadRequest(result);
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -84,4 +118,10 @@ public class InvoiceOcrController : ControllerBase
 
         return Ok(result);
     }
+}
+
+public class InvoiceOcrProcessFormRequest
+{
+    public IFormFile? File { get; set; }
+    public string? StorageCallbackUrl { get; set; }
 }

@@ -20,8 +20,8 @@
 
     const PRODUCT = {
         1: { label: 'Daimler Benz', defaultPath: '/formdetails.html' },
-        2: { label: 'Access2Pay', defaultPath: '/access2pay.html#insert' },
-        3: { label: 'Invoice OCR Agent', defaultPath: '/invoiceocr.html#insert' }
+        2: { label: 'Access2Pay', defaultPath: '/access2pay.html#initiateprocess' },
+        3: { label: 'Invoice OCR Agent', defaultPath: '/invoiceocr.html#process' }
     };
 
     const FUNCTION_ITEMS = [
@@ -30,9 +30,10 @@
         { href: '/subformfields.html', label: 'SubForm Fields', icon: 'lines', productId: 1 },
         { href: '/subformsubmitarchive.html', label: 'Generate PDF', icon: 'doc', productId: 1 },
         { href: '/getdatafromsalesforce.html', label: 'Get Data From Salesforce', icon: 'cloud', productId: 1 },
-        { href: '/access2pay.html#insert', label: 'Access2Pay Connector Insert', icon: 'payment', productId: 2 },
-        { href: '/access2pay.html#get', label: 'Access2Pay Get', icon: 'payment', productId: 2 },
-        { href: '/access2pay.html#update', label: 'Access2Pay Update', icon: 'payment', productId: 2 },
+        { href: '/access2pay.html#initiateprocess', label: 'InitiateProcess', icon: 'payment', productId: 2 },
+        { href: '/access2pay.html#getprocesstickets', label: 'GetProcessTickets', icon: 'payment', productId: 2 },
+        { href: '/access2pay.html#routeprocessticket', label: 'RouteProcessTicket', icon: 'payment', productId: 2 },
+        { href: '/invoiceocr.html#process', label: 'Invoice OCR Process', icon: 'scan', productId: 3 },
         { href: '/invoiceocr.html#insert', label: 'Invoice OCR Insert', icon: 'scan', productId: 3 },
         { href: '/invoiceocr.html#get', label: 'Invoice OCR Get', icon: 'scan', productId: 3 },
         { href: '/invoiceocr.html#update', label: 'Invoice OCR Update', icon: 'scan', productId: 3 }
@@ -45,8 +46,8 @@
         '/subformfields.html': 'subformfields',
         '/subformsubmitarchive.html': 'generatepdf',
         '/getdatafromsalesforce.html': 'getdatafromsalesforce',
-        '/access2pay.html': 'access2payinsert',
-        '/invoiceocr.html': 'invoiceocrinsert',
+        '/access2pay.html': 'access2payinitiateprocess',
+        '/invoiceocr.html': 'invoiceocrprocess',
         '/apikey.html': 'apikey',
         '/filesummary.html': 'filesummary',
         '/kycagent.html': 'kycagent'
@@ -140,16 +141,19 @@
     function functionForPage(path) {
         const normalized = normalizePath(path);
         if (normalized === '/access2pay.html') {
-            const hash = (window.location.hash || '#insert').replace('#', '').toLowerCase();
-            if (hash === 'get') return 'access2payget';
-            if (hash === 'update') return 'access2payupdate';
-            return 'access2payinsert';
+            const hash = (window.location.hash || '#initiateprocess').replace('#', '').toLowerCase();
+            if (hash === 'getprocesstickets' || hash === 'processget' || hash === 'ticketget' || hash === 'get')
+                return 'access2paygetprocesstickets';
+            if (hash === 'routeprocessticket' || hash === 'processupdate' || hash === 'ticketprocessed' || hash === 'update')
+                return 'access2payrouteprocessticket';
+            return 'access2payinitiateprocess';
         }
         if (normalized === '/invoiceocr.html') {
-            const hash = (window.location.hash || '#insert').replace('#', '').toLowerCase();
+            const hash = (window.location.hash || '#process').replace('#', '').toLowerCase();
             if (hash === 'get') return 'invoiceocrget';
             if (hash === 'update') return 'invoiceocrupdate';
-            return 'invoiceocrinsert';
+            if (hash === 'insert') return 'invoiceocrinsert';
+            return 'invoiceocrprocess';
         }
         return PAGE_TO_FUNCTION[normalized] || null;
     }
@@ -227,9 +231,18 @@
         if (itemHref.includes('#')) {
             const parts = itemHref.split('#');
             const itemPath = normalizePath(parts[0]);
-            const itemHash = '#' + (parts[1] || 'insert');
-            const currentHash = window.location.hash || '#insert';
-            return itemPath === activePath && itemHash === currentHash;
+            const itemHash = '#' + (parts[1] || '').toLowerCase();
+            let defaultHash = '#insert';
+            if (itemPath === '/access2pay.html') defaultHash = '#initiateprocess';
+            if (itemPath === '/invoiceocr.html') defaultHash = '#process';
+            const currentHash = (window.location.hash || defaultHash).toLowerCase();
+            let normalizedCurrent = currentHash;
+            if (itemPath === '/access2pay.html') {
+                if (['#get', '#processget', '#ticketget'].includes(currentHash)) normalizedCurrent = '#getprocesstickets';
+                if (['#update', '#processupdate', '#ticketprocessed'].includes(currentHash)) normalizedCurrent = '#routeprocessticket';
+                if (['#processinitiate', '#insert'].includes(currentHash)) normalizedCurrent = '#initiateprocess';
+            }
+            return itemPath === activePath && itemHash === normalizedCurrent;
         }
         return normalizePath(itemHref) === activePath;
     }

@@ -18,10 +18,12 @@ public class FileSummaryController : ControllerBase
     }
 
     [HttpPost("getSummary")]
-    public async Task<ActionResult<ResultForHttpsCode>> GetFileSummary(
-        [FromForm] IFormFile file,
-        [FromForm] string token)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<ResultForHttpsCode>> GetFileSummary([FromForm] FileSummaryFormRequest request)
     {
+        var file = request?.File;
+        var token = request?.Token;
+
         if (file == null || file.Length == 0)
         {
             return BadRequest(new ResultForHttpsCode
@@ -78,5 +80,11 @@ public class FileSummaryController : ControllerBase
             });
         }
     }
+}
+
+public class FileSummaryFormRequest
+{
+    public IFormFile? File { get; set; }
+    public string? Token { get; set; }
 }
 

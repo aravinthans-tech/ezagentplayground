@@ -80,6 +80,7 @@ public class ApiKeyMiddleware
             path.StartsWith("/playground-documentation.html") ||
             path.StartsWith("/kycagent.html") ||
             path.StartsWith("/kyc-documentation.html") ||
+            path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase) ||
             (path.StartsWith("/") && !path.StartsWith("/api")))
         {
             return true;

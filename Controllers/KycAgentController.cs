@@ -61,14 +61,14 @@ public class KycAgentController : ControllerBase
     // }
 
     [HttpPost("verify")]
-    public async Task<ActionResult<KycVerificationResult>> VerifyKyc(
-        [FromForm] List<IFormFile> documents,
-        [FromForm] string expectedAddress,
-        [FromForm] string modelChoice = "Mistral",
-        [FromForm] double consistencyThreshold = 0.82,
-        [FromForm] IFormFile? licenseImage = null,
-        [FromForm] IFormFile? selfieImage = null)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<KycVerificationResult>> VerifyKyc([FromForm] KycVerifyFormRequest request)
     {
+        var documents = request?.Documents;
+        var expectedAddress = request?.ExpectedAddress;
+        var modelChoice = string.IsNullOrWhiteSpace(request?.ModelChoice) ? "Mistral" : request!.ModelChoice!;
+        var consistencyThreshold = request?.ConsistencyThreshold ?? 0.82;
+
         if (documents == null || documents.Count < 2)
         {
             return BadRequest(new KycVerificationResult
@@ -87,17 +87,17 @@ public class KycAgentController : ControllerBase
 
         try
         {
-            var request = new KycVerificationRequest
+            var verifyRequest = new KycVerificationRequest
             {
                 Documents = documents,
                 ExpectedAddress = expectedAddress,
                 ModelChoice = modelChoice,
                 ConsistencyThreshold = consistencyThreshold,
-                LicenseImage = licenseImage,
-                SelfieImage = selfieImage
+                LicenseImage = request?.LicenseImage,
+                SelfieImage = request?.SelfieImage
             };
 
-            var result = await _kycVerificationService.VerifyKyc(request);
+            var result = await _kycVerificationService.VerifyKyc(verifyRequest);
             return Ok(result);
         }
         catch (Exception ex)
@@ -109,5 +109,15 @@ public class KycAgentController : ControllerBase
             });
         }
     }
+}
+
+public class KycVerifyFormRequest
+{
+    public List<IFormFile>? Documents { get; set; }
+    public string? ExpectedAddress { get; set; }
+    public string? ModelChoice { get; set; } = "Mistral";
+    public double ConsistencyThreshold { get; set; } = 0.82;
+    public IFormFile? LicenseImage { get; set; }
+    public IFormFile? SelfieImage { get; set; }
 }
 

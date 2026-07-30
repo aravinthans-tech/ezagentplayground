@@ -135,7 +135,7 @@
     <!-- Main -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
-        <script src="/js/playground-sidebar.js"></script>
+        <script src="/js/playground-sidebar.js?v=20260730c"></script>
         <script>PlaygroundSidebar.mount('/usage-report.html');</script>
         <!-- Content -->
         <div class="flex-1 overflow-y-auto p-4 pb-8">
@@ -374,13 +374,22 @@
             { name: 'SubForm Fields',           endpoint: '/api/SubFormFields',                  method: 'POST', productId: 1 },
             { name: 'Generate PDF',             endpoint: '/api/SubFormSubmitAndArchive',        method: 'POST', productId: 1 },
             { name: 'Get Data From Salesforce', endpoint: '/api/GetDataFromSalesforce',            method: 'POST', productId: 1 },
-            { name: 'Access2Pay Connector Insert', endpoint: '/api/Access2Pay/connectorInsert', method: 'POST', productId: 2 },
-            { name: 'Access2Pay Get',           endpoint: '/api/Access2Pay/get',                 method: 'POST', productId: 2 },
-            { name: 'Access2Pay Update',        endpoint: '/api/Access2Pay/update',              method: 'PUT',  productId: 2 },
+            { name: 'InitiateProcess',          endpoint: '/api/Access2Pay/InitiateProcess',     method: 'POST', productId: 2 },
+            { name: 'GetProcessTickets',        endpoint: '/api/Access2Pay/GetProcessTickets',   method: 'POST', productId: 2 },
+            { name: 'RouteProcessTicket',       endpoint: '/api/Access2Pay/RouteProcessTicket',  method: 'PUT',  productId: 2 },
+            { name: 'Invoice OCR Process',      endpoint: '/api/InvoiceOcr/process',             method: 'POST', productId: 3 },
             { name: 'Invoice OCR Insert',       endpoint: '/api/InvoiceOcr/insert',              method: 'POST', productId: 3 },
             { name: 'Invoice OCR Get',          endpoint: '/api/InvoiceOcr/get',                 method: 'POST', productId: 3 },
             { name: 'Invoice OCR Update',       endpoint: '/api/InvoiceOcr/update',              method: 'PUT',  productId: 3 }
         ];
+
+        // Old logged names/paths → current function name (for historical usage rows)
+        const FUNCTION_NAME_ALIASES = {
+            'access2pay connector insert': 'InitiateProcess',
+            'access2pay get': 'GetProcessTickets',
+            'access2pay update': 'RouteProcessTicket',
+            'invoice ocr insert': 'Invoice OCR Process'
+        };
 
         function getProductId() {
             if (window.PlaygroundSidebar && typeof window.PlaygroundSidebar.getProductId === 'function') {
@@ -428,14 +437,56 @@
             return (path || '').toLowerCase().split('?')[0];
         }
 
+        function findFunctionByName(name) {
+            const n = (name || '').trim();
+            if (!n) return null;
+            const alias = FUNCTION_NAME_ALIASES[n.toLowerCase()];
+            const target = alias || n;
+            return ALL_FUNCTIONS.find(f => f.name.toLowerCase() === target.toLowerCase()) || null;
+        }
+
         function matchFunctionForEndpoint(endpoint) {
             const p = normalizeEndpoint(endpoint);
+
+            // Access2Pay (check longer paths before short aliases like /get)
+            if (p.includes('/access2pay/initiateprocess') || p.includes('/access2pay/processinitiate')
+                || p.includes('/access2pay/connectorinsert'))
+                return ALL_FUNCTIONS.find(f => f.name === 'InitiateProcess') || null;
+            if (p.includes('/access2pay/getprocesstickets'))
+                return ALL_FUNCTIONS.find(f => f.name === 'GetProcessTickets') || null;
+            if (p.includes('/access2pay/routeprocessticket'))
+                return ALL_FUNCTIONS.find(f => f.name === 'RouteProcessTicket') || null;
+            if (p.includes('/access2pay/get'))
+                return ALL_FUNCTIONS.find(f => f.name === 'GetProcessTickets') || null;
+            if (p.includes('/access2pay/update'))
+                return ALL_FUNCTIONS.find(f => f.name === 'RouteProcessTicket') || null;
+
+            // Invoice OCR
+            if (p.includes('/invoiceocr/process'))
+                return ALL_FUNCTIONS.find(f => f.name === 'Invoice OCR Process') || null;
+            if (p.includes('/invoiceocr/insert'))
+                return ALL_FUNCTIONS.find(f => f.name === 'Invoice OCR Insert') || null;
+            if (p.includes('/invoiceocr/get'))
+                return ALL_FUNCTIONS.find(f => f.name === 'Invoice OCR Get') || null;
+            if (p.includes('/invoiceocr/update'))
+                return ALL_FUNCTIONS.find(f => f.name === 'Invoice OCR Update') || null;
+
             for (const fn of ALL_FUNCTIONS) {
                 const ep = fn.endpoint.toLowerCase();
                 if (ep.endsWith('/update') && p.startsWith(ep)) return fn;
                 if (p === ep || p.startsWith(ep + '/')) return fn;
             }
             return null;
+        }
+
+        function displayEndpoint(logEndpoint, matched) {
+            if (!matched) return logEndpoint || '';
+            const p = normalizeEndpoint(logEndpoint);
+            if (matched.name === 'RouteProcessTicket' || matched.name === 'Invoice OCR Update') {
+                const m = p.match(/\/(?:routeprocessticket|update)\/([^/]+)/i);
+                return m ? `${matched.endpoint}/${m[1]}` : matched.endpoint + '/{id}';
+            }
+            return matched.endpoint;
         }
 
         function productIdForEndpoint(endpoint) {
@@ -445,22 +496,24 @@
 
         function mapLogToRecord(log) {
             const endpoint = log.endpoint || '';
-            const matched = matchFunctionForEndpoint(endpoint);
+            const matched = matchFunctionForEndpoint(endpoint) || findFunctionByName(log.functionName);
             const name = matched ? matched.name : (log.functionName || 'Unknown');
             const method = matched ? matched.method : (log.httpMethod || 'POST');
+            const shownEndpoint = displayEndpoint(endpoint, matched);
             return {
                 id: log.id,
                 isSample: false,
                 time: new Date(log.calledAt),
                 name: name,
-                endpoint: endpoint,
+                endpoint: shownEndpoint,
                 method: method,
                 status: log.statusCode,
                 latency: log.latencyMs,
                 client: 'API Playground',
                 ip: log.clientIp || '—',
                 inputs: {
-                    endpoint: endpoint,
+                    endpoint: shownEndpoint,
+                    loggedEndpoint: endpoint,
                     method: method,
                     statusCode: log.statusCode,
                     latencyMs: log.latencyMs,
@@ -504,9 +557,8 @@
                     const ep = l.endpoint || '';
                     const byEndpoint = productIdForEndpoint(ep);
                     if (byEndpoint != null) return byEndpoint === pid;
-                    // Fallback: match by function name when endpoint shape differs
-                    const fn = ALL_FUNCTIONS.find(f => f.productId === pid && f.name === (l.functionName || ''));
-                    return !!fn;
+                    const byName = findFunctionByName(l.functionName || '');
+                    return !!(byName && byName.productId === pid);
                 })
                 .filter(l => {
                     const key = String(l.id);

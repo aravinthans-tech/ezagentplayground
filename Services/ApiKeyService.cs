@@ -104,6 +104,121 @@ public class ApiKeyService
         return await Run(connection);
     }
 
+    /// <summary>
+    /// Resolve Ezofis JWT from playground API key:
+    /// tenantuserApiKey.username (email) → tenant.connectionString → [user].id → authenticate.token.
+    /// [user] is in the tenant database; authenticate is in ezEnterpriseMain.
+    /// </summary>
+    public async Task<(string? Token, string? Email, string? UserId, string? TenantId, string? Error)>
+        GetEzofisTokenByApiKeyAsync(string apiKey, string? preferredTenantId = null)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return (null, null, null, null, "API key is required");
+
+        var mainCs = GetConnectionString();
+        if (string.IsNullOrEmpty(mainCs))
+            return (null, null, null, null, "Database not configured");
+
+        try
+        {
+            await using var main = new SqlConnection(mainCs);
+            await main.OpenAsync();
+
+            string? email = null;
+            string? keyTenantId = null;
+            using (var cmdKey = new SqlCommand(
+                @"SELECT TOP 1 username, tenantId
+                  FROM tenantuserApiKey
+                  WHERE apikey=@k", main))
+            {
+                cmdKey.Parameters.AddWithValue("@k", apiKey.Trim());
+                await using var reader = await cmdKey.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                    return (null, null, null, null, "API key not found");
+
+                email = reader["username"]?.ToString()?.Trim();
+                keyTenantId = reader["tenantId"] == DBNull.Value ? null : reader["tenantId"]?.ToString()?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+                return (null, null, null, null, "API key has no username/email");
+
+            var tenantId = !string.IsNullOrWhiteSpace(preferredTenantId)
+                ? preferredTenantId.Trim()
+                : (!string.IsNullOrWhiteSpace(keyTenantId) ? keyTenantId : "2");
+
+            string? tenantConnectionString = null;
+            using (var cmdTenant = new SqlCommand(
+                @"SELECT TOP 1 connectionString
+                  FROM tenant
+                  WHERE id=@tid AND (isDeleted=0 OR isDeleted IS NULL)", main))
+            {
+                cmdTenant.Parameters.AddWithValue("@tid", tenantId);
+                var csVal = await cmdTenant.ExecuteScalarAsync();
+                tenantConnectionString = csVal?.ToString()?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(tenantConnectionString))
+                return (null, email, null, tenantId, $"No connectionString on tenant id={tenantId}");
+
+            string? userId = null;
+            await using (var tenantDb = new SqlConnection(tenantConnectionString))
+            {
+                await tenantDb.OpenAsync();
+                using var cmdUser = new SqlCommand(
+                    @"SELECT TOP 1 id
+                      FROM [user]
+                      WHERE email=@email AND (isDeleted=0 OR isDeleted IS NULL)", tenantDb);
+                cmdUser.Parameters.AddWithValue("@email", email);
+                var result = await cmdUser.ExecuteScalarAsync();
+                if (result != null && result != DBNull.Value)
+                    userId = result.ToString()?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                // Fallback: tenantUser id on main DB (some tenants mirror ids here)
+                using var cmdTu = new SqlCommand(
+                    @"SELECT TOP 1 id
+                      FROM tenantUser
+                      WHERE email=@email AND tenantId=@tid", main);
+                cmdTu.Parameters.AddWithValue("@email", email);
+                cmdTu.Parameters.AddWithValue("@tid", tenantId);
+                var tu = await cmdTu.ExecuteScalarAsync();
+                if (tu != null && tu != DBNull.Value)
+                    userId = tu.ToString()?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return (null, email, null, tenantId, $"No [user] row found for email '{email}' in tenant DB {tenantId}");
+
+            string? token = null;
+            using (var cmdToken = new SqlCommand(
+                @"SELECT TOP 1 token
+                  FROM authenticate
+                  WHERE tenantId=@tid AND userid=@uid
+                  ORDER BY id DESC", main))
+            {
+                cmdToken.Parameters.AddWithValue("@tid", tenantId);
+                cmdToken.Parameters.AddWithValue("@uid", userId);
+                var tok = await cmdToken.ExecuteScalarAsync();
+                if (tok != null && tok != DBNull.Value)
+                    token = tok.ToString()?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+                return (null, email, userId, tenantId,
+                    $"No authenticate token for tenantId={tenantId} and userid={userId}");
+
+            return (token, email, userId, tenantId, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetEzofisTokenByApiKeyAsync failed");
+            return (null, null, null, null, ex.Message);
+        }
+    }
+
     public async Task<bool> UserOwnsApiKeyAsync(string userName, string password, int apiKeyId, SqlConnection? existing = null)
     {
         var cs = GetConnectionString();
@@ -773,9 +888,11 @@ public class ApiKeyService
         if (p.Contains("/subformfields")) return "SubForm Fields";
         if (p.Contains("/subformsubmitandarchive")) return "Generate PDF";
         if (p.Contains("/getdatafromsalesforce")) return "Get Data From Salesforce";
+        if (p.Contains("/access2pay/initiateprocess") || p.Contains("/access2pay/processinitiate")) return "InitiateProcess";
+        if (p.Contains("/access2pay/getprocesstickets") || p.Contains("/access2pay/get")) return "GetProcessTickets";
+        if (p.Contains("/access2pay/routeprocessticket") || p.Contains("/access2pay/update")) return "RouteProcessTicket";
         if (p.Contains("/access2pay/connectorinsert")) return "Access2Pay Connector Insert";
-        if (p.Contains("/access2pay/get")) return "Access2Pay Get";
-        if (p.Contains("/access2pay/update")) return "Access2Pay Update";
+        if (p.Contains("/invoiceocr/process")) return "Invoice OCR Process";
         if (p.Contains("/invoiceocr/insert")) return "Invoice OCR Insert";
         if (p.Contains("/invoiceocr/get")) return "Invoice OCR Get";
         if (p.Contains("/invoiceocr/update")) return "Invoice OCR Update";

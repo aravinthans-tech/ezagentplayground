@@ -32,7 +32,7 @@
 
     <div class="flex flex-1 overflow-hidden" style="min-height:0">
         <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
-        <script src="/js/playground-sidebar.js"></script>
+        <script src="/js/playground-sidebar.js?v=20260730c"></script>
         <script>PlaygroundSidebar.mount('/playground-documentation.html');</script>
 
         <main class="flex-1 overflow-y-auto p-4 md:p-6 min-w-0">
@@ -53,9 +53,9 @@
                             <option value="subform-fields" data-product-ids="1">SubForm Fields</option>
                             <option value="generate-pdf" data-product-ids="1">Generate PDF</option>
                             <option value="getdata-from-salesforce" data-product-ids="1">Get Data From Salesforce</option>
-                            <option value="access2pay-insert" data-product-ids="2">Access2Pay Connector Insert</option>
-                            <option value="access2pay-get" data-product-ids="2">Access2Pay Get</option>
-                            <option value="access2pay-update" data-product-ids="2">Access2Pay Update</option>
+                            <option value="access2pay-initiateprocess" data-product-ids="2">InitiateProcess</option>
+                            <option value="access2pay-getprocesstickets" data-product-ids="2">GetProcessTickets</option>
+                            <option value="access2pay-routeprocessticket" data-product-ids="2">RouteProcessTicket</option>
                             <option value="invoiceocr-insert" data-product-ids="3">Invoice OCR Insert</option>
                             <option value="invoiceocr-get" data-product-ids="3">Invoice OCR Get</option>
                             <option value="invoiceocr-update" data-product-ids="3">Invoice OCR Update</option>
@@ -223,56 +223,58 @@
                         </article>
                     </section>
 
-                    <section id="access2pay-insert" data-doc-function="access2pay-insert" data-product-id="2" class="doc-section anchor">
+                    <section id="access2pay-initiateprocess" data-doc-function="access2pay-initiateprocess" data-product-id="2" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
-                                <h2>Access2Pay Connector Insert</h2>
-                                <p class="doc-lead">Insert a connector payload into Access2Pay. Only <code>X-API-Key</code> is required from the client; tenant token is applied server-side.</p>
+                                <h2>InitiateProcess</h2>
+                                <p class="doc-lead">Upload an invoice file and receive an Access2Pay request payload. Only <code>X-API-Key</code> and the file are required.</p>
                             </header>
                             <div class="doc-card-body">
                                 <ul class="doc-meta">
-                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/Access2Pay/connectorInsert</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/Access2Pay/InitiateProcess</code></span></li>
                                     <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Body</span><span class="doc-meta-v"><code>multipart/form-data</code>: <code>file</code> (required), <code>storageCallbackUrl</code> (optional)</span></li>
                                 </ul>
                                 <div class="doc-code-wrap">
-                                    <span class="doc-code-label">Sample body</span>
+                                    <span class="doc-code-label">Sample output (<code>output</code>)</span>
                                     <pre>{
-  "connectorId": 89,
-  "payload": {
-    "processId": 26,
-    "workflowId": 104,
-    "transactionId": 26,
-    "formId": 141,
-    "transactionStatus": "Pending",
-    "formentryId": 27,
-    "requestPayload": {
-      "referenceNo": "REQ-28",
-      "submission": { "submittedFrom": "muthu.perumal@ezofis.com", "emailSubject": "..." },
-      "sourceDocument": { "fileName": "_20260604140429723.pdf", "mimeType": "application/pdf", "location": "https://..." },
-      "Vendor": { "company": "Maple Leaf Logistics Inc." },
-      "Invoice": {
-        "invoiceNumber": "INV-2026-004",
-        "currency": "CAD",
-        "lineItems": [{ "lineNumber": 1, "description": "...", "lineAmount": "1495.00" }]
-      }
-    }
+  "referenceNo": "REQ-71",
+  "submission": {
+    "submittedFrom": "user@example.com",
+    "emailSubject": "Vendor Name",
+    "receivedFileName": "invoice.pdf",
+    "submittedAtUtc": "2026-07-30T13:41:55.429Z"
+  },
+  "sourceDocument": {
+    "fileName": "invoice.pdf",
+    "mimeType": "application/pdf",
+    "storageProvider": "blob",
+    "location": "https://...",
+    "externalId": ""
+  },
+  "Vendor": { "company": "Vendor Name", "address1": "..." },
+  "Invoice": {
+    "documentType": "Invoice",
+    "invoiceNumber": "INV-001",
+    "currency": "CAD",
+    "lineItems": []
   }
 }</pre>
                                 </div>
-                                <p class="doc-note">The playground proxies to Ezofis with the connector body sent as a JSON-encoded string.</p>
+                                <p class="doc-note">If <code>storageCallbackUrl</code> is set, the same payload JSON is POSTed to that URL before the response returns.</p>
                             </div>
                         </article>
                     </section>
 
-                    <section id="access2pay-get" data-doc-function="access2pay-get" data-product-id="2" class="doc-section anchor">
+                    <section id="access2pay-getprocesstickets" data-doc-function="access2pay-getprocesstickets" data-product-id="2" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
-                                <h2>Access2Pay Get</h2>
-                                <p class="doc-lead">Browse Access2Pay records with sorting, pagination, and filters.</p>
+                                <h2>GetProcessTickets</h2>
+                                <p class="doc-lead">Browse Access2Pay tickets with sorting, pagination, and filters.</p>
                             </header>
                             <div class="doc-card-body">
                                 <ul class="doc-meta">
-                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/Access2Pay/get</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>POST /api/Access2Pay/GetProcessTickets</code></span></li>
                                     <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
                                 </ul>
                                 <div class="doc-code-wrap">
@@ -297,15 +299,15 @@
                         </article>
                     </section>
 
-                    <section id="access2pay-update" data-doc-function="access2pay-update" data-product-id="2" class="doc-section anchor">
+                    <section id="access2pay-routeprocessticket" data-doc-function="access2pay-routeprocessticket" data-product-id="2" class="doc-section anchor">
                         <article class="doc-card">
                             <header class="doc-card-header">
-                                <h2>Access2Pay Update</h2>
-                                <p class="doc-lead">Update an existing Access2Pay record by ID.</p>
+                                <h2>RouteProcessTicket</h2>
+                                <p class="doc-lead">Update an existing Access2Pay ticket by ID.</p>
                             </header>
                             <div class="doc-card-body">
                                 <ul class="doc-meta">
-                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>PUT /api/Access2Pay/update/{id}</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>PUT /api/Access2Pay/RouteProcessTicket/{id}</code></span></li>
                                     <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
                                 </ul>
                                 <div class="doc-code-wrap">
@@ -356,7 +358,7 @@
   }
 }</pre>
                                 </div>
-                                <p class="doc-note">Same payload shape as Access2Pay Connector Insert; playground route name is Invoice OCR.</p>
+                                <p class="doc-note">Invoice OCR insert uses the same Access2Pay-style connector payload shape.</p>
                             </div>
                         </article>
                     </section>
@@ -444,12 +446,12 @@
                 },
                 2: {
                     label: 'Access2Pay',
-                    functions: ['api-key', 'access2pay-insert', 'access2pay-get', 'access2pay-update'],
+                    functions: ['api-key', 'access2pay-initiateprocess', 'access2pay-getprocesstickets', 'access2pay-routeprocessticket'],
                     jumpLabels: {
                         'api-key': 'API key',
-                        'access2pay-insert': 'Connector Insert',
-                        'access2pay-get': 'Get',
-                        'access2pay-update': 'Update'
+                        'access2pay-initiateprocess': 'InitiateProcess',
+                        'access2pay-getprocesstickets': 'GetProcessTickets',
+                        'access2pay-routeprocessticket': 'RouteProcessTicket'
                     }
                 },
                 3: {
@@ -471,9 +473,12 @@
                 subformfields: 'subform-fields',
                 generatepdf: 'generate-pdf',
                 getdatafromsalesforce: 'getdata-from-salesforce',
-                access2payinsert: 'access2pay-insert',
-                access2payget: 'access2pay-get',
-                access2payupdate: 'access2pay-update',
+                access2payinitiateprocess: 'access2pay-initiateprocess',
+                access2payinsert: 'access2pay-initiateprocess',
+                access2paygetprocesstickets: 'access2pay-getprocesstickets',
+                access2payget: 'access2pay-getprocesstickets',
+                access2payrouteprocessticket: 'access2pay-routeprocessticket',
+                access2payupdate: 'access2pay-routeprocessticket',
                 invoiceocrinsert: 'invoiceocr-insert',
                 invoiceocrget: 'invoiceocr-get',
                 invoiceocrupdate: 'invoiceocr-update'

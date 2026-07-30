@@ -199,7 +199,7 @@
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <aside id="sidebar" class="sticky top-0 h-[calc(100vh-3rem)]"></aside>
-        <script src="/js/playground-sidebar.js"></script>
+        <script src="/js/playground-sidebar.js?v=20260730c"></script>
         <script>PlaygroundSidebar.mount('/examples.html');</script>
 
         <main class="flex-1 overflow-y-auto p-4 pb-8">
@@ -226,9 +226,9 @@
                                 <option value="subformfields">SubForm Fields</option>
                                 <option value="generatepdf">Generate PDF</option>
                                 <option value="getdatafromsalesforce">Get Data From Salesforce</option>
-                                <option value="access2payinsert">Access2Pay Connector Insert</option>
-                                <option value="access2payget">Access2Pay Get</option>
-                                <option value="access2payupdate">Access2Pay Update</option>
+                                <option value="access2payinitiateprocess">InitiateProcess</option>
+                                <option value="access2paygetprocesstickets">GetProcessTickets</option>
+                                <option value="access2payrouteprocessticket">RouteProcessTicket</option>
                                 <option value="invoiceocrinsert">Invoice OCR Insert</option>
                                 <option value="invoiceocrget">Invoice OCR Get</option>
                                 <option value="invoiceocrupdate">Invoice OCR Update</option>
@@ -455,8 +455,14 @@
 
                         <div id="access2pay-fields" class="hidden space-y-3">
                             <div id="a2pInsertFields">
-                                <label for="a2pInsertJson" class="block text-xs font-semibold text-gray-700 mb-1">Connector Insert JSON</label>
-                                <textarea id="a2pInsertJson" rows="18" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none input-focus code-block text-xs" spellcheck="false">{
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Invoice file</label>
+                                <input id="a2pProcessFile" type="file" accept=".pdf,.png,.jpg,.jpeg" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus">
+                                <label class="block text-xs font-semibold text-gray-700 mb-1 mt-3">Storage callback URL <span class="text-gray-400 font-normal">(optional)</span></label>
+                                <input id="a2pCallbackUrl" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus" placeholder="https://your-api/callback" autocomplete="off">
+                            </div>
+                            <div id="a2pInvoiceInsertFields" class="hidden">
+                                <label for="a2pInsertJson" class="block text-xs font-semibold text-gray-700 mb-1">Insert JSON</label>
+                                <textarea id="a2pInsertJson" rows="10" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md resize-none input-focus code-block text-xs" spellcheck="false">{
   "connectorId": 89,
   "payload": {
     "processId": 26,
@@ -467,51 +473,8 @@
     "formentryId": 27,
     "requestPayload": {
       "referenceNo": "REQ-28",
-      "submission": {
-        "submittedFrom": "muthu.perumal@ezofis.com",
-        "emailSubject": "Maple Leaf Logistics Inc. Invoice 95812-1 for A2P",
-        "receivedFileName": "_20260604140429723.pdf",
-        "submittedAtUtc": ""
-      },
-      "sourceDocument": {
-        "fileName": "_20260604140429723.pdf",
-        "mimeType": "application/pdf",
-        "storageProvider": "blob",
-        "location": "https://eztapi.ezofis.com/api/file/viewBinary/2/EU_15/214/6/1",
-        "externalId": ""
-      },
-      "Vendor": {
-        "company": "Maple Leaf Logistics Inc. Invoice 95812-1 for A2P"
-      },
-      "Invoice": {
-        "documentType": "Invoice",
-        "invoiceNumber": "INV-2026-004",
-        "invoiceDate": "2025-09-07",
-        "poNumber": "PO-1002",
-        "currency": "CAD",
-        "buyer": {
-          "billToName": "ABC Company",
-          "billToAddress": "789 Pine Ave, Toronto, BC"
-        },
-        "amounts": {
-          "taxAmount": "$468.26",
-          "netTotal": null
-        },
-        "paymentTerms": "Net 30 days",
-        "lineItems": [
-          {
-            "lineNumber": 1,
-            "description": "Transportation service for milled wood products",
-            "quantity": "1.0000",
-            "unitOfMeasure": "Flat Rate",
-            "rate": "1495.0000",
-            "lineAmount": "1495.00",
-            "metadata": [
-              { "lineNumber": 1, "header": "Description", "dataType": "SHORT_TEXT", "value": "Office Chair" }
-            ]
-          }
-        ]
-      }
+      "Vendor": { "company": "Sample Vendor" },
+      "Invoice": { "invoiceNumber": "INV-001", "currency": "CAD" }
     }
   }
 }</textarea>
@@ -529,11 +492,11 @@
                             <div id="a2pUpdateFields" class="hidden space-y-3">
                                 <div>
                                     <label for="a2pUpdateId" class="block text-xs font-semibold text-gray-700 mb-1">Record ID</label>
-                                    <input type="text" id="a2pUpdateId" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus" placeholder="id" />
+                                    <input id="a2pUpdateId" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus" placeholder="id" value="12">
                                 </div>
                                 <div>
                                     <label for="a2pUpdateBody" class="block text-xs font-semibold text-gray-700 mb-1">Update body (JSON string)</label>
-                                    <input type="text" id="a2pUpdateBody" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus font-mono" value="string" />
+                                    <input id="a2pUpdateBody" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus font-mono" value='{ "referenceNo": "EZ-00012", "transactionStatus": "processed" }'>
                                 </div>
                             </div>
                         </div>
@@ -651,6 +614,7 @@
         const getdatafromsalesforceFields = document.getElementById('getdatafromsalesforce-fields');
         const access2payFields = document.getElementById('access2pay-fields');
         const a2pInsertFields = document.getElementById('a2pInsertFields');
+        const a2pInvoiceInsertFields = document.getElementById('a2pInvoiceInsertFields');
         const a2pGetFields = document.getElementById('a2pGetFields');
         const a2pUpdateFields = document.getElementById('a2pUpdateFields');
         const apikeyFields = document.getElementById('apikey-fields');
@@ -680,13 +644,17 @@
                 generatepdfFields?.classList.remove('hidden');
             } else if (functionType === 'getdatafromsalesforce') {
                 getdatafromsalesforceFields?.classList.remove('hidden');
-            } else if (functionType === 'access2payinsert' || functionType === 'access2payget' || functionType === 'access2payupdate'
+            } else if (functionType === 'access2payinitiateprocess' || functionType === 'access2payinsert'
+                || functionType === 'access2paygetprocesstickets' || functionType === 'access2payget'
+                || functionType === 'access2payrouteprocessticket' || functionType === 'access2payupdate'
                 || functionType === 'invoiceocrinsert' || functionType === 'invoiceocrget' || functionType === 'invoiceocrupdate') {
                 access2payFields?.classList.remove('hidden');
-                const isInsert = functionType === 'access2payinsert' || functionType === 'invoiceocrinsert';
-                const isGet = functionType === 'access2payget' || functionType === 'invoiceocrget';
-                const isUpdate = functionType === 'access2payupdate' || functionType === 'invoiceocrupdate';
-                a2pInsertFields?.classList.toggle('hidden', !isInsert);
+                const isA2pInitiate = functionType === 'access2payinitiateprocess' || functionType === 'access2payinsert';
+                const isInvoiceInsert = functionType === 'invoiceocrinsert';
+                const isGet = functionType === 'access2paygetprocesstickets' || functionType === 'access2payget' || functionType === 'invoiceocrget';
+                const isUpdate = functionType === 'access2payrouteprocessticket' || functionType === 'access2payupdate' || functionType === 'invoiceocrupdate';
+                a2pInsertFields?.classList.toggle('hidden', !isA2pInitiate);
+                a2pInvoiceInsertFields?.classList.toggle('hidden', !isInvoiceInsert);
                 a2pGetFields?.classList.toggle('hidden', !isGet);
                 a2pUpdateFields?.classList.toggle('hidden', !isUpdate);
             } else if (functionType === 'apikey') {
@@ -889,15 +857,19 @@ token: "string"</pre>
 }</pre>
                     </div>
                 `;
-            } else if (functionType === 'access2payinsert') {
+            } else if (functionType === 'access2payinitiateprocess' || functionType === 'access2payinsert') {
                 apiInfoContent.innerHTML = `
                     <div class="border-l-4 border-purple-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
-                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Access2Pay/connectorInsert</code>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Access2Pay/InitiateProcess</code>
                     </div>
                     <div class="border-l-4 border-cyan-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Authentication</div>
                         <div class="text-gray-600">X-API-Key header required</div>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <div class="font-semibold text-gray-700 mb-1">Body</div>
+                        <div class="text-gray-600">multipart/form-data: <code>file</code> (required), <code>storageCallbackUrl</code> (optional)</div>
                     </div>
                 `;
             } else if (functionType === 'invoiceocrinsert') {
@@ -911,11 +883,11 @@ token: "string"</pre>
                         <div class="text-gray-600">X-API-Key header required</div>
                     </div>
                 `;
-            } else if (functionType === 'access2payget') {
+            } else if (functionType === 'access2paygetprocesstickets' || functionType === 'access2payget') {
                 apiInfoContent.innerHTML = `
                     <div class="border-l-4 border-purple-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
-                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Access2Pay/get</code>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/Access2Pay/GetProcessTickets</code>
                     </div>
                     <div class="border-l-4 border-cyan-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Authentication</div>
@@ -953,11 +925,11 @@ token: "string"</pre>
 }</pre>
                     </div>
                 `;
-            } else if (functionType === 'access2payupdate') {
+            } else if (functionType === 'access2payrouteprocessticket' || functionType === 'access2payupdate') {
                 apiInfoContent.innerHTML = `
                     <div class="border-l-4 border-purple-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
-                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">PUT /api/Access2Pay/update/{id}</code>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">PUT /api/Access2Pay/RouteProcessTicket/{id}</code>
                     </div>
                     <div class="border-l-4 border-cyan-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Authentication</div>
@@ -1476,38 +1448,42 @@ print(response.json())`;
 });
 const data = await response.json();
 console.log(data);`;
-            } else if (functionType === 'access2payinsert') {
+            } else if (functionType === 'access2payinitiateprocess' || functionType === 'access2payinsert') {
                 const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
-                let payload;
-                try { payload = JSON.parse(document.getElementById('a2pInsertJson')?.value || '{}'); } catch { payload = {}; }
-                const payloadOneLine = JSON.stringify(payload).replace(/'/g, "'\\''");
-                const payloadPretty = JSON.stringify(payload, null, 2);
                 const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const callbackUrl = (document.getElementById('a2pCallbackUrl')?.value || '').trim();
+                const callbackCurl = callbackUrl
+                    ? ` \\\n  -F "storageCallbackUrl=${callbackUrl.replace(/"/g, '\\"')}"`
+                    : '';
+                const callbackJs = callbackUrl
+                    ? `\nformData.append("storageCallbackUrl", ${JSON.stringify(callbackUrl)});`
+                    : '';
 
-                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Access2Pay/connectorInsert" \\
-  -H "Content-Type: application/json" \\
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Access2Pay/InitiateProcess" \\
   -H "X-API-Key: ${escapedApiKey}" \\
-  -d '${payloadOneLine}'`;
+  -F "file=@/path/to/invoice.pdf"${callbackCurl}`;
 
                 document.getElementById('python-code').textContent = `import requests
 
-url = "${API_BASE_URL}/api/Access2Pay/connectorInsert"
+url = "${API_BASE_URL}/api/Access2Pay/InitiateProcess"
 headers = {
-    "Content-Type": "application/json",
     "X-API-Key": "${escapedApiKey}"
 }
-payload = ${payloadPretty}
+files = { "file": open("/path/to/invoice.pdf", "rb") }
+data = {}${callbackUrl ? `\ndata["storageCallbackUrl"] = "${callbackUrl.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"` : ''}
 
-response = requests.post(url, headers=headers, json=payload)
+response = requests.post(url, headers=headers, files=files, data=data)
 print(response.json())`;
 
-                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/connectorInsert", {
+                document.getElementById('javascript-code').textContent = `const formData = new FormData();
+formData.append("file", fileInput.files[0]);${callbackJs}
+
+const response = await fetch("${API_BASE_URL}/api/Access2Pay/InitiateProcess", {
   method: "POST",
   headers: {
-    "Content-Type": "application/json",
     "X-API-Key": "${escapedApiKey}"
   },
-  body: JSON.stringify(${payloadPretty})
+  body: formData
 });
 const data = await response.json();
 console.log(data);`;
@@ -1546,7 +1522,7 @@ print(response.json())`;
 });
 const data = await response.json();
 console.log(data);`;
-            } else if (functionType === 'access2payget') {
+            } else if (functionType === 'access2paygetprocesstickets' || functionType === 'access2payget') {
                 const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
                 let payload;
                 try { payload = JSON.parse(document.getElementById('a2pGetJson')?.value || '{}'); } catch { payload = { sortBy: { criteria: 'id', order: 'DESC' }, filterBy: [], currentPage: 1, itemsPerPage: 0, mode: 'browse' }; }
@@ -1554,14 +1530,14 @@ console.log(data);`;
                 const payloadPretty = JSON.stringify(payload, null, 2);
                 const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
 
-                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Access2Pay/get" \\
+                document.getElementById('curl-code').textContent = `curl -X POST "${API_BASE_URL}/api/Access2Pay/GetProcessTickets" \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: ${escapedApiKey}" \\
   -d '${payloadOneLine}'`;
 
                 document.getElementById('python-code').textContent = `import requests
 
-url = "${API_BASE_URL}/api/Access2Pay/get"
+url = "${API_BASE_URL}/api/Access2Pay/GetProcessTickets"
 headers = {
     "Content-Type": "application/json",
     "X-API-Key": "${escapedApiKey}"
@@ -1571,7 +1547,7 @@ payload = ${payloadPretty}
 response = requests.post(url, headers=headers, json=payload)
 print(response.json())`;
 
-                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/get", {
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/GetProcessTickets", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -1616,21 +1592,21 @@ print(response.json())`;
 });
 const data = await response.json();
 console.log(data);`;
-            } else if (functionType === 'access2payupdate') {
+            } else if (functionType === 'access2payrouteprocessticket' || functionType === 'access2payupdate') {
                 const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
                 const recordId = (document.getElementById('a2pUpdateId')?.value || 'id').trim();
                 const bodyStr = document.getElementById('a2pUpdateBody')?.value ?? 'string';
                 const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
                 const escapedBody = JSON.stringify(bodyStr);
 
-                document.getElementById('curl-code').textContent = `curl -X PUT "${API_BASE_URL}/api/Access2Pay/update/${recordId}" \\
+                document.getElementById('curl-code').textContent = `curl -X PUT "${API_BASE_URL}/api/Access2Pay/RouteProcessTicket/${recordId}" \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: ${escapedApiKey}" \\
   -d '${escapedBody}'`;
 
                 document.getElementById('python-code').textContent = `import requests
 
-url = "${API_BASE_URL}/api/Access2Pay/update/${recordId}"
+url = "${API_BASE_URL}/api/Access2Pay/RouteProcessTicket/${recordId}"
 headers = {
     "Content-Type": "application/json",
     "X-API-Key": "${escapedApiKey}"
@@ -1639,7 +1615,7 @@ headers = {
 response = requests.put(url, headers=headers, json=${escapedBody})
 print(response.json())`;
 
-                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/update/${recordId}", {
+                document.getElementById('javascript-code').textContent = `const response = await fetch("${API_BASE_URL}/api/Access2Pay/RouteProcessTicket/${recordId}", {
   method: "PUT",
   headers: {
     "Content-Type": "application/json",
@@ -1749,10 +1725,12 @@ console.log(text);`;
         });
         const gpIsMultiple = document.getElementById('gpIsMultiple');
         if (gpIsMultiple) gpIsMultiple.addEventListener('change', updateCodeExamples);
-        ['a2pInsertJson', 'a2pGetJson', 'a2pUpdateId', 'a2pUpdateBody'].forEach((id) => {
+        ['a2pCallbackUrl', 'a2pInsertJson', 'a2pGetJson', 'a2pUpdateId', 'a2pUpdateBody'].forEach((id) => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('input', updateCodeExamples);
         });
+        const a2pProcessFile = document.getElementById('a2pProcessFile');
+        if (a2pProcessFile) a2pProcessFile.addEventListener('change', updateCodeExamples);
         ['sfEzofisToken', 'sfPayloadJson'].forEach((id) => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('input', updateCodeExamples);
@@ -1813,11 +1791,11 @@ console.log(text);`;
             return data ? JSON.parse(data) : null;
         }
 
-        const VALID_FUNCTIONS = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'access2payinsert', 'access2payget', 'access2payupdate', 'invoiceocrinsert', 'invoiceocrget', 'invoiceocrupdate', 'apikey']);
+        const VALID_FUNCTIONS = new Set(['qrcode', 'filesummary', 'kycagent', 'formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'access2payinitiateprocess', 'access2paygetprocesstickets', 'access2payrouteprocessticket', 'access2payinsert', 'access2payget', 'access2payupdate', 'invoiceocrinsert', 'invoiceocrget', 'invoiceocrupdate', 'apikey']);
 
         const PRODUCT_FUNCTIONS = {
             1: new Set(['formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'qrcode', 'apikey']),
-            2: new Set(['access2payinsert', 'access2payget', 'access2payupdate', 'apikey']),
+            2: new Set(['access2payinitiateprocess', 'access2paygetprocesstickets', 'access2payrouteprocessticket', 'access2payinsert', 'access2payget', 'access2payupdate', 'apikey']),
             3: new Set(['invoiceocrinsert', 'invoiceocrget', 'invoiceocrupdate', 'apikey'])
         };
 
@@ -1833,7 +1811,7 @@ console.log(text);`;
 
         function defaultFunctionForProduct(pid) {
             if (pid === 3) return 'invoiceocrinsert';
-            if (pid === 2) return 'access2payinsert';
+            if (pid === 2) return 'access2payinitiateprocess';
             return 'formdetails';
         }
 
@@ -1849,19 +1827,28 @@ console.log(text);`;
             }
         }
 
+        function normalizeFunctionType(fn) {
+            const aliases = {
+                access2payinsert: 'access2payinitiateprocess',
+                access2payget: 'access2paygetprocesstickets',
+                access2payupdate: 'access2payrouteprocessticket'
+            };
+            return aliases[fn] || fn;
+        }
+
         function resolveInitialFunctionType() {
             const urlParams = new URLSearchParams(window.location.search);
             const allowed = PRODUCT_FUNCTIONS[getProductId()];
-            const functionParam = urlParams.get('function');
+            const functionParam = normalizeFunctionType(urlParams.get('function') || '');
             if (functionParam && VALID_FUNCTIONS.has(functionParam) && allowed.has(functionParam)) return functionParam;
 
-            const lastApiCall = localStorage.getItem('lastApiCall');
+            const lastApiCall = normalizeFunctionType(localStorage.getItem('lastApiCall') || '');
             if (lastApiCall && VALID_FUNCTIONS.has(lastApiCall) && allowed.has(lastApiCall)) return lastApiCall;
 
             try {
                 const ref = document.referrer ? new URL(document.referrer) : null;
                 if (ref && ref.origin === window.location.origin && window.PlaygroundSidebar) {
-                    const mapped = window.PlaygroundSidebar.functionForPage(ref.pathname);
+                    const mapped = normalizeFunctionType(window.PlaygroundSidebar.functionForPage(ref.pathname) || '');
                     if (mapped && VALID_FUNCTIONS.has(mapped)) return mapped;
                 }
             } catch (_) {}
