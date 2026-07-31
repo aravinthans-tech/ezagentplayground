@@ -79,20 +79,10 @@ public class Access2PayController : ControllerBase
 
     /// <summary>
     /// Demo storage callback — accepts request-payload JSON only (for InitiateProcess demos).
+    /// Hidden from Swagger — not a public Access2Pay API.
     /// </summary>
     /// <remarks>
     /// **Input:** raw Access2Pay request payload JSON (same shape InitiateProcess returns).
-    ///
-    /// **Sample body**
-    /// ```json
-    /// {
-    ///   "referenceNo": "REQ-71",
-    ///   "submission": { },
-    ///   "sourceDocument": { },
-    ///   "Vendor": { },
-    ///   "Invoice": { }
-    /// }
-    /// ```
     ///
     /// No <c>X-API-Key</c> required (called by InitiateProcess as an optional callback).
     /// </remarks>
@@ -100,6 +90,7 @@ public class Access2PayController : ControllerBase
     /// <response code="200">Payload received.</response>
     /// <response code="400">Body missing or not a JSON object.</response>
     [HttpPost("StorageCallback")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public ActionResult<object> StorageCallback([FromBody] JsonElement payload)
