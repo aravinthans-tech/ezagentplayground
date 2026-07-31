@@ -78,6 +78,52 @@ public class Access2PayController : ControllerBase
     }
 
     /// <summary>
+    /// Demo storage callback — accepts request-payload JSON only (for InitiateProcess demos).
+    /// </summary>
+    /// <remarks>
+    /// **Input:** raw Access2Pay request payload JSON (same shape InitiateProcess returns).
+    ///
+    /// **Sample body**
+    /// ```json
+    /// {
+    ///   "referenceNo": "REQ-71",
+    ///   "submission": { },
+    ///   "sourceDocument": { },
+    ///   "Vendor": { },
+    ///   "Invoice": { }
+    /// }
+    /// ```
+    ///
+    /// No <c>X-API-Key</c> required (called by InitiateProcess as an optional callback).
+    /// </remarks>
+    /// <param name="payload">Request payload JSON only.</param>
+    /// <response code="200">Payload received.</response>
+    /// <response code="400">Body missing or not a JSON object.</response>
+    [HttpPost("StorageCallback")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<object> StorageCallback([FromBody] JsonElement payload)
+    {
+        if (payload.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
+            || payload.ValueKind != JsonValueKind.Object)
+        {
+            return BadRequest(new { message = "Request payload JSON object is required" });
+        }
+
+        string? referenceNo = null;
+        if (payload.TryGetProperty("referenceNo", out var refEl) && refEl.ValueKind == JsonValueKind.String)
+            referenceNo = refEl.GetString();
+
+        return Ok(new
+        {
+            received = true,
+            message = "Storage callback received request payload JSON",
+            referenceNo,
+            payload
+        });
+    }
+
+    /// <summary>
     /// GetProcessTickets — list / filter Access2Pay tickets.
     /// </summary>
     /// <remarks>
@@ -123,15 +169,14 @@ public class Access2PayController : ControllerBase
     }
 
     /// <summary>
-    /// RouteProcessTicket — update an Access2Pay ticket by id.
+    /// RouteProcessTicket — update an Access2Pay ticket by referenceNo (no record id in path).
     /// </summary>
     /// <remarks>
     /// **Input**
     /// | Name | In | Required | Description |
     /// |------|----|----------|-------------|
     /// | `X-API-Key` | header | yes | Playground API key |
-    /// | `id` | path | yes | Ticket id |
-    /// | body | JSON string | yes | Fields to update |
+    /// | body | JSON | yes | Must include <c>referenceNo</c>; other fields to update |
     ///
     /// **Sample body**
     /// ```json
@@ -141,25 +186,24 @@ public class Access2PayController : ControllerBase
     /// }
     /// ```
     /// </remarks>
-    /// <param name="id">Ticket id in the path.</param>
-    /// <param name="body">Update JSON as a string.</param>
+    /// <param name="body">Update JSON including <c>referenceNo</c>.</param>
     /// <response code="200">Success — result in <c>output</c>.</response>
-    /// <response code="400">Missing body or error.</response>
-    [HttpPut("RouteProcessTicket/{id}")]
+    /// <response code="400">Missing body / referenceNo or error.</response>
+    [HttpPut("RouteProcessTicket")]
     [ProducesResponseType(typeof(ResultForHttpsCode), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResultForHttpsCode), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ResultForHttpsCode>> RouteProcessTicket(string id, [FromBody] string? body)
+    public async Task<ActionResult<ResultForHttpsCode>> RouteProcessTicket([FromBody] JsonElement body)
     {
-        if (string.IsNullOrWhiteSpace(body))
+        if (body.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
         {
             return BadRequest(new ResultForHttpsCode
             {
                 id = 0,
-                EncryptOutput = "Request body string is required"
+                EncryptOutput = "Request body is required"
             });
         }
 
-        var result = await _access2PayService.UpdateAsync(id, body);
+        var result = await _access2PayService.UpdateByReferenceNoAsync(body);
         if (result.id == 0)
             return BadRequest(result);
 

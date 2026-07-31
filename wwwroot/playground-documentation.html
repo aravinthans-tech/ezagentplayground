@@ -303,11 +303,11 @@
                         <article class="doc-card">
                             <header class="doc-card-header">
                                 <h2>RouteProcessTicket</h2>
-                                <p class="doc-lead">Update an existing Access2Pay ticket by ID.</p>
+                                <p class="doc-lead">Update an Access2Pay ticket using <code>referenceNo</code> (no record id required).</p>
                             </header>
                             <div class="doc-card-body">
                                 <ul class="doc-meta">
-                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>PUT /api/Access2Pay/RouteProcessTicket/{id}</code></span></li>
+                                    <li class="doc-meta-row"><span class="doc-meta-k">Endpoint</span><span class="doc-meta-v"><code>PUT /api/Access2Pay/RouteProcessTicket</code></span></li>
                                     <li class="doc-meta-row"><span class="doc-meta-k">Headers</span><span class="doc-meta-v"><code>X-API-Key</code></span></li>
                                 </ul>
                                 <div class="doc-code-wrap">
@@ -317,7 +317,7 @@
   "transactionStatus": "processed"
 }</pre>
                                 </div>
-                                <p class="doc-note">The update payload is sent as a JSON-encoded string to the upstream API.</p>
+                                <p class="doc-note"><code>referenceNo</code> is required. Record id is resolved server-side — no path id needed.</p>
                             </div>
                         </article>
                     </section>

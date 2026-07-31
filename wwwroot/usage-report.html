@@ -482,7 +482,7 @@
         function displayEndpoint(logEndpoint, matched) {
             if (!matched) return logEndpoint || '';
             const p = normalizeEndpoint(logEndpoint);
-            if (matched.name === 'RouteProcessTicket' || matched.name === 'Invoice OCR Update') {
+            if (matched.name === 'Invoice OCR Update') {
                 const m = p.match(/\/(?:routeprocessticket|update)\/([^/]+)/i);
                 return m ? `${matched.endpoint}/${m[1]}` : matched.endpoint + '/{id}';
             }

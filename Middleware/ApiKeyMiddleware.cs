@@ -75,6 +75,8 @@ public class ApiKeyMiddleware
             path.StartsWith("/subformsubmitarchive.html") ||
             path.StartsWith("/getdatafromsalesforce.html") ||
             path.StartsWith("/access2pay.html") ||
+            path.StartsWith("/access2pay-documentation.html") ||
+            path.StartsWith("/access2pay-documentation.md") ||
             path.StartsWith("/invoiceocr.html") ||
             path.StartsWith("/usage-report.html") ||
             path.StartsWith("/playground-documentation.html") ||
@@ -89,7 +91,8 @@ public class ApiKeyMiddleware
         if (path.StartsWith("/api/Client/apiKey", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/api/Client/apiKeys", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("/api/Client/playground-demo", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("/api/ApiKey/apiKey", StringComparison.OrdinalIgnoreCase))
+            path.StartsWith("/api/ApiKey/apiKey", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/api/Access2Pay/StorageCallback", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

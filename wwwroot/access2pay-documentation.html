@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access2Pay API Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+:root {
+  --primary: #9333ea;
+  --secondary: #00bcd4;
+  --surface: #ffffff;
+  --gray-bg: #faf9fb;
+  --gray-1: #fdfcfd;
+  --gray-2: #faf9fb;
+  --gray-3: #f2eff3;
+  --gray-8: #bcbac7;
+  --gray-10: #84828e;
+  --gray-11: #65636d;
+  --gray-13: #211f26;
+  --green-9: #30a46c;
+  --green-3: #e6f6eb;
+  --red-9: #e5484d;
+  --red-3: #feebec;
+  --orange-9: #f76b15;
+  --orange-3: #ffefd6;
+  --font-main: 'Inter', sans-serif;
+  --font-head: 'Poppins', sans-serif;
+  --text-primary: #211f26;
+  --text-muted: #84828e;
+  --radius-sm: 5px;
+  --radius-xl: 12px;
+  --border-color: #f2eff3;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  color: var(--text-primary);
+  background-color: var(--gray-1);
+  -webkit-font-smoothing: antialiased;
+}
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topnav a {
+  color: var(--gray-11);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.topnav a:hover { background: var(--gray-2); color: var(--primary); }
+
+.brand {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gray-13);
+}
+
+.layout {
+  display: flex;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: calc(100vh - 52px);
+}
+
+.side {
+  width: 220px;
+  padding: 20px 16px;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow: auto;
+  border-right: 1px solid var(--border-color);
+  background: var(--surface);
+}
+
+.side h3 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gray-10);
+  font-weight: 700;
+}
+
+.side a {
+  display: block;
+  text-decoration: none;
+  color: var(--gray-11);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+
+.side a:hover, .side a.active {
+  background: var(--gray-2);
+  color: var(--primary);
+}
+
+.main {
+  flex: 1;
+  padding: 28px 28px 64px;
+}
+
+.page-title {
+  font-family: var(--font-head);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  color: var(--gray-13);
+}
+
+.lead {
+  font-size: 14px;
+  color: var(--gray-11);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.card-base {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card-base h2 {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--gray-13);
+}
+
+.card-base h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-11);
+  margin: 18px 0 8px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-11);
+  background: var(--gray-2);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  padding: 4px 10px;
+}
+
+.pill strong { color: var(--primary); font-weight: 700; margin-right: 4px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+}
+
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-10);
+  font-weight: 700;
+  background: var(--gray-2);
+}
+
+td code, p code, li code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  background: var(--gray-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  color: var(--gray-13);
+}
+
+.note {
+  font-size: 12px;
+  color: var(--gray-10);
+  margin: 8px 0 0;
+}
+
+pre {
+  background: #211f26;
+  color: #f2eff3;
+  border-radius: var(--radius-xl);
+  padding: 14px 16px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.req { color: var(--red-9); font-weight: 600; }
+.opt { color: var(--gray-10); }
+
+.status-ok { color: var(--green-9); font-weight: 600; }
+.status-bad { color: var(--red-9); font-weight: 600; }
+
+.btn-primary {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-weight: 500;
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  display: inline-block;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-weight: 500;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+@media (max-width: 800px) {
+  .layout { flex-direction: column; }
+  .side {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+  }
+  .side h3 { width: 100%; }
+}
+    </style>
+</head>
+<body>
+    <nav class="topnav">
+        <div class="brand">Access2Pay · API Docs</div>
+        <div class="actions">
+            <a href="/access2pay.html?id=2">Playground</a>
+            <a href="/examples.html?id=2">Code examples</a>
+            <a href="/access2pay-documentation.md">Markdown</a>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="side">
+            <h3>Jump to</h3>
+            <a href="#overview">Overview</a>
+            <a href="#auth">Authentication</a>
+            <a href="#initiateprocess">InitiateProcess</a>
+            <a href="#getprocesstickets">GetProcessTickets</a>
+            <a href="#routeprocessticket">RouteProcessTicket</a>
+        </aside>
+
+        <main class="main">
+            <h1 class="page-title">Access2Pay API</h1>
+            <p class="lead">Input and output reference. Use your playground <code>X-API-Key</code> on every call.</p>
+
+            <section id="overview" class="card-base">
+                <h2>What each API does</h2>
+                <table>
+                    <thead><tr><th>API</th><th>Purpose</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>InitiateProcess</strong></td><td>OCR the invoice file, upload it to our backend, and return the OCR JSON payload.</td></tr>
+                        <tr><td><strong>GetProcessTickets</strong></td><td>Get process tickets (list or filter by fields such as <code>referenceNo</code>).</td></tr>
+                        <tr><td><strong>RouteProcessTicket</strong></td><td>Update a ticket by <code>referenceNo</code> — set status to values like <code>pending</code>, <code>processed</code>, or <code>on hold</code>.</td></tr>
+                    </tbody>
+                </table>
+                <p class="note">Typical flow: <strong>InitiateProcess</strong> → <strong>GetProcessTickets</strong> → <strong>RouteProcessTicket</strong>.</p>
+            </section>
+
+            <section id="auth" class="card-base">
+                <h2>Authentication</h2>
+                <table>
+                    <thead><tr><th>Name</th><th>In</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>X-API-Key</code></td><td>header</td><td class="req">yes</td><td>Playground API key</td></tr>
+                    </tbody>
+                </table>
+                <h3>HTTP status</h3>
+                <table>
+                    <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+                    <tbody>
+                        <tr><td class="status-ok">200</td><td>Success — <code>id = 1</code>, data in <code>output</code></td></tr>
+                        <tr><td class="status-bad">400</td><td>Validation / processing error — message in <code>encryptOutput</code></td></tr>
+                        <tr><td class="status-bad">401</td><td>Missing or invalid API key</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="initiateprocess" class="card-base">
+                <h2>InitiateProcess</h2>
+                <p class="note">Send an invoice file. The API runs OCR on the file, uploads it to our backend, and returns the OCR result as Access2Pay JSON in <code>output</code>.</p>
+                <div class="meta">
+                    <span class="pill"><strong>POST</strong> /api/Access2Pay/InitiateProcess</span>
+                    <span class="pill">multipart/form-data</span>
+                </div>
+                <h3>Input</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>In</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>X-API-Key</code></td><td>header</td><td class="req">yes</td><td>Playground API key</td></tr>
+                        <tr><td><code>file</code></td><td>form-data</td><td class="req">yes</td><td>Invoice PDF or image to OCR and upload</td></tr>
+                        <tr><td><code>storageCallbackUrl</code></td><td>form-data</td><td class="opt">no</td><td>If set, OCR payload JSON is POSTed to this URL before the response returns</td></tr>
+                    </tbody>
+                </table>
+                <h3>Output (<code>output</code>)</h3>
+                <p class="note">OCR JSON payload (vendor, invoice, line items, <code>referenceNo</code>, source document, etc.).</p>
+<pre>{
+  "referenceNo": "REQ-71",
+  "submission": {
+    "submittedFrom": "user@example.com",
+    "emailSubject": "Vendor Name",
+    "receivedFileName": "invoice.pdf",
+    "submittedAtUtc": "2026-07-30T13:41:55.429Z"
+  },
+  "sourceDocument": {
+    "fileName": "invoice.pdf",
+    "mimeType": "application/pdf",
+    "storageProvider": "blob",
+    "location": "https://...",
+    "externalId": ""
+  },
+  "Vendor": {
+    "company": "Vendor Name",
+    "address1": "..."
+  },
+  "Invoice": {
+    "documentType": "Invoice",
+    "invoiceNumber": "INV-001",
+    "invoiceDate": "2026-07-24",
+    "poNumber": "PO-1002",
+    "currency": "CAD",
+    "buyer": { "billToName": "...", "billToAddress": "..." },
+    "amounts": { "grossAmount": "$840.00", "taxAmount": "$109.20", "netTotal": "$949.20" },
+    "paymentTerms": "Net 30",
+    "lineItems": [
+      {
+        "lineNumber": 1,
+        "description": "...",
+        "quantity": "1",
+        "rate": "100.00",
+        "lineAmount": "$100.00",
+        "metadata": []
+      }
+    ]
+  }
+}</pre>
+            </section>
+
+            <section id="getprocesstickets" class="card-base">
+                <h2>GetProcessTickets</h2>
+                <p class="note">Get process tickets — browse all tickets or filter (for example by <code>referenceNo</code> or status).</p>
+                <div class="meta">
+                    <span class="pill"><strong>POST</strong> /api/Access2Pay/GetProcessTickets</span>
+                    <span class="pill">application/json</span>
+                </div>
+                <h3>Input</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>In</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>X-API-Key</code></td><td>header</td><td class="req">yes</td><td>Playground API key</td></tr>
+                        <tr><td>body</td><td>JSON</td><td class="req">yes</td><td>Browse / filter query for process tickets</td></tr>
+                    </tbody>
+                </table>
+                <h3>Sample body</h3>
+<pre>{
+  "sortBy": { "criteria": "id", "order": "DESC" },
+  "filterBy": [],
+  "currentPage": 1,
+  "itemsPerPage": 0,
+  "mode": "browse"
+}</pre>
+                <h3>filterBy example</h3>
+<pre>[
+  {
+    "groupCondition": "",
+    "filters": [
+      {
+        "criteria": "referenceNo",
+        "condition": "IS_EQUALS_TO",
+        "value": "EZ-00012"
+      }
+    ]
+  }
+]</pre>
+                <p class="note">Output: process ticket list JSON in <code>output</code>.</p>
+            </section>
+
+            <section id="routeprocessticket" class="card-base">
+                <h2>RouteProcessTicket</h2>
+                <p class="note">Update a process ticket by <code>referenceNo</code> only (no record id in the path). Use this to change ticket status — for example <code>pending</code>, <code>processed</code>, or <code>on hold</code>.</p>
+                <div class="meta">
+                    <span class="pill"><strong>PUT</strong> /api/Access2Pay/RouteProcessTicket</span>
+                    <span class="pill">application/json</span>
+                </div>
+                <h3>Input</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>In</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>X-API-Key</code></td><td>header</td><td class="req">yes</td><td>Playground API key</td></tr>
+                        <tr><td>body</td><td>JSON</td><td class="req">yes</td><td>Must include <code>referenceNo</code>; set <code>transactionStatus</code> (and any other fields) to update</td></tr>
+                    </tbody>
+                </table>
+                <h3>Status examples for <code>transactionStatus</code></h3>
+                <table>
+                    <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>pending</code></td><td>Ticket is waiting / in progress</td></tr>
+                        <tr><td><code>processed</code></td><td>Ticket is completed</td></tr>
+                        <tr><td><code>on hold</code></td><td>Ticket is paused / on hold</td></tr>
+                    </tbody>
+                </table>
+                <h3>Sample body</h3>
+<pre>{
+  "referenceNo": "EZ-00012",
+  "transactionStatus": "processed"
+}</pre>
+                <h3>Other status examples</h3>
+<pre>{ "referenceNo": "EZ-00012", "transactionStatus": "pending" }</pre>
+<pre>{ "referenceNo": "EZ-00012", "transactionStatus": "on hold" }</pre>
+                <p class="note">Output: update result JSON in <code>output</code>.</p>
+            </section>
+
+            <div class="actions" style="margin-top: 8px;">
+                <a class="btn-primary" href="/access2pay.html?id=2">Open playground</a>
+                <a class="btn-secondary" href="/access2pay-documentation.md">Download / view Markdown</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
