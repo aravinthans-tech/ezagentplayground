@@ -70,6 +70,8 @@ public class InvoiceOcrPipelineService
     private readonly int _workflowId;
     private readonly string _portalId;
     private readonly string _transactionPath;
+    private readonly int _fileExportArchivedWaitSeconds;
+    private readonly int _fileExportArchivedPollMs;
 
     public InvoiceOcrPipelineService(
         IHttpClientFactory httpClientFactory,
@@ -97,6 +99,14 @@ public class InvoiceOcrPipelineService
             : DefaultWorkflowId;
         _portalId = configuration["ExternalApis:InvoiceOcr:PortalId"] ?? DefaultPortalId;
         _transactionPath = configuration["ExternalApis:InvoiceOcr:TransactionPath"] ?? "/api/workflow/transaction";
+        _fileExportArchivedWaitSeconds = int.TryParse(
+            configuration["ExternalApis:InvoiceOcr:FileExportArchivedWaitSeconds"], out var waitSec)
+            ? Math.Clamp(waitSec, 1, 300)
+            : 45;
+        _fileExportArchivedPollMs = int.TryParse(
+            configuration["ExternalApis:InvoiceOcr:FileExportArchivedPollMs"], out var pollMs)
+            ? Math.Clamp(pollMs, 200, 10000)
+            : 1500;
     }
 
     public async Task<ResultForHttpsCode> ProcessInvoiceAsync(
@@ -321,6 +331,75 @@ public class InvoiceOcrPipelineService
     }
 
     /// <summary>
+    /// Poll fileExport until Status='Archived' for this workflow/process.
+    /// Filename/itemId must only be taken from the Archived row (non-Archived can be wrong).
+    /// </summary>
+    private async Task<(string RepositoryId, string ItemId)?> WaitForArchivedFileExportAsync(
+        SqlConnection conn,
+        int wId,
+        int pId,
+        CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(_fileExportArchivedWaitSeconds);
+        var attempt = 0;
+
+        while (true)
+        {
+            attempt++;
+            await using (var feCmd = new SqlCommand(
+                             @"SELECT TOP 1 repositoryId, itemId, [Status]
+                               FROM fileExport
+                               WHERE workflowid=@wId AND processid=@pId AND [Status]='Archived'
+                               ORDER BY id DESC", conn))
+            {
+                feCmd.Parameters.AddWithValue("@wId", wId);
+                feCmd.Parameters.AddWithValue("@pId", pId);
+                await using var feReader = await feCmd.ExecuteReaderAsync(cancellationToken);
+                if (await feReader.ReadAsync(cancellationToken))
+                {
+                    var repo = feReader["repositoryId"]?.ToString()?.Trim() ?? "";
+                    var item = feReader["itemId"]?.ToString()?.Trim() ?? "";
+                    if (!string.IsNullOrWhiteSpace(repo) && !string.IsNullOrWhiteSpace(item))
+                    {
+                        _logger.LogInformation(
+                            "fileExport Archived found on attempt {Attempt} for workflowId={WorkflowId} processId={ProcessId} repositoryId={RepositoryId} itemId={ItemId}",
+                            attempt, wId, pId, repo, item);
+                        return (repo, item);
+                    }
+                }
+            }
+
+            // Optional: log current non-Archived status so we can see progress
+            string? currentStatus = null;
+            await using (var statusCmd = new SqlCommand(
+                             @"SELECT TOP 1 [Status]
+                               FROM fileExport
+                               WHERE workflowid=@wId AND processid=@pId
+                               ORDER BY id DESC", conn))
+            {
+                statusCmd.Parameters.AddWithValue("@wId", wId);
+                statusCmd.Parameters.AddWithValue("@pId", pId);
+                var statusVal = await statusCmd.ExecuteScalarAsync(cancellationToken);
+                currentStatus = statusVal?.ToString();
+            }
+
+            if (DateTime.UtcNow >= deadline)
+            {
+                _logger.LogWarning(
+                    "Timed out waiting for fileExport Archived (wait={Wait}s, lastStatus={Status}) workflowId={WorkflowId} processId={ProcessId}",
+                    _fileExportArchivedWaitSeconds, currentStatus ?? "(none)", wId, pId);
+                return null;
+            }
+
+            _logger.LogInformation(
+                "Waiting for fileExport Archived (attempt={Attempt}, status={Status}, pollMs={PollMs}) workflowId={WorkflowId} processId={ProcessId}",
+                attempt, currentStatus ?? "(none)", _fileExportArchivedPollMs, wId, pId);
+
+            await Task.Delay(_fileExportArchivedPollMs, cancellationToken);
+        }
+    }
+
+    /// <summary>
     /// Same data path as ezofis CreateJsonPayload: processform_*, fileExport, ezca_*_items, ezfb_*_items.
     /// Returns requestPayload only (no connectorId / connector insert).
     /// </summary>
@@ -398,43 +477,22 @@ public class InvoiceOcrPipelineService
             }
         }
 
-        // fileExport (prefer Archived) → ezca_{repo}_items
+        // Wait until fileExport Status='Archived' — only then take repositoryId/itemId/fileName.
+        // Non-Archived rows can point at a wrong/partial file name.
         string fileName = fallbackFileName;
         string repositoryId = _repositoryId.ToString(CultureInfo.InvariantCulture);
         string itemId = fallbackFileId.ToString(CultureInfo.InvariantCulture);
 
-        await using (var feCmd = new SqlCommand(
-                         @"SELECT TOP 1 repositoryId, itemId
-                           FROM fileExport
-                           WHERE workflowid=@wId AND processid=@pId AND [Status]='Archived'
-                           ORDER BY id DESC", conn))
+        var archived = await WaitForArchivedFileExportAsync(conn, wId, pId, cancellationToken);
+        if (archived == null)
         {
-            feCmd.Parameters.AddWithValue("@wId", wId);
-            feCmd.Parameters.AddWithValue("@pId", pId);
-            await using var feReader = await feCmd.ExecuteReaderAsync(cancellationToken);
-            if (await feReader.ReadAsync(cancellationToken))
-            {
-                repositoryId = feReader["repositoryId"]?.ToString() ?? repositoryId;
-                itemId = feReader["itemId"]?.ToString() ?? itemId;
-            }
-            else
-            {
-                await feReader.CloseAsync();
-                await using var feAny = new SqlCommand(
-                    @"SELECT TOP 1 repositoryId, itemId
-                      FROM fileExport
-                      WHERE workflowid=@wId AND processid=@pId
-                      ORDER BY id DESC", conn);
-                feAny.Parameters.AddWithValue("@wId", wId);
-                feAny.Parameters.AddWithValue("@pId", pId);
-                await using var feAnyReader = await feAny.ExecuteReaderAsync(cancellationToken);
-                if (await feAnyReader.ReadAsync(cancellationToken))
-                {
-                    repositoryId = feAnyReader["repositoryId"]?.ToString() ?? repositoryId;
-                    itemId = feAnyReader["itemId"]?.ToString() ?? itemId;
-                }
-            }
+            return (null,
+                $"fileExport Status='Archived' not found for workflowId={wId}, processId={pId} after {_fileExportArchivedWaitSeconds}s. Retry InitiateProcess shortly.",
+                resolved);
         }
+
+        repositoryId = archived.Value.RepositoryId;
+        itemId = archived.Value.ItemId;
 
         if (int.TryParse(repositoryId, out var repoParsed))
             resolved.RepositoryId = repoParsed;
@@ -576,9 +634,12 @@ public class InvoiceOcrPipelineService
         if (string.IsNullOrWhiteSpace(referenceNo))
             referenceNo = $"REQ-{pId}";
 
+        // Same as CreateJsonPayload:
+        // apiurl + "/api/file/view/" + tenantId + "/" + userId + "/" + repositoryId + "/" + itemId + "/2/1/" + fileName
         var userSegment = string.IsNullOrWhiteSpace(userId) ? "0" : userId.Trim();
+        var safeFileName = string.IsNullOrWhiteSpace(fileName) ? "file.pdf" : fileName.Trim().TrimStart('/');
         var location =
-            $"{_ezofisBaseUrl}/api/file/viewBinary/{_tenantId}/{userSegment}/{repositoryId}/{itemId}/1";
+            $"{_ezofisBaseUrl}/api/file/view/{_tenantId}/2/{repositoryId}/{itemId}/2/1/{safeFileName}";
 
         var payload = new JsonObject
         {
