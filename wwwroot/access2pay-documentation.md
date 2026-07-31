@@ -64,11 +64,29 @@ Send an invoice file. The API runs OCR on the file, uploads it to our backend, a
 |------|----|----------|-------------|
 | `X-API-Key` | header | yes | Playground API key |
 | `file` | form-data | yes | Invoice PDF or image to OCR and upload |
-| `storageCallbackUrl` | form-data | no | If set, OCR payload JSON is POSTed to this URL before the response returns |
+| `storageCallbackUrl` | form-data | no | If set, OCR payload JSON is POSTed to this URL; InitiateProcess returns that URL's response plus the usual `requestPayload` |
 
 ### Output (`output`)
 
-OCR JSON payload (vendor, invoice, line items, `referenceNo`, source document, etc.).
+Without `storageCallbackUrl` — OCR JSON payload (vendor, invoice, line items, `referenceNo`, source document, etc.).
+
+With `storageCallbackUrl` — `storageCallback` first, then the usual payload fields:
+
+```json
+{
+  "storageCallback": {
+    "received": true,
+    "message": "Invoice data stored successfully"
+  },
+  "referenceNo": "REQ-71",
+  "Vendor": {},
+  "Invoice": {}
+}
+```
+
+On callback failure, `storageCallback.received` is `false` and `message` indicates fail; the usual payload fields are still returned below.
+
+**Sample output payload**
 
 ```json
 {

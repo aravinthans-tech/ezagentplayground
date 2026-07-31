@@ -30,9 +30,9 @@ public class Access2PayController : ControllerBase
     /// |------|----|----------|-------------|
     /// | `X-API-Key` | header | yes | Playground API key |
     /// | `file` | form-data | yes | Invoice PDF/image |
-    /// | `storageCallbackUrl` | form-data | no | If set, POST payload JSON to this URL before returning |
+    /// | `storageCallbackUrl` | form-data | no | If set, POST payload to this URL; response includes client callback output + requestPayload |
     ///
-    /// **Output (`output`)**
+    /// **Output (`output`) — without storageCallbackUrl**
     /// ```json
     /// {
     ///   "referenceNo": "REQ-71",
@@ -42,6 +42,23 @@ public class Access2PayController : ControllerBase
     ///   "Invoice": { }
     /// }
     /// ```
+    ///
+    /// **Output (`output`) — with storageCallbackUrl**
+    /// ```json
+    /// {
+    ///   "storageCallback": {
+    ///     "received": true,
+    ///     "message": "Invoice data stored successfully"
+    ///   },
+    ///   "referenceNo": "REQ-71",
+    ///   "submission": { },
+    ///   "sourceDocument": { },
+    ///   "Vendor": { },
+    ///   "Invoice": { }
+    /// }
+    /// ```
+    /// On callback failure, <c>storageCallback.received</c> is <c>false</c> and <c>message</c> indicates fail;
+    /// the usual payload fields are still returned below.
     /// </remarks>
     /// <param name="request">Multipart form with invoice <c>file</c> and optional <c>storageCallbackUrl</c>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -108,7 +125,7 @@ public class Access2PayController : ControllerBase
         return Ok(new
         {
             received = true,
-            message = "Storage callback received request payload JSON",
+            message = "Invoice data stored successfully",
             referenceNo,
             payload
         });

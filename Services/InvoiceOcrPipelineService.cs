@@ -240,12 +240,29 @@ public class InvoiceOcrPipelineService
 
         var payloadJson = requestPayload!.ToJsonString();
 
-        // Optional: POST request payload to StorageCallbackUrl before returning
+        // Optional: POST request payload to client's storageCallbackUrl and return their response
+        // together with the usual requestPayload.
         if (!string.IsNullOrWhiteSpace(storageCallbackUrl))
         {
-            var callbackError = await PostPayloadToCallbackAsync(storageCallbackUrl.Trim(), payloadJson, cancellationToken);
-            if (callbackError != null)
-                return Error(callbackError);
+            var callback = await PostPayloadToCallbackAsync(
+                storageCallbackUrl.Trim(), payloadJson, cancellationToken);
+
+            // storageCallback first, then the usual requestPayload fields below
+            var combined = new JsonObject
+            {
+                ["storageCallback"] = callback.ResponseNode
+            };
+            foreach (var prop in requestPayload)
+                combined[prop.Key] = prop.Value?.DeepClone();
+
+            return new ResultForHttpsCode
+            {
+                id = 1,
+                output = combined.ToJsonString(),
+                EncryptOutput = callback.Success
+                    ? null
+                    : (callback.ErrorMessage ?? "Storage callback failed")
+            };
         }
 
         return new ResultForHttpsCode
@@ -256,7 +273,11 @@ public class InvoiceOcrPipelineService
         };
     }
 
-    private async Task<string?> PostPayloadToCallbackAsync(
+    /// <summary>
+    /// POSTs requestPayload JSON to the client-provided URL and returns their response body
+    /// (parsed JSON when possible). On HTTP/network failure, returns received=false + fail message.
+    /// </summary>
+    private async Task<(bool Success, JsonNode ResponseNode, string? ErrorMessage)> PostPayloadToCallbackAsync(
         string callbackUrl,
         string payloadJson,
         CancellationToken cancellationToken)
@@ -264,7 +285,13 @@ public class InvoiceOcrPipelineService
         if (!Uri.TryCreate(callbackUrl, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
-            return "StorageCallbackUrl must be a valid http or https URL";
+            return (false,
+                new JsonObject
+                {
+                    ["received"] = false,
+                    ["message"] = "Invoice data store failed"
+                },
+                "StorageCallbackUrl must be a valid http or https URL");
         }
 
         try
@@ -273,22 +300,66 @@ public class InvoiceOcrPipelineService
             using var content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
             using var response = await client.PostAsync(uri, content, cancellationToken);
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            JsonNode responseNode;
+            try
+            {
+                responseNode = string.IsNullOrWhiteSpace(body)
+                    ? new JsonObject()
+                    : (JsonNode.Parse(body) ?? new JsonObject());
+            }
+            catch
+            {
+                responseNode = new JsonObject { ["body"] = body };
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
                     "StorageCallbackUrl returned {Status}: {Body}",
                     (int)response.StatusCode,
                     body);
-                return $"StorageCallbackUrl error {(int)response.StatusCode}: {body}";
+
+                // Prefer client body; ensure fail shape if client didn't set received/message
+                if (responseNode is JsonObject failObj)
+                {
+                    failObj["received"] = failObj.ContainsKey("received")
+                        ? failObj["received"]
+                        : false;
+                    if (!failObj.ContainsKey("message") || string.IsNullOrWhiteSpace(failObj["message"]?.ToString()))
+                        failObj["message"] = "Invoice data store failed";
+                    if (!failObj.ContainsKey("statusCode"))
+                        failObj["statusCode"] = (int)response.StatusCode;
+                }
+
+                return (false, responseNode,
+                    $"StorageCallbackUrl error {(int)response.StatusCode}: {body}");
             }
 
             _logger.LogInformation("Request payload posted to StorageCallbackUrl {Url}", callbackUrl);
-            return null;
+
+            // Normalize success message if client returned a simple ack without message
+            if (responseNode is JsonObject okObj)
+            {
+                if (!okObj.ContainsKey("received"))
+                    okObj["received"] = true;
+                if (!okObj.ContainsKey("message") || string.IsNullOrWhiteSpace(okObj["message"]?.ToString()))
+                    okObj["message"] = "Invoice data stored successfully";
+            }
+
+            return (true, responseNode, null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "StorageCallbackUrl call failed for {Url}", callbackUrl);
-            return "StorageCallbackUrl failed: " + ex.Message;
+            return (false,
+                new JsonObject
+                {
+                    ["received"] = false,
+                    ["message"] = "Invoice data store failed",
+                    ["error"] = ex.Message
+                },
+                "StorageCallbackUrl failed: " + ex.Message);
         }
     }
 

@@ -354,11 +354,22 @@ pre {
                     <tbody>
                         <tr><td><code>X-API-Key</code></td><td>header</td><td class="req">yes</td><td>Playground API key</td></tr>
                         <tr><td><code>file</code></td><td>form-data</td><td class="req">yes</td><td>Invoice PDF or image to OCR and upload</td></tr>
-                        <tr><td><code>storageCallbackUrl</code></td><td>form-data</td><td class="opt">no</td><td>If set, OCR payload JSON is POSTed to this URL before the response returns</td></tr>
+                        <tr><td><code>storageCallbackUrl</code></td><td>form-data</td><td class="opt">no</td><td>If set, payload is POSTed to this URL; response includes that URL's output plus <code>requestPayload</code></td></tr>
                     </tbody>
                 </table>
                 <h3>Output (<code>output</code>)</h3>
-                <p class="note">OCR JSON payload (vendor, invoice, line items, <code>referenceNo</code>, source document, etc.).</p>
+                <p class="note">Without callback — OCR JSON payload. With <code>storageCallbackUrl</code> — callback first, then usual payload:</p>
+<pre>{
+  "storageCallback": {
+    "received": true,
+    "message": "Invoice data stored successfully"
+  },
+  "referenceNo": "REQ-71",
+  "Vendor": {},
+  "Invoice": {}
+}</pre>
+                <p class="note">On callback failure: <code>received: false</code> + fail message; usual payload fields still returned below.</p>
+                <h3>Sample output payload</h3>
 <pre>{
   "referenceNo": "REQ-71",
   "submission": {
