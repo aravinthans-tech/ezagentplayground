@@ -24,23 +24,63 @@ public class InvoiceOcrPipelineService
     private const string DefaultPortalId = "69";
     private const string DefaultReview = "Submit";
 
+    /// <summary>
+    /// OCR fields for the Access2Pay Vendor / Invoice JSON (final response).
+    /// Combined with <see cref="RepositoryFields"/> into <see cref="OcrFormFields"/> for uploadforStaticMetadata.
+    /// Indexed upload still uses only <see cref="RepositoryFields"/>.
+    /// </summary>
     private static readonly string[] StaticFormFields =
     {
+        // Vendor
         "Supplier Name, SHORT_TEXT",
-        "PO Number, SHORT_TEXT",
-        "Invoice Date, DATE",
         "Address, LONG_TEXT",
+        "Vendor Id, SHORT_TEXT",
+        "City, SHORT_TEXT",
+        "State, SHORT_TEXT",
+        "Zip, SHORT_TEXT",
+        "Country, SHORT_TEXT",
+        "Email, SHORT_TEXT",
+        "Contact Name, SHORT_TEXT",
+        "GLID, SHORT_TEXT",
+
+        // Invoice header
+        "Invoice Number, SHORT_TEXT",
+        "Invoice Date, DATE",
+        "PO Number, SHORT_TEXT",
+        "PO Date, DATE",
+        "Document Type, SHORT_TEXT",
+        "FID Number, SHORT_TEXT",
+        "Delivery Doc Number, SHORT_TEXT",
+        "Delivery Doc Date, DATE",
+        "Currency, SHORT_TEXT",
+
+        // Buyer / ship-to
         "Bill To, SHORT_TEXT",
+        "Bill To Address, LONG_TEXT",
+        "Ship To Name, SHORT_TEXT",
+        "Ship To Address, LONG_TEXT",
+
+        // Amounts
         "Subtotal, SHORT_TEXT",
         "Tax (13%), SHORT_TEXT",
+        "Discount, SHORT_TEXT",
+        "Deposit, SHORT_TEXT",
+        "Charge, SHORT_TEXT",
+        "Round Off, SHORT_TEXT",
         "Total Due, SHORT_TEXT",
+
+        // Terms / notes / remittance
         "Payment Terms, SHORT_TEXT",
+        "Notes, LONG_TEXT",
         "Remit To, SHORT_TEXT",
-        "Invoice Number, SHORT_TEXT",
+        "Bank Account, SHORT_TEXT",
+        "Bank Account Number, SHORT_TEXT",
+
+        // Lines
         "Line Items, TABLE"
     };
 
-    /// <summary>Repository metadata field ids for repo 214.</summary>
+    /// <summary>Repository metadata field ids for repo 214 — used only for uploadAndIndex/upload.</summary>
     private static readonly (int Id, string Name, string Type)[] RepositoryFields =
     {
         (317, "Supplier Name", "SHORT_TEXT"),
@@ -58,6 +98,38 @@ public class InvoiceOcrPipelineService
         (329, "Payment Terms", "SHORT_TEXT"),
         (330, "Remit To", "SHORT_TEXT")
     };
+
+    /// <summary>
+    /// formFields for uploadforStaticMetadata: all Vendor/Invoice OCR fields ∪ repository names (deduped).
+    /// </summary>
+    private static readonly string[] OcrFormFields = BuildOcrFormFields();
+
+    private static string[] BuildOcrFormFields()
+    {
+        var result = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void Add(string name, string type)
+        {
+            name = name.Trim();
+            type = type.Trim();
+            if (string.IsNullOrWhiteSpace(name) || !seen.Add(name))
+                return;
+            result.Add($"{name}, {type}");
+        }
+
+        foreach (var entry in StaticFormFields)
+        {
+            var parts = entry.Split(',', 2);
+            Add(parts[0], parts.Length > 1 ? parts[1] : "SHORT_TEXT");
+        }
+
+        // Include repo names so upload can bind OCR → repository metadata directly.
+        foreach (var (_, name, type) in RepositoryFields)
+            Add(name, type);
+
+        return result.ToArray();
+    }
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ApiKeyService _apiKeyService;
@@ -115,6 +187,36 @@ public class InvoiceOcrPipelineService
         string? storageCallbackUrl = null,
         CancellationToken cancellationToken = default)
     {
+        var log = new ProcessIoLogState
+        {
+            FileName = file?.FileName,
+            FileSize = file?.Length ?? 0,
+            StorageCallbackUrl = storageCallbackUrl
+        };
+
+        ResultForHttpsCode result;
+        try
+        {
+            result = await ProcessInvoiceCoreAsync(file, playgroundApiKey, storageCallbackUrl, log, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "InitiateProcess failed unexpectedly");
+            result = Error(ex.Message);
+        }
+
+        // Tenant DB only (not main) — fire-and-forget so API latency is unaffected.
+        QueueTenantProcessIoLog(log, result);
+        return result;
+    }
+
+    private async Task<ResultForHttpsCode> ProcessInvoiceCoreAsync(
+        IFormFile? file,
+        string? playgroundApiKey,
+        string? storageCallbackUrl,
+        ProcessIoLogState log,
+        CancellationToken cancellationToken)
+    {
         if (file == null || file.Length == 0)
             return Error("File is required");
 
@@ -145,10 +247,14 @@ public class InvoiceOcrPipelineService
             createdBy = await ResolveTenantEmailAsync(_tenantId) ?? $"tenant{_tenantId}@ezofis.com";
         }
 
+        log.SubmittedFrom = createdBy;
+
         await using var ms = new MemoryStream();
         await file.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
         var originalFileName = string.IsNullOrWhiteSpace(file.FileName) ? "invoice.pdf" : file.FileName;
+        log.FileName = originalFileName;
+        log.FileSize = bytes.Length;
 
         // Step 1 — OCR via uploadforStaticMetadata (response may be AES-encrypted for portal tokens)
         var ocrRaw = await UploadForStaticMetadataAsync(bytes, originalFileName, token, cancellationToken);
@@ -163,6 +269,8 @@ public class InvoiceOcrPipelineService
         var ocrDoc = UnwrapJson(ocrPlain.plain ?? "");
         if (ocrDoc == null)
             return Error("Unable to parse OCR response from uploadforStaticMetadata");
+
+        log.InputJson = BuildProcessInputJson(originalFileName, bytes.Length, createdBy, storageCallbackUrl, ocrPlain.plain);
 
         var ocrByName = BuildOcrLookup(ocrDoc);
         var invoiceNumber = GetOcrString(ocrByName, "Invoice Number");
@@ -238,7 +346,11 @@ public class InvoiceOcrPipelineService
         if (payloadError != null)
             return Error(payloadError);
 
+        // Prefer DB form columns; fill empty/missing Vendor/Invoice values from OCR.
+        FillMissingVendorInvoiceFromOcr(requestPayload!, ocrByName);
+
         var payloadJson = requestPayload!.ToJsonString();
+        log.ReferenceNo = requestPayload["referenceNo"]?.ToString();
 
         // Optional: POST request payload to client's storageCallbackUrl and return their response
         // together with the usual requestPayload.
@@ -271,6 +383,161 @@ public class InvoiceOcrPipelineService
             output = payloadJson,
             EncryptOutput = null
         };
+    }
+
+    private sealed class ProcessIoLogState
+    {
+        public string? FileName { get; set; }
+        public long FileSize { get; set; }
+        public string? SubmittedFrom { get; set; }
+        public string? StorageCallbackUrl { get; set; }
+        public string? InputJson { get; set; }
+        public string? ReferenceNo { get; set; }
+    }
+
+    private static string BuildProcessInputJson(
+        string fileName,
+        long fileSize,
+        string submittedFrom,
+        string? storageCallbackUrl,
+        string? ocrJson)
+    {
+        JsonNode? ocrNode = null;
+        if (!string.IsNullOrWhiteSpace(ocrJson))
+        {
+            try { ocrNode = JsonNode.Parse(ocrJson); }
+            catch { ocrNode = ocrJson; }
+        }
+
+        var input = new JsonObject
+        {
+            ["fileName"] = fileName,
+            ["fileSize"] = fileSize,
+            ["submittedFrom"] = submittedFrom,
+            ["storageCallbackUrl"] = string.IsNullOrWhiteSpace(storageCallbackUrl) ? null : storageCallbackUrl,
+            ["ocr"] = ocrNode
+        };
+        return input.ToJsonString();
+    }
+
+    private void QueueTenantProcessIoLog(ProcessIoLogState log, ResultForHttpsCode result)
+    {
+        // Capture values — do not capture mutable request objects beyond this point.
+        var fileName = log.FileName;
+        var fileSize = log.FileSize;
+        var submittedFrom = log.SubmittedFrom;
+        var referenceNo = log.ReferenceNo;
+        var inputJson = log.InputJson;
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            inputJson = BuildProcessInputJson(
+                fileName ?? "",
+                fileSize,
+                submittedFrom ?? "",
+                log.StorageCallbackUrl,
+                ocrJson: null);
+        }
+
+        var outputJson = result.output;
+        var isSuccess = result.id == 1;
+        var errorMessage = result.EncryptOutput;
+        if (string.IsNullOrWhiteSpace(referenceNo) && !string.IsNullOrWhiteSpace(outputJson))
+        {
+            try
+            {
+                var node = JsonNode.Parse(outputJson);
+                referenceNo = node?["referenceNo"]?.ToString()
+                    ?? node?["storageCallback"]?["referenceNo"]?.ToString()
+                    ?? node?["storageCallback"]?["payload"]?["referenceNo"]?.ToString();
+            }
+            catch
+            {
+                // ignore parse errors for logging
+            }
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await SaveTenantProcessIoLogAsync(
+                    referenceNo,
+                    fileName,
+                    submittedFrom,
+                    inputJson,
+                    outputJson,
+                    isSuccess,
+                    errorMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Background Access2PayProcessIoLog save failed");
+            }
+        });
+    }
+
+    private async Task SaveTenantProcessIoLogAsync(
+        string? referenceNo,
+        string? fileName,
+        string? submittedFrom,
+        string? inputJson,
+        string? outputJson,
+        bool isSuccess,
+        string? errorMessage)
+    {
+        var tenantCs = await GetTenantConnectionStringAsync(_tenantId);
+        if (string.IsNullOrWhiteSpace(tenantCs))
+        {
+            _logger.LogWarning(
+                "Skip Access2PayProcessIoLog: no tenant connectionString for tenantId={TenantId}",
+                _tenantId);
+            return;
+        }
+
+        await using var conn = new SqlConnection(tenantCs);
+        await conn.OpenAsync();
+        await EnsureAccess2PayProcessIoLogTableAsync(conn);
+
+        await using var cmd = new SqlCommand(
+            @"INSERT INTO dbo.Access2PayProcessIoLog
+                (ReferenceNo, FileName, SubmittedFrom, InputJson, OutputJson, IsSuccess, ErrorMessage, CreatedAt)
+              VALUES
+                (@ref, @file, @from, @in, @out, @ok, @err, SYSUTCDATETIME())", conn);
+        cmd.Parameters.AddWithValue("@ref", (object?)NullIfWhite(referenceNo) ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@file", (object?)NullIfWhite(fileName) ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@from", (object?)NullIfWhite(submittedFrom) ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@in", (object?)inputJson ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@out", (object?)outputJson ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ok", isSuccess);
+        cmd.Parameters.AddWithValue("@err", (object?)NullIfWhite(errorMessage) ?? DBNull.Value);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static string? NullIfWhite(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static async Task EnsureAccess2PayProcessIoLogTableAsync(SqlConnection conn)
+    {
+        await using var cmd = new SqlCommand(
+            @"IF OBJECT_ID(N'dbo.Access2PayProcessIoLog', N'U') IS NULL
+              BEGIN
+                CREATE TABLE dbo.Access2PayProcessIoLog (
+                    Id            BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                    ReferenceNo   NVARCHAR(100) NULL,
+                    FileName      NVARCHAR(512) NULL,
+                    SubmittedFrom NVARCHAR(256) NULL,
+                    InputJson     NVARCHAR(MAX) NULL,
+                    OutputJson    NVARCHAR(MAX) NULL,
+                    IsSuccess     BIT NOT NULL CONSTRAINT DF_Access2PayProcessIoLog_IsSuccess DEFAULT (1),
+                    ErrorMessage  NVARCHAR(MAX) NULL,
+                    CreatedAt     DATETIME2 NOT NULL CONSTRAINT DF_Access2PayProcessIoLog_CreatedAt DEFAULT (SYSUTCDATETIME())
+                );
+                CREATE INDEX IX_Access2PayProcessIoLog_CreatedAt
+                    ON dbo.Access2PayProcessIoLog (CreatedAt DESC);
+                CREATE INDEX IX_Access2PayProcessIoLog_ReferenceNo
+                    ON dbo.Access2PayProcessIoLog (ReferenceNo);
+              END", conn);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     /// <summary>
@@ -548,8 +815,8 @@ public class InvoiceOcrPipelineService
             }
         }
 
-        // Wait until fileExport Status='Archived' — only then take repositoryId/itemId/fileName.
-        // Non-Archived rows can point at a wrong/partial file name.
+        // Prefer fileExport Status='Archived' for repositoryId/itemId/fileName.
+        // If archive is slow (larger OCR / backend lag), fall back to upload fileId so we still return Vendor/Invoice.
         string fileName = fallbackFileName;
         string repositoryId = _repositoryId.ToString(CultureInfo.InvariantCulture);
         string itemId = fallbackFileId.ToString(CultureInfo.InvariantCulture);
@@ -557,13 +824,15 @@ public class InvoiceOcrPipelineService
         var archived = await WaitForArchivedFileExportAsync(conn, wId, pId, cancellationToken);
         if (archived == null)
         {
-            return (null,
-                $"fileExport Status='Archived' not found for workflowId={wId}, processId={pId} after {_fileExportArchivedWaitSeconds}s. Retry InitiateProcess shortly.",
-                resolved);
+            _logger.LogWarning(
+                "fileExport Status='Archived' not found for workflowId={WorkflowId} processId={ProcessId} after {Wait}s; using upload fallback fileId={FileId} fileName={FileName}",
+                wId, pId, _fileExportArchivedWaitSeconds, fallbackFileId, fallbackFileName);
         }
-
-        repositoryId = archived.Value.RepositoryId;
-        itemId = archived.Value.ItemId;
+        else
+        {
+            repositoryId = archived.Value.RepositoryId;
+            itemId = archived.Value.ItemId;
+        }
 
         if (int.TryParse(repositoryId, out var repoParsed))
             resolved.RepositoryId = repoParsed;
@@ -766,6 +1035,7 @@ public class InvoiceOcrPipelineService
                     ["grossAmount"] = string.IsNullOrWhiteSpace(grossAmt) ? null : grossAmt,
                     ["taxAmount"] = string.IsNullOrWhiteSpace(taxAmt) ? null : taxAmt,
                     ["discount"] = null,
+                    ["deposit"] = null,
                     ["charge"] = null,
                     ["roundOff"] = null,
                     ["netTotal"] = string.IsNullOrWhiteSpace(netTotal) ? null : netTotal
@@ -783,6 +1053,180 @@ public class InvoiceOcrPipelineService
         };
 
         return (payload, null, resolved);
+    }
+
+    /// <summary>
+    /// Prefer DB form values already on the payload. Where a field is null/empty, fill from OCR.
+    /// </summary>
+    private static void FillMissingVendorInvoiceFromOcr(JsonObject payload, Dictionary<string, JsonElement> ocrByName)
+    {
+        static string Ocr(Dictionary<string, JsonElement> map, params string[] names)
+        {
+            foreach (var n in names)
+            {
+                var v = GetOcrString(map, n);
+                if (!string.IsNullOrWhiteSpace(v))
+                    return v.Trim();
+            }
+            return "";
+        }
+
+        static bool IsEmpty(JsonNode? node)
+        {
+            if (node == null || node is JsonObject { Count: 0 })
+                return true;
+            if (node is JsonValue)
+            {
+                var s = node.ToString();
+                return string.IsNullOrWhiteSpace(s) || s == "null";
+            }
+            return false;
+        }
+
+        static void SetIfEmpty(JsonObject obj, string key, string? ocrValue, bool asNullWhenEmpty = false)
+        {
+            obj.TryGetPropertyValue(key, out var existing);
+            if (!IsEmpty(existing))
+                return;
+
+            if (string.IsNullOrWhiteSpace(ocrValue))
+            {
+                if (asNullWhenEmpty)
+                    obj[key] = null;
+                return;
+            }
+
+            obj[key] = ocrValue.Trim();
+        }
+
+        static JsonObject EnsureObject(JsonObject parent, string key)
+        {
+            if (parent.TryGetPropertyValue(key, out var node) && node is JsonObject existing)
+                return existing;
+            var created = new JsonObject();
+            parent[key] = created;
+            return created;
+        }
+
+        var vendor = EnsureObject(payload, "Vendor");
+        SetIfEmpty(vendor, "vendorId", Ocr(ocrByName, "Vendor Id", "VendorId"));
+        SetIfEmpty(vendor, "company", Ocr(ocrByName, "Supplier Name", "Company"));
+        SetIfEmpty(vendor, "address1", Ocr(ocrByName, "Address", "Address1"));
+        SetIfEmpty(vendor, "city", Ocr(ocrByName, "City"));
+        SetIfEmpty(vendor, "state", Ocr(ocrByName, "State"));
+        SetIfEmpty(vendor, "zip", Ocr(ocrByName, "Zip", "Postal Code"));
+        SetIfEmpty(vendor, "country", Ocr(ocrByName, "Country"));
+        SetIfEmpty(vendor, "email", Ocr(ocrByName, "Email"));
+        SetIfEmpty(vendor, "contactName", Ocr(ocrByName, "Contact Name"));
+        SetIfEmpty(vendor, "glid", Ocr(ocrByName, "GLID", "Glid"));
+
+        var invoice = EnsureObject(payload, "Invoice");
+        SetIfEmpty(invoice, "documentType", Ocr(ocrByName, "Document Type"));
+        if (!invoice.TryGetPropertyValue("documentType", out var dt) || IsEmpty(dt))
+            invoice["documentType"] = "Invoice";
+
+        SetIfEmpty(invoice, "fidNumber", Ocr(ocrByName, "FID Number"), asNullWhenEmpty: true);
+        SetIfEmpty(invoice, "invoiceNumber", Ocr(ocrByName, "Invoice Number"));
+        SetIfEmpty(invoice, "invoiceDate", Ocr(ocrByName, "Invoice Date"));
+        SetIfEmpty(invoice, "poNumber", Ocr(ocrByName, "PO Number"));
+        SetIfEmpty(invoice, "poDate", Ocr(ocrByName, "PO Date"));
+        SetIfEmpty(invoice, "deliveryDocNumber", Ocr(ocrByName, "Delivery Doc Number"), asNullWhenEmpty: true);
+        SetIfEmpty(invoice, "deliveryDocDate", Ocr(ocrByName, "Delivery Doc Date"), asNullWhenEmpty: true);
+        SetIfEmpty(invoice, "currency", Ocr(ocrByName, "Currency"));
+        if (!invoice.TryGetPropertyValue("currency", out var cur) || IsEmpty(cur))
+            invoice["currency"] = "CAD";
+
+        var buyer = EnsureObject(invoice, "buyer");
+        SetIfEmpty(buyer, "billToName", Ocr(ocrByName, "Bill To", "Billing To"));
+        SetIfEmpty(buyer, "billToAddress", Ocr(ocrByName, "Bill To Address", "Address"));
+        SetIfEmpty(buyer, "shipToName", Ocr(ocrByName, "Ship To Name"), asNullWhenEmpty: true);
+        SetIfEmpty(buyer, "shipToAddress", Ocr(ocrByName, "Ship To Address"), asNullWhenEmpty: true);
+
+        var amounts = EnsureObject(invoice, "amounts");
+        SetIfEmpty(amounts, "grossAmount", Ocr(ocrByName, "Subtotal", "Gross Amount"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "taxAmount", Ocr(ocrByName, "Tax (13%)", "Tax(13%)", "Tax Amount"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "discount", Ocr(ocrByName, "Discount"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "deposit", Ocr(ocrByName, "Deposit"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "charge", Ocr(ocrByName, "Charge"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "roundOff", Ocr(ocrByName, "Round Off", "RoundOff"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "netTotal", Ocr(ocrByName, "Total Due", "Net Total"), asNullWhenEmpty: true);
+
+        SetIfEmpty(invoice, "paymentTerms", Ocr(ocrByName, "Payment Terms"));
+        SetIfEmpty(invoice, "notes", Ocr(ocrByName, "Notes"));
+
+        var remittance = EnsureObject(invoice, "remittance");
+        SetIfEmpty(remittance, "bankName", Ocr(ocrByName, "Remit To", "Bank Name"));
+        SetIfEmpty(remittance, "bankAccount", Ocr(ocrByName, "Bank Account"));
+        SetIfEmpty(remittance, "bankAccountNumber", Ocr(ocrByName, "Bank Account Number"));
+
+        // Line items: keep DB rows when present; otherwise use OCR table.
+        var hasDbLines = invoice.TryGetPropertyValue("lineItems", out var linesNode)
+            && linesNode is JsonArray { Count: > 0 } dbLines
+            && dbLines.Any(x => x is JsonObject);
+        if (!hasDbLines)
+            invoice["lineItems"] = BuildAccess2PayLineItemsFromOcr(ocrByName);
+
+        if (payload.TryGetPropertyValue("submission", out var subNode) && subNode is JsonObject submission)
+        {
+            var company = vendor.TryGetPropertyValue("company", out var c) ? c?.ToString() : null;
+            if (!string.IsNullOrWhiteSpace(company) && company != "null")
+                SetIfEmpty(submission, "emailSubject", company);
+        }
+    }
+
+    private static JsonArray BuildAccess2PayLineItemsFromOcr(Dictionary<string, JsonElement> ocrByName)
+    {
+        var lineItems = new JsonArray();
+        if (!TryGetOcrValue(ocrByName, "Line Items", out var items) || items.ValueKind != JsonValueKind.Array)
+            return lineItems;
+
+        var rowNo = 1;
+        foreach (var item in items.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object)
+                continue;
+
+            var description = GetPropString(item, "Description");
+            var type = GetPropString(item, "Type");
+            var quantity = GetPropString(item, "Quantity");
+            var rate = StripCurrency(GetPropString(item, "Unit Price", "Rate"));
+            var amount = GetPropString(item, "Amount");
+            var itemNumber = GetPropString(item, "Item Number", "ItemNumber");
+            var uom = GetPropString(item, "Unit Of Measure", "UOM", "unitOfMeasure");
+
+            var metaLineNo = 1;
+            var metadata = new JsonArray();
+            void AddMeta(string header, string value)
+            {
+                metadata.Add(new JsonObject
+                {
+                    ["lineNumber"] = metaLineNo++,
+                    ["header"] = header,
+                    ["dataType"] = "SHORT_TEXT",
+                    ["value"] = value ?? ""
+                });
+            }
+
+            AddMeta("Description", description);
+            AddMeta("Type", type);
+            AddMeta("Quantity", quantity);
+            AddMeta("Rate", rate);
+            AddMeta("Amount", amount);
+
+            lineItems.Add(new JsonObject
+            {
+                ["lineNumber"] = rowNo++,
+                ["itemNumber"] = string.IsNullOrWhiteSpace(itemNumber) ? null : itemNumber,
+                ["description"] = description,
+                ["quantity"] = quantity,
+                ["unitOfMeasure"] = uom ?? "",
+                ["rate"] = rate,
+                ["lineAmount"] = amount,
+                ["metadata"] = metadata
+            });
+        }
+
+        return lineItems;
     }
 
     private async Task<string?> GetTenantConnectionStringAsync(string tenantId)
@@ -974,7 +1418,7 @@ public class InvoiceOcrPipelineService
         var url = $"{_ezofisBaseUrl}/api/uploadAndIndex/uploadforStaticMetadata";
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent(_repositoryId.ToString(CultureInfo.InvariantCulture)), "repositoryId");
-        content.Add(new StringContent(JsonSerializer.Serialize(StaticFormFields)), "formFields");
+        content.Add(new StringContent(JsonSerializer.Serialize(OcrFormFields)), "formFields");
         content.Add(CreateFileContent(bytes, fileName), "file", fileName);
         content.Add(new StringContent("false"), "isReturnJson");
         content.Add(new StringContent("1"), "validateType");
@@ -1135,21 +1579,21 @@ public class InvoiceOcrPipelineService
         foreach (var (id, name, type) in RepositoryFields)
         {
             object value = "";
-            if (TryGetOcrValue(ocrByName, name, out var direct) && direct.ValueKind != JsonValueKind.Null)
+
+            // Prefer non-empty OCR value under the exact repo field name.
+            if (TryGetNonEmptyOcrValue(ocrByName, name, out var direct))
             {
-                value = direct.ValueKind == JsonValueKind.String
-                    ? direct.GetString() ?? ""
-                    : JsonNode.Parse(direct.GetRawText())!;
+                value = direct;
             }
             else if (string.Equals(name, "Billing To", StringComparison.OrdinalIgnoreCase)
-                     && TryGetOcrValue(ocrByName, "Bill To", out var billTo))
+                     && TryGetNonEmptyOcrValue(ocrByName, "Bill To", out var billTo))
             {
-                value = billTo.GetString() ?? "";
+                value = billTo;
             }
             else if (string.Equals(name, "Tax(13%)", StringComparison.OrdinalIgnoreCase)
-                     && TryGetOcrValue(ocrByName, "Tax (13%)", out var tax))
+                     && TryGetNonEmptyOcrValue(ocrByName, "Tax (13%)", out var tax))
             {
-                value = tax.GetString() ?? "";
+                value = tax;
             }
             else if (firstLine != null)
             {
@@ -1169,6 +1613,32 @@ public class InvoiceOcrPipelineService
         }
 
         return JsonSerializer.Serialize(list);
+    }
+
+    /// <summary>
+    /// Returns true when OCR has a usable (non-whitespace) value for <paramref name="name"/>.
+    /// Strings become string values; other JSON kinds stay as JsonNode.
+    /// </summary>
+    private static bool TryGetNonEmptyOcrValue(
+        Dictionary<string, JsonElement> ocrByName,
+        string name,
+        out object value)
+    {
+        value = "";
+        if (!TryGetOcrValue(ocrByName, name, out var el) || el.ValueKind == JsonValueKind.Null)
+            return false;
+
+        if (el.ValueKind == JsonValueKind.String)
+        {
+            var s = el.GetString()?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(s))
+                return false;
+            value = s;
+            return true;
+        }
+
+        value = JsonNode.Parse(el.GetRawText())!;
+        return true;
     }
 
     private string BuildTransactionPayload(

@@ -136,6 +136,7 @@ On callback failure, `storageCallback.received` is `false` and `message` indicat
       "grossAmount": "$840.00",
       "taxAmount": "$109.20",
       "discount": null,
+      "deposit": null,
       "charge": null,
       "roundOff": null,
       "netTotal": "$949.20"
