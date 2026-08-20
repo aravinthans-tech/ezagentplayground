@@ -66,6 +66,10 @@ public class InvoiceOcrPipelineService
         "Discount, SHORT_TEXT",
         "Deposit, SHORT_TEXT",
         "Charge, SHORT_TEXT",
+        "Shipping, SHORT_TEXT",
+        "Handling, SHORT_TEXT",
+        "Shipping and Handling, SHORT_TEXT",
+        "Freight, SHORT_TEXT",
         "Round Off, SHORT_TEXT",
         "Total Due, SHORT_TEXT",
 
@@ -1037,6 +1041,7 @@ public class InvoiceOcrPipelineService
                     ["discount"] = null,
                     ["deposit"] = null,
                     ["charge"] = null,
+                    ["shippingAndHandling"] = null,
                     ["roundOff"] = null,
                     ["netTotal"] = string.IsNullOrWhiteSpace(netTotal) ? null : netTotal
                 },
@@ -1147,7 +1152,17 @@ public class InvoiceOcrPipelineService
         SetIfEmpty(amounts, "taxAmount", Ocr(ocrByName, "Tax (13%)", "Tax(13%)", "Tax Amount"), asNullWhenEmpty: true);
         SetIfEmpty(amounts, "discount", Ocr(ocrByName, "Discount"), asNullWhenEmpty: true);
         SetIfEmpty(amounts, "deposit", Ocr(ocrByName, "Deposit"), asNullWhenEmpty: true);
+
+        // Shipping & Handling — single amounts field only (no separate shipping/handling).
+        var shippingAndHandling = GetCombinedShippingAndHandling(ocrByName);
+        if (string.IsNullOrWhiteSpace(shippingAndHandling))
+            shippingAndHandling = FirstNonEmpty(GetStandaloneShipping(ocrByName), GetStandaloneHandling(ocrByName));
+
         SetIfEmpty(amounts, "charge", Ocr(ocrByName, "Charge"), asNullWhenEmpty: true);
+        SetIfEmpty(amounts, "shippingAndHandling", shippingAndHandling, asNullWhenEmpty: true);
+        amounts.Remove("shipping");
+        amounts.Remove("handling");
+
         SetIfEmpty(amounts, "roundOff", Ocr(ocrByName, "Round Off", "RoundOff"), asNullWhenEmpty: true);
         SetIfEmpty(amounts, "netTotal", Ocr(ocrByName, "Total Due", "Net Total"), asNullWhenEmpty: true);
 
@@ -1954,6 +1969,66 @@ public class InvoiceOcrPipelineService
             ? el.GetString() ?? ""
             : "";
     }
+
+    private static string FirstNonEmpty(params string?[] values)
+    {
+        foreach (var v in values)
+        {
+            if (!string.IsNullOrWhiteSpace(v))
+                return v.Trim();
+        }
+        return "";
+    }
+
+    private static bool IsCombinedShippingHandlingName(string name)
+    {
+        var n = NormalizeName(name);
+        if (n is "sandh" or "sh")
+            return true;
+        return n.Contains("shipping", StringComparison.Ordinal)
+            && n.Contains("handling", StringComparison.Ordinal);
+    }
+
+    private static string OcrStringFromKeys(
+        Dictionary<string, JsonElement> map,
+        Func<string, bool> nameMatch)
+    {
+        foreach (var kv in map)
+        {
+            if (!nameMatch(kv.Key))
+                continue;
+            if (kv.Value.ValueKind != JsonValueKind.String)
+                continue;
+            var v = kv.Value.GetString()?.Trim();
+            if (!string.IsNullOrWhiteSpace(v))
+                return v;
+        }
+        return "";
+    }
+
+    /// <summary>Combined invoice line such as "Shipping &amp; Handling (courier)".</summary>
+    private static string GetCombinedShippingAndHandling(Dictionary<string, JsonElement> map) =>
+        OcrStringFromKeys(map, IsCombinedShippingHandlingName);
+
+    /// <summary>Shipping/Freight only — skip combined Shipping &amp; Handling field names.</summary>
+    private static string GetStandaloneShipping(Dictionary<string, JsonElement> map) =>
+        OcrStringFromKeys(map, name =>
+        {
+            if (IsCombinedShippingHandlingName(name))
+                return false;
+            var n = NormalizeName(name);
+            return n is "shipping" or "freight" or "shippingfee" or "shippingfees";
+        });
+
+    /// <summary>Handling only — skip combined Shipping &amp; Handling field names.</summary>
+    private static string GetStandaloneHandling(Dictionary<string, JsonElement> map) =>
+        OcrStringFromKeys(map, name =>
+        {
+            if (IsCombinedShippingHandlingName(name))
+                return false;
+            var n = NormalizeName(name);
+            return n is "handling" or "handlingfee" or "handlingfees";
+        });
 
     private static JsonElement? GetFirstLineItem(Dictionary<string, JsonElement> map)
     {

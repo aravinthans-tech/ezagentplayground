@@ -138,6 +138,7 @@ On callback failure, `storageCallback.received` is `false` and `message` indicat
       "discount": null,
       "deposit": null,
       "charge": null,
+      "shippingAndHandling": null,
       "roundOff": null,
       "netTotal": "$949.20"
     },
