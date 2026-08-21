@@ -365,6 +365,10 @@
             3: {
                 label: 'Invoice OCR Agent',
                 subtitle: 'Live usage from Invoice OCR playground API calls.'
+            },
+            4: {
+                label: 'KYC Agent',
+                subtitle: 'Live usage from KYC playground API calls.'
             }
         };
         const API_BASE_URL = window.location.origin;
@@ -380,7 +384,8 @@
             { name: 'Invoice OCR Process',      endpoint: '/api/InvoiceOcr/process',             method: 'POST', productId: 3 },
             { name: 'Invoice OCR Insert',       endpoint: '/api/InvoiceOcr/insert',              method: 'POST', productId: 3 },
             { name: 'Invoice OCR Get',          endpoint: '/api/InvoiceOcr/get',                 method: 'POST', productId: 3 },
-            { name: 'Invoice OCR Update',       endpoint: '/api/InvoiceOcr/update',              method: 'PUT',  productId: 3 }
+            { name: 'Invoice OCR Update',       endpoint: '/api/InvoiceOcr/update',              method: 'PUT',  productId: 3 },
+            { name: 'KYC Agent',                endpoint: '/api/KycAgent/verify',                method: 'POST', productId: 4 }
         ];
 
         // Old logged names/paths → current function name (for historical usage rows)
@@ -396,6 +401,7 @@
                 return window.PlaygroundSidebar.getProductId();
             }
             const id = new URLSearchParams(window.location.search).get('id');
+            if (id === '4') return 4;
             if (id === '3') return 3;
             if (id === '2') return 2;
             return 1;

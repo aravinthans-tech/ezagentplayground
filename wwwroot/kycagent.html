@@ -10,6 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/playground-v6.css">
     <link rel="stylesheet" href="/css/playground-dark.css">
+    <link rel="stylesheet" href="/css/playground-sidebar.css">
     <link rel="stylesheet" href="/theme.css">
     <script src="/theme.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -197,16 +198,16 @@
             <h1 class="pg-brand-title">API Playground</h1>
         </a>
         <div class="flex space-x-4 flex-1 justify-end">
-            <a href="/examples.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <a href="/examples.html?function=kycagent&id=4" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Code Examples
             </a>
-            <a href="/kyc-documentation.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <a href="/kyc-documentation.html?id=4" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 Developer Docs
             </a>
-            <a href="/my-api-keys.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <a href="/my-api-keys.html?id=4" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 My API Keys
             </a>
-            <a href="/usage-report.html" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <a href="/usage-report.html?id=4" class="px-3 py-1 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
                 API Usage
             </a>
         </div>
@@ -222,121 +223,23 @@
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden" style="min-height: 0;">
         <!-- Sidebar -->
-        <div id="sidebar" class="w-64 bg-white shadow-lg border-r-2 border-gray-200 flex flex-col flex-shrink-0 sticky top-0 h-[calc(100vh-3.5rem)]" style="display: flex !important; visibility: visible !important;">
-            <div class="p-4 border-b-2 border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                <h2 class="text-base font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight">API Functions</h2>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2">
-                <!-- API KEY Section -->
-                <div class="mb-4">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">API KEY</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="generate-apikey"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                            Generate API Key
-                        </div>
-                    </button>
-                    <a href="/my-api-keys.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-all duration-300 hover:shadow-md">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                            My API Keys
-                        </div>
-                    </a>
-                </div>
-
-                <!-- FUNCTIONS Section -->
-                <div>
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">FUNCTIONS</h3>
-                    <button 
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="form-details"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"></path>
-                            </svg>
-                            Form Details
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="subform-details"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h14v4H5zM5 13h14v6H5z"></path>
-                            </svg>
-                            SubForm Details
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="subform-fields"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6"></path>
-                            </svg>
-                            SubForm Fields
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="generate-pdf"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
-                            </svg>
-                            Generate PDF
-                        </div>
-                    </button>
-                    <button
-                        class="api-function-btn w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95"
-                        data-function="getdata-salesforce"
-                    >
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>
-                            </svg>
-                            Get Data From Salesforce
-                        </div>
-                    </button>
-                    </div>
-
-                <!-- REPORTS Section -->
-                <div>
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">REPORTS</h3>
-                    <a href="/usage-report.html" class="block w-full text-left px-3 py-2 rounded-lg mb-2 bg-gray-100 text-gray-700 text-sm font-semibold transition-all duration-300 hover:bg-gray-200 hover:shadow-md hover:scale-105 active:scale-95">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>
-                            </svg>
-                            API Usage
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
+        <div id="sidebar"></div>
+        <script src="/js/playground-sidebar.js?v=20260821a"></script>
+        <script>PlaygroundSidebar.mount('/kycagent.html');</script>
 
         <!-- Main Content Area -->
         <div class="flex-1 overflow-y-auto p-4 pb-8">
             <div class="max-w-6xl mx-auto">
                 <!-- Page Header -->
-                <div class="text-center mb-8 animate-fadeInUp">
-                    <h2 class="text-4xl font-semibold text-gray-900 mb-2">KYC Agent</h2>
-                    <p class="text-lg text-gray-600">Process KYC documents and get agent information</p>
+                <div class="text-center mb-4 animate-fadeInUp py-1">
+                    <h2 class="text-xl font-semibold text-gray-900">KYC Agent</h2>
+                    <p class="text-xs text-gray-600 mt-1">Process KYC documents and verify identity</p>
                 </div>
 
                 <!-- Hidden: Old KYC Agent Request Section (kept for backward compatibility but hidden) -->
                 <div class="hidden">
                     <div class="bg-white rounded-xl shadow-lg p-8 card-hover animate-slideInLeft delay-100">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">KYC Agent Request</h3>
+                        <h3 class="text-base font-semibold text-gray-900 mb-4">KYC Agent Request</h3>
                         <form id="kycAgentForm" class="space-y-4">
                             <div>
                                 <label for="apiKeyOld" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -385,25 +288,25 @@
                 </div>
 
                 <!-- KYC Verification Section -->
-                <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 card-hover animate-fadeInUp">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">
-                        ðŸ” Real-time KYC Verification
+                <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-4 card-hover animate-fadeInUp">
+                    <h3 class="text-base font-semibold text-gray-900 mb-1 text-center">
+                        Real-time KYC Verification
                     </h3>
-                    <p class="text-xs text-gray-600 mb-4 text-center">Upload multiple documents, verify address with Google Maps, and match faces between license and selfie.</p>
+                    <p class="text-xs text-gray-600 mb-4 text-center">Upload documents, verify address, and match faces between license and selfie.</p>
                     
                     <form id="kycVerificationForm" class="space-y-4" onsubmit="return false;">
                         <!-- API Key Input -->
                         <div>
                             <label for="apiKey" class="block text-xs font-semibold text-gray-700 mb-1">
-                                API Key <span class="text-red-500">*</span>
+                                Playground API key <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
                                 <input 
                                     type="text" 
                                     id="apiKey" 
                                     name="apiKey"
-                                    class="w-full px-2 py-1.5 pr-8 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus"
-                                    placeholder="Enter your API key"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm input-focus pr-8"
+                                    placeholder="X-API-Key"
                                     required
                                 />
                                 <!-- API Key Validation Checkmark -->
@@ -567,9 +470,9 @@
                         <button 
                             type="button"
                             id="verifyBtn"
-                            class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover text-sm"
+                            class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover text-sm"
                         >
-                            <span id="verifyBtnText">ðŸ” Verify Now</span>
+                            <span id="verifyBtnText">Verify Now</span>
                             <svg id="verifyLoadingSpinner" class="hidden animate-spin h-4 w-4 ml-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -635,9 +538,9 @@
                 <button 
                     type="button" 
                     id="capturePhotoBtn"
-                    class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold text-sm py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover"
+                    class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold text-sm py-2 px-4 rounded-lg shadow-md hover:shadow-lg button-hover"
                 >
-                    ðŸ“· Capture Photo
+                    Capture Photo
                 </button>
                 <button 
                     type="button" 
@@ -914,12 +817,15 @@
         function getFileIcon(file) {
             const ext = file.name.split('.').pop().toLowerCase();
             const iconMap = {
-                'pdf': 'ðŸ“„',
-                'doc': 'ðŸ“',
-                'docx': 'ðŸ“',
-                'txt': 'ðŸ“„'
+                'pdf': 'PDF',
+                'doc': 'DOC',
+                'docx': 'DOC',
+                'txt': 'TXT',
+                'jpg': 'IMG',
+                'jpeg': 'IMG',
+                'png': 'IMG'
             };
-            return iconMap[ext] || 'ðŸ“„';
+            return iconMap[ext] || 'FILE';
         }
 
         function createDocumentPreview(file, index) {
@@ -932,7 +838,7 @@
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors z-10';
-            removeBtn.innerHTML = 'Ã—';
+            removeBtn.innerHTML = '&times;';
             removeBtn.onclick = () => removeDocumentPreview(index);
 
             if (isImageFile(file)) {
@@ -1001,7 +907,7 @@
                         loadingPlaceholder.style.display = 'flex';
                         // Fallback to icon
                         const fallbackIcon = document.createElement('div');
-                        fallbackIcon.className = 'text-4xl mb-1';
+                        fallbackIcon.className = 'text-xs font-bold tracking-wide text-gray-500 mb-1';
                         fallbackIcon.textContent = getFileIcon(file);
                         pdfContainer.innerHTML = '';
                         pdfContainer.className = 'w-full h-24 bg-gray-100 rounded flex flex-col items-center justify-center mb-1';
@@ -1015,7 +921,7 @@
                 iconContainer.className = 'w-full h-24 bg-gray-100 rounded flex flex-col items-center justify-center mb-1';
                 
                 const icon = document.createElement('div');
-                icon.className = 'text-4xl mb-1';
+                icon.className = 'text-xs font-bold tracking-wide text-gray-500 mb-1';
                 icon.textContent = getFileIcon(file);
                 
                 iconContainer.appendChild(icon);
@@ -1337,7 +1243,7 @@
         const viewCodeExamplesBtn = document.getElementById('viewCodeExamplesBtn');
         if (viewCodeExamplesBtn) {
             viewCodeExamplesBtn.addEventListener('click', () => {
-                window.location.href = '/examples.html?function=kycagent';
+                window.location.href = '/examples.html?function=kycagent&id=4';
             });
         }
         
@@ -1727,47 +1633,12 @@
                     if (selfieScanningLine) selfieScanningLine.classList.add('hidden');
                 } finally {
                     verifyBtn.disabled = false;
-                    if (verifyBtnText) verifyBtnText.textContent = 'ðŸ” Verify Now';
+                    if (verifyBtnText) verifyBtnText.textContent = 'Verify Now';
                     if (verifyLoadingSpinner) verifyLoadingSpinner.classList.add('hidden');
                 }
             });
         }
         
-        // Sidebar navigation
-        const apiFunctionButtons = document.querySelectorAll('.api-function-btn');
-        apiFunctionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const functionName = button.getAttribute('data-function');
-                
-                apiFunctionButtons.forEach(btn => {
-                    btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
-                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-                });
-                button.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white', 'active');
-                button.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
-
-                if (functionName === 'generate-qrcode') {
-                    window.location.href = '/index.html';
-                } else if (functionName === 'generate-apikey') {
-                    window.location.href = '/apikey.html';
-                } else if (functionName === 'file-summary') {
-                    window.location.href = '/filesummary.html';
-                } else if (functionName === 'form-details') {
-                    window.location.href = '/formdetails.html';
-                } else if (functionName === 'subform-details') {
-                    window.location.href = '/subformdetails.html';
-                } else if (functionName === 'subform-fields') {
-                    window.location.href = '/subformfields.html';
-                } else if (functionName === 'generate-pdf') {
-                    window.location.href = '/subformsubmitarchive.html';
-                } else if (functionName === 'getdata-salesforce') {
-                    window.location.href = '/getdatafromsalesforce.html';
-                } else if (functionName === 'kyc-agent') {
-                    window.location.href = '/kycagent.html';
-                }
-            });
-        });
-
         // Smooth scroll behavior
         document.documentElement.style.scrollBehavior = 'smooth';
     </script>

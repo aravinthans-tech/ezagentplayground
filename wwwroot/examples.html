@@ -232,6 +232,7 @@
                                 <option value="invoiceocrinsert">Invoice OCR Insert</option>
                                 <option value="invoiceocrget">Invoice OCR Get</option>
                                 <option value="invoiceocrupdate">Invoice OCR Update</option>
+                                <option value="kycagent">KYC Agent</option>
                                 <option value="apikey">Generate API Key</option>
                                 <option value="qrcode">Generate QR Code</option>
                             </select>
@@ -296,19 +297,30 @@
                         </div>
                         
                         <!-- KYC Agent Fields -->
-                        <div id="kycagent-fields" class="hidden">
+                        <div id="kycagent-fields" class="hidden space-y-3">
                             <div>
-                                <label for="fileInputKyc" class="block text-xs font-semibold text-gray-700 mb-1">
-                                    File
+                                <label for="kycExpectedAddress" class="block text-xs font-semibold text-gray-700 mb-1">
+                                    Expected address <span class="text-red-500">*</span>
                                 </label>
-                                <input 
-                                    type="file" 
-                                    id="fileInputKyc" 
-                                    name="file"
-                                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                <input
+                                    type="text"
+                                    id="kycExpectedAddress"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md input-focus"
+                                    placeholder="Full expected address"
+                                    value="10 F2 Narayanasamy Kovil Street, Pettai, Tirunelveli, Tamil Nadu 627004"
                                 />
-                                <p class="mt-1 text-xs text-gray-500">Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                    Documents (2+) <span class="text-red-500">*</span>
+                                </label>
+                                <p class="text-[11px] text-gray-500">multipart field: <code>Documents</code> — PDF/JPG/PNG</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                    Optional: LicenseImage, SelfieImage
+                                </label>
+                                <p class="text-[11px] text-gray-500">For face match via AWS Rekognition</p>
                             </div>
                         </div>
                         
@@ -600,7 +612,7 @@
         const qrValueInput = document.getElementById('qrValue');
         const tokenInput = document.getElementById('token');
         const fileInputExample = document.getElementById('fileInputExample');
-        const fileInputKyc = document.getElementById('fileInputKyc');
+        const kycExpectedAddress = document.getElementById('kycExpectedAddress');
         const ezofisTokenExample = document.getElementById('ezofisTokenExample');
         const formdetailsQuery = document.getElementById('formdetailsQuery');
         const subEzofisTokenExample = document.getElementById('subEzofisTokenExample');
@@ -745,7 +757,7 @@ token: "string"</pre>
                 apiInfoContent.innerHTML = `
                     <div class="border-l-4 border-purple-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Endpoint</div>
-                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/KycAgent/process</code>
+                        <code class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent font-mono">POST /api/KycAgent/verify</code>
                     </div>
                     <div class="border-l-4 border-cyan-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-1">Authentication</div>
@@ -753,22 +765,28 @@ token: "string"</pre>
                     </div>
                     <div class="border-l-4 border-purple-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-2">Request Body (multipart/form-data)</div>
-                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">file: (file upload)</pre>
+                        <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto">Documents: (file) — at least 2 required
+ExpectedAddress: string (required)
+ConsistencyThreshold: 0.82 (optional)
+ModelChoice: Mistral | OpenAI (optional)
+LicenseImage: (file, optional)
+SelfieImage: (file, optional)</pre>
                     </div>
                     <div class="border-l-4 border-cyan-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-2">Success Response</div>
                         <pre class="bg-cyan-50 p-3 rounded text-xs overflow-x-auto">{
-  "output": "decrypted_html_string",
-  "id": 1,
-  "EncryptOutput": null
+  "finalResult": true,
+  "addressConsistencyScore": 1.0,
+  "nameConsistencyScore": 0.95,
+  "statusHtml": "...",
+  "documents": [ ... ],
+  "faceMatch": { "match": true, "matchScore": 5 }
 }</pre>
                     </div>
                     <div class="border-l-4 border-red-500 pl-4">
                         <div class="font-semibold text-gray-700 mb-2">Error Response</div>
                         <pre class="bg-red-50 p-3 rounded text-xs overflow-x-auto">{
-  "output": null,
-  "id": 0,
-  "EncryptOutput": "error message"
+  "statusHtml": "Please upload at least two documents."
 }</pre>
                     </div>
                 `;
@@ -1177,66 +1195,79 @@ if (data.id === 1) {
 }`;
                 document.getElementById('javascript-code').textContent = jsCode;
             } else if (functionType === 'kycagent') {
-                // KYC Agent examples
+                // KYC Agent verify examples
                 const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
                 const escapedApiKey = apiKey.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const expectedAddr = (document.getElementById('kycExpectedAddress')?.value || 'YOUR_EXPECTED_ADDRESS')
+                    .replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
                 // cURL
-                const curlCode = `curl -X POST "${API_BASE_URL}/api/KycAgent/process" \\
+                const curlCode = `curl -X POST "${API_BASE_URL}/api/KycAgent/verify" \\
   -H "X-API-Key: ${escapedApiKey}" \\
-  -F "file=@yourfile.pdf"`;
+  -F "Documents=@doc1.pdf" \\
+  -F "Documents=@doc2.pdf" \\
+  -F "ExpectedAddress=${expectedAddr}" \\
+  -F "ConsistencyThreshold=0.82" \\
+  -F "ModelChoice=Mistral" \\
+  -F "LicenseImage=@license.jpg" \\
+  -F "SelfieImage=@selfie.jpg"`;
                 document.getElementById('curl-code').textContent = curlCode;
 
                 // Python
                 const pythonCode = `import requests
 
-url = "${API_BASE_URL}/api/KycAgent/process"
+url = "${API_BASE_URL}/api/KycAgent/verify"
 headers = {
     "X-API-Key": "${escapedApiKey}"
 }
-files = {
-    "file": ("yourfile.pdf", open("yourfile.pdf", "rb"), "application/pdf")
+files = [
+    ("Documents", ("doc1.pdf", open("doc1.pdf", "rb"), "application/pdf")),
+    ("Documents", ("doc2.pdf", open("doc2.pdf", "rb"), "application/pdf")),
+    ("LicenseImage", ("license.jpg", open("license.jpg", "rb"), "image/jpeg")),
+    ("SelfieImage", ("selfie.jpg", open("selfie.jpg", "rb"), "image/jpeg")),
+]
+data = {
+    "ExpectedAddress": "${expectedAddr}",
+    "ConsistencyThreshold": "0.82",
+    "ModelChoice": "Mistral",
 }
 
-response = requests.post(url, files=files, headers=headers)
+response = requests.post(url, headers=headers, files=files, data=data)
 result = response.json()
 
-if result["id"] == 1:
-    # result["output"] contains the HTML report with extracted KYC data
-    html_content = result["output"]
-    print("KYC Agent HTML:")
-    print(html_content)
-else:
-    print(f"Error: {result['EncryptOutput']}")`;
+print("Final result:", result.get("finalResult"))
+print("Address consistency:", result.get("addressConsistencyScore"))
+print("Name consistency:", result.get("nameConsistencyScore"))
+if result.get("statusHtml"):
+    print(result["statusHtml"])`;
                 document.getElementById('python-code').textContent = pythonCode;
 
                 // JavaScript
-                const fileNameKyc = fileInputKyc && fileInputKyc.files.length > 0 
-                    ? fileInputKyc.files[0].name 
-                    : 'yourfile.pdf';
                 const jsCode = `const formData = new FormData();
-const fileInput = document.getElementById('fileInput'); // Your file input element
-formData.append('file', fileInput.files[0]);
+// At least 2 documents required
+formData.append("Documents", documentInput.files[0]);
+formData.append("Documents", documentInput.files[1]);
+formData.append("ExpectedAddress", "${expectedAddr}");
+formData.append("ConsistencyThreshold", "0.82");
+formData.append("ModelChoice", "Mistral");
+// Optional face match
+if (licenseInput.files[0]) formData.append("LicenseImage", licenseInput.files[0]);
+if (selfieInput.files[0]) formData.append("SelfieImage", selfieInput.files[0]);
 
-const response = await fetch("${API_BASE_URL}/api/KycAgent/process", {
+const response = await fetch("${API_BASE_URL}/api/KycAgent/verify", {
   method: "POST",
   headers: {
     "X-API-Key": "${escapedApiKey}"
-    // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+    // Do not set Content-Type — browser sets multipart boundary
   },
   body: formData
 });
 
 const data = await response.json();
-
-if (data.id === 1) {
-  // data.output contains the HTML report with extracted KYC data
-  console.log("KYC Agent HTML:", data.output);
-  // You can parse and display the HTML
-  document.body.innerHTML = data.output;
-} else {
-  console.error("Error:", data.EncryptOutput);
-}`;
+console.log("Final result:", data.finalResult);
+console.log("Status HTML:", data.statusHtml);
+console.log("Documents:", data.documents);
+console.log("Face match:", data.faceMatch);`;
                 document.getElementById('javascript-code').textContent = jsCode;
             } else if (functionType === 'formdetails') {
                 const apiKey = apiKeyInput.value || 'YOUR_API_KEY';
@@ -1731,8 +1762,8 @@ console.log(text);`;
         if (fileInputExample) {
             fileInputExample.addEventListener('change', updateCodeExamples);
         }
-        if (fileInputKyc) {
-            fileInputKyc.addEventListener('change', updateCodeExamples);
+        if (kycExpectedAddress) {
+            kycExpectedAddress.addEventListener('input', updateCodeExamples);
         }
         ['gpEzofisToken', 'gpFormId', 'gpTemplateId', 'gpEntryIdForFormEntry', 'gpEntryId', 'gpPanelName', 'gpFieldsJson'].forEach((id) => {
             const el = document.getElementById(id);
@@ -1811,7 +1842,8 @@ console.log(text);`;
         const PRODUCT_FUNCTIONS = {
             1: new Set(['formdetails', 'subformdetails', 'subformfields', 'generatepdf', 'getdatafromsalesforce', 'qrcode', 'apikey']),
             2: new Set(['access2payinitiateprocess', 'access2paygetprocesstickets', 'access2payrouteprocessticket', 'access2payinsert', 'access2payget', 'access2payupdate', 'apikey']),
-            3: new Set(['invoiceocrinsert', 'invoiceocrget', 'invoiceocrupdate', 'apikey'])
+            3: new Set(['invoiceocrinsert', 'invoiceocrget', 'invoiceocrupdate', 'apikey']),
+            4: new Set(['kycagent', 'apikey'])
         };
 
         function getProductId() {
@@ -1819,12 +1851,14 @@ console.log(text);`;
                 return window.PlaygroundSidebar.getProductId();
             }
             const id = new URLSearchParams(window.location.search).get('id');
+            if (id === '4') return 4;
             if (id === '3') return 3;
             if (id === '2') return 2;
             return 1;
         }
 
         function defaultFunctionForProduct(pid) {
+            if (pid === 4) return 'kycagent';
             if (pid === 3) return 'invoiceocrinsert';
             if (pid === 2) return 'access2payinitiateprocess';
             return 'formdetails';
@@ -1916,6 +1950,9 @@ console.log(text);`;
                 const kycagentData = loadFromLocalStorage('kycagent');
                 if (kycagentData) {
                     apiKeyInput.value = kycagentData.apiKey || '';
+                }
+                if (kycExpectedAddress && kycagentData?.expectedAddress) {
+                    kycExpectedAddress.value = kycagentData.expectedAddress;
                 }
             } else if (functionType === 'formdetails') {
                 const formdetailsData = loadFromLocalStorage('formdetails_data');

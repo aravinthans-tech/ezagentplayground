@@ -23,20 +23,24 @@ public class AwsRekognitionMatchingService
         _logger = logger;
         _configuration = configuration;
 
-        // Get AWS Rekognition configuration
-        var accessKey = _configuration["ExternalApis:AwsRekognition:AccessKey"]
-            ?? throw new InvalidOperationException("AWS Rekognition Access Key not configured. Please set ExternalApis:AwsRekognition:AccessKey in appsettings.json");
+        // Get AWS Rekognition configuration (trim — trailing spaces cause InvalidClientTokenId)
+        var accessKey = (_configuration["ExternalApis:AwsRekognition:AccessKey"] ?? "").Trim();
+        var secretKey = (_configuration["ExternalApis:AwsRekognition:SecretKey"] ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(accessKey) || string.IsNullOrWhiteSpace(secretKey))
+            throw new InvalidOperationException(
+                "AWS Rekognition AccessKey/SecretKey not configured. Set ExternalApis:AwsRekognition in appsettings.json");
 
-        var secretKey = _configuration["ExternalApis:AwsRekognition:SecretKey"]
-            ?? throw new InvalidOperationException("AWS Rekognition Secret Key not configured. Please set ExternalApis:AwsRekognition:SecretKey in appsettings.json");
-
-        _region = _configuration["ExternalApis:AwsRekognition:Region"] ?? "APSouth1";
+        _region = (_configuration["ExternalApis:AwsRekognition:Region"] ?? "ap-south-1").Trim();
 
         // Create AWS Rekognition client
-        var regionEndpoint = RegionEndpoint.GetBySystemName(_region);
+        var regionEndpoint = RegionEndpoint.GetBySystemName(_region)
+            ?? RegionEndpoint.APSouth1;
         _rekognitionClient = new AmazonRekognitionClient(accessKey, secretKey, regionEndpoint);
 
-        _logger.LogInformation("AwsRekognitionMatchingService initialized with region: {Region}", _region);
+        _logger.LogInformation(
+            "AwsRekognitionMatchingService initialized with region: {Region} accessKeyPrefix: {KeyPrefix}",
+            _region,
+            accessKey.Length >= 8 ? accessKey[..8] + "…" : "(short)");
     }
 
     /// <summary>

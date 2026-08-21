@@ -1,6 +1,6 @@
 /**
  * Shared sidebar — V6 design + full API KEY section (Generate + My API Keys).
- * URL ?id=1 → Daimler Benz | ?id=2 → Access2Pay | ?id=3 → Invoice OCR Agent
+ * URL ?id=1 → Daimler Benz | ?id=2 → Access2Pay | ?id=3 → Invoice OCR Agent | ?id=4 → KYC Agent
  */
 (function () {
     const PRODUCT_ID_STORAGE_KEY = 'playgroundProductId';
@@ -15,13 +15,15 @@
         cloud: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>',
         payment: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>',
         scan: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>',
-        chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>'
+        chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>',
+        user: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>'
     };
 
     const PRODUCT = {
         1: { label: 'Daimler Benz', defaultPath: '/formdetails.html' },
         2: { label: 'Access2Pay', defaultPath: '/access2pay.html#initiateprocess' },
-        3: { label: 'Invoice OCR Agent', defaultPath: '/invoiceocr.html#process' }
+        3: { label: 'Invoice OCR Agent', defaultPath: '/invoiceocr.html#process' },
+        4: { label: 'KYC Agent', defaultPath: '/kycagent.html' }
     };
 
     const FUNCTION_ITEMS = [
@@ -36,7 +38,8 @@
         { href: '/invoiceocr.html#process', label: 'Invoice OCR Process', icon: 'scan', productId: 3 },
         { href: '/invoiceocr.html#insert', label: 'Invoice OCR Insert', icon: 'scan', productId: 3 },
         { href: '/invoiceocr.html#get', label: 'Invoice OCR Get', icon: 'scan', productId: 3 },
-        { href: '/invoiceocr.html#update', label: 'Invoice OCR Update', icon: 'scan', productId: 3 }
+        { href: '/invoiceocr.html#update', label: 'Invoice OCR Update', icon: 'scan', productId: 3 },
+        { href: '/kycagent.html', label: 'KYC Agent', icon: 'user', productId: 4 }
     ];
 
     const PAGE_TO_FUNCTION = {
@@ -60,7 +63,8 @@
         '/subformsubmitarchive.html': 1,
         '/getdatafromsalesforce.html': 1,
         '/access2pay.html': 2,
-        '/invoiceocr.html': 3
+        '/invoiceocr.html': 3,
+        '/kycagent.html': 4
     };
 
     function normalizePath(path) {
@@ -83,15 +87,21 @@
         '/subformsubmitarchive.html',
         '/getdatafromsalesforce.html',
         '/access2pay.html',
-        '/invoiceocr.html'
+        '/invoiceocr.html',
+        '/kycagent.html',
+        '/kyc-documentation.html'
     ]);
 
-    function readUrlProductId() {
-        const id = new URLSearchParams(window.location.search).get('id');
-        if (id === '3') return 3;
-        if (id === '2') return 2;
-        if (id === '1') return 1;
+    function parseProductId(raw) {
+        if (raw === '4' || raw === 4) return 4;
+        if (raw === '3' || raw === 3) return 3;
+        if (raw === '2' || raw === 2) return 2;
+        if (raw === '1' || raw === 1) return 1;
         return null;
+    }
+
+    function readUrlProductId() {
+        return parseProductId(new URLSearchParams(window.location.search).get('id'));
     }
 
     function getProductId() {
@@ -101,16 +111,14 @@
             return fromUrl;
         }
         try {
-            const stored = sessionStorage.getItem(PRODUCT_ID_STORAGE_KEY);
-            if (stored === '3') return 3;
-            if (stored === '2') return 2;
-            if (stored === '1') return 1;
+            const stored = parseProductId(sessionStorage.getItem(PRODUCT_ID_STORAGE_KEY));
+            if (stored !== null) return stored;
         } catch (_) {}
         return 1;
     }
 
     function setProductId(productId) {
-        const id = (productId === 3 || productId === 2) ? productId : 1;
+        const id = parseProductId(productId) || 1;
         try { sessionStorage.setItem(PRODUCT_ID_STORAGE_KEY, String(id)); } catch (_) {}
         return id;
     }

@@ -47,7 +47,7 @@
                         <label for="docFunctionSelect">Show documentation for</label>
                         <select id="docFunctionSelect" aria-label="Function type">
                             <option value="all">All functions</option>
-                            <option value="api-key" data-product-ids="1,2,3">API key</option>
+                            <option value="api-key" data-product-ids="1,2,3,4">API key</option>
                             <option value="form-details" data-product-ids="1">Form Details</option>
                             <option value="subform-details" data-product-ids="1">SubForm Details</option>
                             <option value="subform-fields" data-product-ids="1">SubForm Fields</option>
@@ -59,6 +59,7 @@
                             <option value="invoiceocr-insert" data-product-ids="3">Invoice OCR Insert</option>
                             <option value="invoiceocr-get" data-product-ids="3">Invoice OCR Get</option>
                             <option value="invoiceocr-update" data-product-ids="3">Invoice OCR Update</option>
+                            <option value="kyc-agent" data-product-ids="4">KYC Agent</option>
                         </select>
                     </div>
                 </div>
@@ -418,6 +419,21 @@
                             </div>
                         </article>
                     </section>
+
+                    <section id="kyc-agent" data-doc-function="kyc-agent" data-product-id="4" class="doc-section anchor">
+                        <article class="doc-card">
+                            <h2 class="doc-h2">KYC Agent</h2>
+                            <p class="doc-lead">Verify identity documents and face match via <code>POST /api/KycAgent/verify</code>.</p>
+                            <div class="doc-body space-y-3">
+                                <p class="doc-note">Full field reference and examples: <a href="/kyc-documentation.html?id=4">KYC documentation</a> · Playground: <a href="/kycagent.html?id=4">KYC Agent</a></p>
+                                <ul class="doc-list">
+                                    <li>Upload license / ID documents and a selfie</li>
+                                    <li>Optional expected address + consistency threshold</li>
+                                    <li>Requires playground <code>X-API-Key</code></li>
+                                </ul>
+                            </div>
+                        </article>
+                    </section>
                 </div>
             </div>
         </main>
@@ -463,6 +479,14 @@
                         'invoiceocr-get': 'Get',
                         'invoiceocr-update': 'Update'
                     }
+                },
+                4: {
+                    label: 'KYC Agent',
+                    functions: ['api-key', 'kyc-agent'],
+                    jumpLabels: {
+                        'api-key': 'API key',
+                        'kyc-agent': 'KYC Agent'
+                    }
                 }
             };
 
@@ -481,7 +505,8 @@
                 access2payupdate: 'access2pay-routeprocessticket',
                 invoiceocrinsert: 'invoiceocr-insert',
                 invoiceocrget: 'invoiceocr-get',
-                invoiceocrupdate: 'invoiceocr-update'
+                invoiceocrupdate: 'invoiceocr-update',
+                kycagent: 'kyc-agent'
             };
 
             function getProductId() {
@@ -489,6 +514,7 @@
                     return PlaygroundSidebar.getProductId();
                 }
                 const id = new URLSearchParams(window.location.search).get('id');
+                if (id === '4') return 4;
                 if (id === '3') return 3;
                 if (id === '2') return 2;
                 return 1;
@@ -522,7 +548,9 @@
                     subtitle.innerHTML =
                         'API reference for <strong>' + config.label + '</strong>. ' +
                         '<a href="/examples.html?id=' + productId + '" id="docExamplesLink">Code examples</a> &middot; ' +
-                        '<a href="/kyc-documentation.html">KYC docs</a>';
+                        (productId === 4
+                            ? '<a href="/kyc-documentation.html?id=4">KYC docs</a>'
+                            : '<a href="/kyc-documentation.html">KYC docs</a>');
                 } else if (examplesLink) {
                     examplesLink.href = '/examples.html?id=' + productId;
                 }
