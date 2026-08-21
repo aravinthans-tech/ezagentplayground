@@ -16,7 +16,10 @@ public class ApiKeyService
     }
 
     public string? GetConnectionString() =>
-        _configuration.GetConnectionString("eZApiTenantContext");
+        ConfigValue.Get(_configuration, "ConnectionStrings:eZApiTenantContext", "eZApiTenantContext")
+        is { Length: > 0 } cs
+            ? cs
+            : _configuration.GetConnectionString("eZApiTenantContext");
 
     public async Task<(string TenantId, string Token)?> GetTenantAndTokenAsync(string userName, SqlConnection connection)
     {

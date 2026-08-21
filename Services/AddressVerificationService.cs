@@ -18,8 +18,20 @@ public class AddressVerificationService
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _configuration = configuration;
-        _googleMapsApiKey = _configuration["ExternalApis:GoogleMaps:ApiKey"] ?? string.Empty;
-        _geocodingUrl = _configuration["ExternalApis:GoogleMaps:GeocodingUrl"] ?? "https://maps.googleapis.com/maps/api/geocode/json";
+        _googleMapsApiKey = ConfigValue.Get(
+            _configuration,
+            "ExternalApis:GoogleMaps:ApiKey",
+            "GoogleMapsApiKey");
+        _geocodingUrl = ConfigValue.Get(
+            _configuration,
+            "ExternalApis:GoogleMaps:GeocodingUrl")
+            is { Length: > 0 } url
+            ? url
+            : "https://maps.googleapis.com/maps/api/geocode/json";
+        if (string.IsNullOrWhiteSpace(_googleMapsApiKey))
+            _logger.LogWarning("Google Maps API key not found (ExternalApis__GoogleMaps__ApiKey or GoogleMapsApiKey)");
+        else
+            _logger.LogInformation("Google Maps API key loaded (length={Length})", _googleMapsApiKey.Length);
     }
 
     public async Task<(bool verified, string formattedAddress)> VerifyAddress(string address)

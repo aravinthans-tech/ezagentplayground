@@ -23,14 +23,32 @@ public class AwsRekognitionMatchingService
         _logger = logger;
         _configuration = configuration;
 
-        // Get AWS Rekognition configuration (trim — trailing spaces cause InvalidClientTokenId)
-        var accessKey = (_configuration["ExternalApis:AwsRekognition:AccessKey"] ?? "").Trim();
-        var secretKey = (_configuration["ExternalApis:AwsRekognition:SecretKey"] ?? "").Trim();
+        // Nested appsettings / ExternalApis__AwsRekognition__* env, plus short deploy secret names
+        var accessKey = ConfigValue.Get(
+            _configuration,
+            "ExternalApis:AwsRekognition:AccessKey",
+            "AwsRekognition__AccessKey",
+            "AwsRekognitionAccessKey",
+            "AWS_ACCESS_KEY_ID");
+        var secretKey = ConfigValue.Get(
+            _configuration,
+            "ExternalApis:AwsRekognition:SecretKey",
+            "AwsRekognition__SecretKey",
+            "AwsRekognitionSecretKey",
+            "AWS_SECRET_ACCESS_KEY");
         if (string.IsNullOrWhiteSpace(accessKey) || string.IsNullOrWhiteSpace(secretKey))
             throw new InvalidOperationException(
-                "AWS Rekognition AccessKey/SecretKey not configured. Set ExternalApis:AwsRekognition in appsettings.json");
+                "AWS Rekognition AccessKey/SecretKey not configured. " +
+                "Set ExternalApis__AwsRekognition__AccessKey and ExternalApis__AwsRekognition__SecretKey (or appsettings ExternalApis:AwsRekognition).");
 
-        _region = (_configuration["ExternalApis:AwsRekognition:Region"] ?? "ap-south-1").Trim();
+        _region = ConfigValue.Get(
+            _configuration,
+            "ExternalApis:AwsRekognition:Region",
+            "AwsRekognition__Region",
+            "AwsRekognitionRegion",
+            "AWS_DEFAULT_REGION");
+        if (string.IsNullOrWhiteSpace(_region))
+            _region = "ap-south-1";
 
         // Create AWS Rekognition client
         var regionEndpoint = RegionEndpoint.GetBySystemName(_region)
@@ -38,9 +56,10 @@ public class AwsRekognitionMatchingService
         _rekognitionClient = new AmazonRekognitionClient(accessKey, secretKey, regionEndpoint);
 
         _logger.LogInformation(
-            "AwsRekognitionMatchingService initialized with region: {Region} accessKeyPrefix: {KeyPrefix}",
+            "AwsRekognitionMatchingService initialized with region: {Region} accessKeyPrefix: {KeyPrefix} accessKeyConfigured: {HasKey}",
             _region,
-            accessKey.Length >= 8 ? accessKey[..8] + "…" : "(short)");
+            accessKey.Length >= 8 ? accessKey[..8] + "…" : "(short)",
+            !string.IsNullOrWhiteSpace(accessKey));
     }
 
     /// <summary>
@@ -151,10 +170,15 @@ public class AwsRekognitionMatchingService
 
             return bestFace;
         }
+        catch (AmazonRekognitionException)
+        {
+            // Auth / quota / invalid token — bubble up so UI shows real AWS error (not "no face")
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error detecting face in {ImageType} image", imageType);
-            return null;
+            throw;
         }
     }
 

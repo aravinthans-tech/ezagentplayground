@@ -19,8 +19,10 @@ public class ConsistencyCheckService
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _configuration = configuration;
-        _openRouterApiKey = _configuration["ExternalApis:OpenRouter:ApiKey"] ?? string.Empty;
-        _openRouterBaseUrl = _configuration["ExternalApis:OpenRouter:BaseUrl"] ?? "https://openrouter.ai/api/v1";
+        _openRouterApiKey = ConfigValue.Get(_configuration, "ExternalApis:OpenRouter:ApiKey", "OpenRouterApiKey");
+        _openRouterBaseUrl = ConfigValue.Get(_configuration, "ExternalApis:OpenRouter:BaseUrl");
+        if (string.IsNullOrWhiteSpace(_openRouterBaseUrl))
+            _openRouterBaseUrl = "https://openrouter.ai/api/v1";
     }
 
     public async Task<(double similarity, bool match)> SemanticMatch(string text1, string text2, double threshold = 0.82)

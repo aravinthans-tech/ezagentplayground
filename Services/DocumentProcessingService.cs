@@ -30,16 +30,26 @@ public class DocumentProcessingService
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _configuration = configuration;
-        _unstractApiKey = _configuration["ExternalApis:Unstract:ApiKey"] ?? string.Empty;
-        _unstractBaseUrl = _configuration["ExternalApis:Unstract:BaseUrl"] ?? "https://llmwhisperer-api.us-central.unstract.com/api/v2";
-        _openRouterApiKey = _configuration["ExternalApis:OpenRouter:ApiKey"] ?? string.Empty;
-        _openRouterBaseUrl = _configuration["ExternalApis:OpenRouter:BaseUrl"] ?? "https://openrouter.ai/api/v1";
-        _mistralModelName = _configuration["ExternalApis:OpenRouter:MistralModel"] ?? "mistralai/mistral-7b-instruct:free";
-        _openAiModelName = _configuration["ExternalApis:OpenRouter:OpenAiModel"] ?? "openai/gpt-4o";
-        _azureOpenAiEndpoint4oMini = _configuration["ExternalApis:AzureOpenAI:Endpoint4oMini"] ?? string.Empty;
-        _azureOpenAiDeployment4oMini = _configuration["ExternalApis:AzureOpenAI:Deployment4oMini"] ?? string.Empty;
-        _azureOpenAiApiVersion4oMini = _configuration["ExternalApis:AzureOpenAI:ApiVersion4oMini"] ?? "2024-08-01-preview";
-        _azureOpenAiApiKey = _configuration["ExternalApis:AzureOpenAI:ApiKey"] ?? string.Empty;
+        _unstractApiKey = ConfigValue.Get(_configuration, "ExternalApis:Unstract:ApiKey", "UnstractApiKey");
+        _unstractBaseUrl = ConfigValue.Get(_configuration, "ExternalApis:Unstract:BaseUrl");
+        if (string.IsNullOrWhiteSpace(_unstractBaseUrl))
+            _unstractBaseUrl = "https://llmwhisperer-api.us-central.unstract.com/api/v2";
+        _openRouterApiKey = ConfigValue.Get(_configuration, "ExternalApis:OpenRouter:ApiKey", "OpenRouterApiKey");
+        _openRouterBaseUrl = ConfigValue.Get(_configuration, "ExternalApis:OpenRouter:BaseUrl");
+        if (string.IsNullOrWhiteSpace(_openRouterBaseUrl))
+            _openRouterBaseUrl = "https://openrouter.ai/api/v1";
+        _mistralModelName = ConfigValue.Get(_configuration, "ExternalApis:OpenRouter:MistralModel");
+        if (string.IsNullOrWhiteSpace(_mistralModelName))
+            _mistralModelName = "mistralai/mistral-7b-instruct:free";
+        _openAiModelName = ConfigValue.Get(_configuration, "ExternalApis:OpenRouter:OpenAiModel");
+        if (string.IsNullOrWhiteSpace(_openAiModelName))
+            _openAiModelName = "openai/gpt-4o";
+        _azureOpenAiEndpoint4oMini = ConfigValue.Get(_configuration, "ExternalApis:AzureOpenAI:Endpoint4oMini");
+        _azureOpenAiDeployment4oMini = ConfigValue.Get(_configuration, "ExternalApis:AzureOpenAI:Deployment4oMini");
+        _azureOpenAiApiVersion4oMini = ConfigValue.Get(_configuration, "ExternalApis:AzureOpenAI:ApiVersion4oMini");
+        if (string.IsNullOrWhiteSpace(_azureOpenAiApiVersion4oMini))
+            _azureOpenAiApiVersion4oMini = "2024-08-01-preview";
+        _azureOpenAiApiKey = ConfigValue.Get(_configuration, "ExternalApis:AzureOpenAI:ApiKey");
     }
 
     public async Task<string> ExtractTextFromFile(IFormFile file)
