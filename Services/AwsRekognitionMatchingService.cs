@@ -23,23 +23,19 @@ public class AwsRekognitionMatchingService
         _logger = logger;
         _configuration = configuration;
 
-        // Nested appsettings / ExternalApis__AwsRekognition__* env, plus short deploy secret names
-        var accessKey = ConfigValue.Get(
+        // Prefer a matched AccessKey+SecretKey pair from the same source (never mix env vars).
+        // Do NOT fall back to AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — hosts often inject
+        // stale/invalid values that cause UnrecognizedClientException.
+        var (accessKey, secretKey, source) = ConfigValue.GetPair(
             _configuration,
-            "ExternalApis:AwsRekognition:AccessKey",
-            "AwsRekognition__AccessKey",
-            "AwsRekognitionAccessKey",
-            "AWS_ACCESS_KEY_ID");
-        var secretKey = ConfigValue.Get(
-            _configuration,
-            "ExternalApis:AwsRekognition:SecretKey",
-            "AwsRekognition__SecretKey",
-            "AwsRekognitionSecretKey",
-            "AWS_SECRET_ACCESS_KEY");
+            ("ExternalApis:AwsRekognition:AccessKey", "ExternalApis:AwsRekognition:SecretKey"),
+            ("AwsRekognition__AccessKey", "AwsRekognition__SecretKey"),
+            ("AwsRekognitionAccessKey", "AwsRekognitionSecretKey"));
         if (string.IsNullOrWhiteSpace(accessKey) || string.IsNullOrWhiteSpace(secretKey))
             throw new InvalidOperationException(
                 "AWS Rekognition AccessKey/SecretKey not configured. " +
-                "Set ExternalApis__AwsRekognition__AccessKey and ExternalApis__AwsRekognition__SecretKey (or appsettings ExternalApis:AwsRekognition).");
+                "Set ExternalApis__AwsRekognition__AccessKey and ExternalApis__AwsRekognition__SecretKey " +
+                "(same IAM user pair as local; no quotes around values).");
 
         _region = ConfigValue.Get(
             _configuration,
@@ -50,16 +46,17 @@ public class AwsRekognitionMatchingService
         if (string.IsNullOrWhiteSpace(_region))
             _region = "ap-south-1";
 
-        // Create AWS Rekognition client
         var regionEndpoint = RegionEndpoint.GetBySystemName(_region)
             ?? RegionEndpoint.APSouth1;
         _rekognitionClient = new AmazonRekognitionClient(accessKey, secretKey, regionEndpoint);
 
         _logger.LogInformation(
-            "AwsRekognitionMatchingService initialized with region: {Region} accessKeyPrefix: {KeyPrefix} accessKeyConfigured: {HasKey}",
+            "AwsRekognitionMatchingService initialized region={Region} source={Source} accessKeyPrefix={KeyPrefix} accessKeyLen={AccessLen} secretKeyLen={SecretLen}",
             _region,
-            accessKey.Length >= 8 ? accessKey[..8] + "…" : "(short)",
-            !string.IsNullOrWhiteSpace(accessKey));
+            source,
+            accessKey.Length >= 4 ? accessKey[..4] + "…" : "(short)",
+            accessKey.Length,
+            secretKey.Length);
     }
 
     /// <summary>
@@ -111,7 +108,10 @@ public class AwsRekognitionMatchingService
         catch (AmazonRekognitionException ex)
         {
             _logger.LogError(ex, "AWS Rekognition error: {ErrorCode} - {Message}", ex.ErrorCode, ex.Message);
-            return (null, null, false, 0, $"❌ Face matching error: AWS Rekognition error ({ex.ErrorCode}): {ex.Message}");
+            var hint = ex.ErrorCode is "UnrecognizedClientException" or "InvalidClientTokenId" or "SignatureDoesNotMatch"
+                ? " Check deploy secrets: ExternalApis__AwsRekognition__AccessKey + SecretKey must be the same IAM pair as local (no quotes, no spaces, restart after change)."
+                : "";
+            return (null, null, false, 0, $"❌ Face matching error: AWS Rekognition error ({ex.ErrorCode}): {ex.Message}.{hint}");
         }
         catch (Exception ex)
         {

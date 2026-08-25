@@ -339,16 +339,32 @@
                                     <span class="ml-1 text-xs text-green-600 font-medium">Documents Matched</span>
                                 </span>
                             </label>
-                            <input 
-                                type="file" 
-                                id="documentsInput" 
-                                name="documents"
-                                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                                multiple
-                                class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
-                                required
-                            />
-                            <p class="mt-0.5 text-xs text-gray-500">Upload at least 2 documents</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label for="document1Input" class="block text-[11px] text-gray-600 mb-0.5">Document 1</label>
+                                    <input
+                                        type="file"
+                                        id="document1Input"
+                                        name="documents"
+                                        accept=".jpg,.jpeg,.jpe,.png,.pdf,image/jpeg,image/png,image/pjpeg,application/pdf"
+                                        class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label for="document2Input" class="block text-[11px] text-gray-600 mb-0.5">Document 2</label>
+                                    <input
+                                        type="file"
+                                        id="document2Input"
+                                        name="documents"
+                                        accept=".jpg,.jpeg,.jpe,.png,.pdf,image/jpeg,image/png,image/pjpeg,application/pdf"
+                                        class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <input type="file" id="documentsInput" name="documentsCombined" class="hidden" multiple />
+                            <p class="mt-0.5 text-xs text-gray-500">Accepted: JPG, JPEG, JPE, PNG, PDF</p>
                             <!-- Document Previews -->
                             <div id="documentsPreview" class="hidden mt-3">
                                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2" id="documentsPreviewGrid">
@@ -402,9 +418,10 @@
                                 type="file" 
                                 id="licenseImage" 
                                 name="licenseImage"
-                                accept=".jpg,.jpeg,.png"
+                                accept=".jpg,.jpeg,.jpe,.png,.pdf,image/jpeg,image/png,image/pjpeg,application/pdf"
                                 class="w-full px-2 py-1.5 text-xs border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 input-focus file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
                             />
+                            <p class="mt-0.5 text-xs text-gray-500">Accepted: PNG, JPG, JPEG, PDF</p>
                             <!-- License Image Preview -->
                             <div id="licensePreview" class="hidden mt-2 relative">
                                 <div class="relative border-2 border-cyan-300 rounded-lg overflow-hidden bg-gray-100">
@@ -565,6 +582,31 @@
         const verificationErrorSection = document.getElementById('verificationErrorSection');
         const verificationErrorMessage = document.getElementById('verificationErrorMessage');
 
+        function isLicenseUploadFile(file) {
+            if (!file) return false;
+            const types = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'application/pdf'];
+            return types.includes(file.type) || /\.(jpg|jpeg|jpe|png|pdf)$/i.test(file.name);
+        }
+
+        async function pdfFirstPageToDataUrl(file) {
+            const typedArray = new Uint8Array(await file.arrayBuffer());
+            const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2.0 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            return canvas.toDataURL('image/jpeg', 0.92);
+        }
+
+        async function pdfFirstPageToJpegFile(file, fileName) {
+            const dataUrl = await pdfFirstPageToDataUrl(file);
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            return new File([blob], fileName || 'license.jpg', { type: 'image/jpeg' });
+        }
+
         // Image Preview Handlers
         function setupImagePreview(inputId, previewId, imgId) {
             const input = document.getElementById(inputId);
@@ -572,17 +614,30 @@
             const img = document.getElementById(imgId);
             
             if (input && preview && img) {
-                input.addEventListener('change', function(e) {
+                input.addEventListener('change', async function(e) {
                     const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            img.src = e.target.result;
-                            preview.classList.remove('hidden');
-                            preview.classList.add('animate-fadeInUp');
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
+                    if (!file) {
+                        preview.classList.add('hidden');
+                        return;
+                    }
+                    if (inputId === 'licenseImage' && !isLicenseUploadFile(file)) {
+                        alert('Please upload PNG, JPG, JPEG, or PDF.');
+                        input.value = '';
+                        preview.classList.add('hidden');
+                        return;
+                    }
+                    try {
+                        if (isPdfFile(file)) {
+                            img.src = await pdfFirstPageToDataUrl(file);
+                        } else {
+                            img.src = URL.createObjectURL(file);
+                        }
+                        preview.classList.remove('hidden');
+                        preview.classList.add('animate-fadeInUp');
+                    } catch (err) {
+                        console.error('Preview failed:', err);
+                        alert('Could not preview this file. Please try PNG, JPG, JPEG, or PDF.');
+                        input.value = '';
                         preview.classList.add('hidden');
                     }
                 });
@@ -758,8 +813,19 @@
         let selectedFiles = [];
 
         function isImageFile(file) {
-            const imageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-            return imageTypes.includes(file.type) || /\.(jpg|jpeg|png)$/i.test(file.name);
+            const imageTypes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png'];
+            return imageTypes.includes(file.type) || /\.(jpg|jpeg|jpe|png)$/i.test(file.name);
+        }
+
+        function isAllowedDocument(file) {
+            if (!file) return false;
+            return isImageFile(file) || isPdfFile(file);
+        }
+
+        function collectDocumentFiles() {
+            const doc1 = document.getElementById('document1Input')?.files?.[0];
+            const doc2 = document.getElementById('document2Input')?.files?.[0];
+            return [doc1, doc2].filter(Boolean);
         }
 
         function isPdfFile(file) {
@@ -823,6 +889,7 @@
                 'txt': 'TXT',
                 'jpg': 'IMG',
                 'jpeg': 'IMG',
+                'jpe': 'IMG',
                 'png': 'IMG'
             };
             return iconMap[ext] || 'FILE';
@@ -984,14 +1051,20 @@
 
         function updateFileInput() {
             const documentsInput = document.getElementById('documentsInput');
-            if (!documentsInput) return;
-            
-            // Create a new DataTransfer object to update the file input
-            const dataTransfer = new DataTransfer();
-            selectedFiles.forEach(file => {
-                dataTransfer.items.add(file);
-            });
-            documentsInput.files = dataTransfer.files;
+            if (documentsInput) {
+                const dataTransfer = new DataTransfer();
+                selectedFiles.forEach(file => dataTransfer.items.add(file));
+                documentsInput.files = dataTransfer.files;
+            }
+
+            const doc1 = document.getElementById('document1Input');
+            const doc2 = document.getElementById('document2Input');
+            const dt1 = new DataTransfer();
+            const dt2 = new DataTransfer();
+            if (selectedFiles[0]) dt1.items.add(selectedFiles[0]);
+            if (selectedFiles[1]) dt2.items.add(selectedFiles[1]);
+            if (doc1) doc1.files = dt1.files;
+            if (doc2) doc2.files = dt2.files;
         }
 
         // Setup image previews when page loads
@@ -1000,25 +1073,23 @@
             setupImagePreview('selfieImage', 'selfiePreview', 'selfiePreviewImg');
             
             // Setup document previews
-            const documentsInput = document.getElementById('documentsInput');
-            if (documentsInput) {
-                console.log('Setting up document preview event listener');
-                documentsInput.addEventListener('change', function(e) {
-                    const files = Array.from(e.target.files);
-                    console.log('Files selected:', files.length, files.map(f => f.name));
-                    selectedFiles = files;
-                    updateDocumentPreviews();
-                });
-                
-                // Initialize document previews if files are already selected
-                if (documentsInput.files.length > 0) {
-                    console.log('Initializing with existing files:', documentsInput.files.length);
-                    selectedFiles = Array.from(documentsInput.files);
-                    updateDocumentPreviews();
+            const document1Input = document.getElementById('document1Input');
+            const document2Input = document.getElementById('document2Input');
+
+            function refreshDocumentsFromSlots() {
+                const files = collectDocumentFiles();
+                const rejected = files.filter(f => !isAllowedDocument(f));
+                if (rejected.length) {
+                    alert('Please upload JPG, JPEG, PNG, or PDF files only.');
                 }
-            } else {
-                console.error('documentsInput not found');
+                selectedFiles = files.filter(isAllowedDocument);
+                updateFileInput();
+                updateDocumentPreviews();
             }
+
+            if (document1Input) document1Input.addEventListener('change', refreshDocumentsFromSlots);
+            if (document2Input) document2Input.addEventListener('change', refreshDocumentsFromSlots);
+            refreshDocumentsFromSlots();
         });
 
         const API_BASE_URL = window.location.origin;
@@ -1366,14 +1437,14 @@
                 console.log('Verify button clicked');
                 
                 const apiKey = document.getElementById('apiKey')?.value.trim() || '';
-                const documentsInput = document.getElementById('documentsInput');
+                const documents = collectDocumentFiles().filter(isAllowedDocument);
                 const expectedAddress = document.getElementById('expectedAddress')?.value.trim() || '';
                 const modelChoice = 'Mistral'; // Default to Mistral
                 const consistencyThreshold = parseFloat(document.getElementById('consistencyThreshold')?.value || '0.82');
                 const licenseImage = document.getElementById('licenseImage')?.files[0];
                 const selfieImage = document.getElementById('selfieImage')?.files[0];
 
-                console.log('Form values:', { apiKey: apiKey ? '***' : 'empty', documentsCount: documentsInput?.files?.length, expectedAddress });
+                console.log('Form values:', { apiKey: apiKey ? '***' : 'empty', documentsCount: documents.length, expectedAddress });
 
                 // Get progress indicator elements
                 const apiKeyCheckmark = document.getElementById('apiKeyCheckmark');
@@ -1416,8 +1487,8 @@
                     console.log('API key validation check:', e);
                 }
 
-                if (!documentsInput || !documentsInput.files || documentsInput.files.length < 2) {
-                    if (verificationErrorMessage) verificationErrorMessage.textContent = 'Please upload at least 2 documents';
+                if (documents.length < 2) {
+                    if (verificationErrorMessage) verificationErrorMessage.textContent = 'Please upload 2 documents (JPG, JPEG, PNG, or PDF)';
                     if (verificationErrorSection) verificationErrorSection.classList.remove('hidden');
                     return;
                 }
@@ -1463,8 +1534,8 @@
                     const formData = new FormData();
                     
                     // Add all documents
-                    for (let i = 0; i < documentsInput.files.length; i++) {
-                        formData.append('documents', documentsInput.files[i]);
+                    for (const file of documents) {
+                        formData.append('documents', file);
                     }
                     
                     formData.append('expectedAddress', expectedAddress);
@@ -1472,7 +1543,10 @@
                     formData.append('consistencyThreshold', consistencyThreshold.toString());
                     
                     if (licenseImage) {
-                        formData.append('licenseImage', licenseImage);
+                        const licenseForApi = isPdfFile(licenseImage)
+                            ? await pdfFirstPageToJpegFile(licenseImage, 'license.jpg')
+                            : licenseImage;
+                        formData.append('licenseImage', licenseForApi);
                     }
                     if (selfieImage) {
                         formData.append('selfieImage', selfieImage);
@@ -1609,7 +1683,7 @@
                         expectedAddress: expectedAddress,
                         consistencyThreshold: consistencyThreshold,
                         modelChoice: modelChoice,
-                        documentsCount: documentsInput.files.length,
+                        documentsCount: documents.length,
                         hasLicenseImage: !!licenseImage,
                         hasSelfieImage: !!selfieImage,
                         verificationResult: result
