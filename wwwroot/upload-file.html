@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload File To Repository - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="css/playground-animations.css">
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-shell.js" defer></script>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-neutral-100 to-neutral-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260721" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 text-sm">
+            <a href="examples.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div id="toast" class="hidden fixed top-14 right-4 z-50 bg-white shadow-lg rounded-lg p-3 border-l-4 border-neutral-800 max-w-md">
+        <p id="toastMessage" class="text-sm font-medium text-neutral-900"></p>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="sidebar"></aside>
+        <script src="js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/upload-file.html');</script>
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-4 py-1 animate-fadeInUp">
+                    <h2 class="text-xl font-semibold text-gray-900">Upload File To Repository</h2>
+                    <p class="text-xs text-gray-600 mt-1">
+                        One call: OCR via <code class="bg-gray-100 px-1 rounded">uploadForOcr</code>, then archive with that metadata via <code class="bg-gray-100 px-1 rounded">upload-archive</code>
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 space-y-3 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-base font-semibold text-gray-900">Request</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
+                            <input type="text" id="apiKey" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono" placeholder="X-API-Key value" autocomplete="off">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Repository name <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="repositoryName" class="w-full appearance-none border border-gray-300 rounded-md px-3 py-2 pr-9 text-sm bg-white">
+                                    <option value="">Enter API key to load repositories…</option>
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-500" aria-hidden="true">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </span>
+                            </div>
+                            <p id="repoHint" class="text-[11px] text-gray-500 mt-1">Repositories load for this API key’s tenant.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">File <span class="text-red-500">*</span></label>
+                            <input type="file" id="uploadFile" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" accept=".pdf,image/*,.tif,.tiff">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">ocrType</label>
+                                <input type="text" id="ocrType" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="ADVANCED" value="ADVANCED">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">pageNo</label>
+                                <input type="text" id="pageNo" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="1" value="1">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">fields <span class="text-gray-400 font-normal">(from repository)</span></label>
+                            <pre id="fieldsPreview" class="w-full border border-gray-200 rounded-md px-3 py-2 text-[11px] font-mono bg-gray-50 text-gray-700 overflow-auto max-h-36 whitespace-pre-wrap">Select a repository to load fields…</pre>
+                            <p id="fieldsHint" class="text-[11px] text-gray-500 mt-1">Loaded from repository field definitions and sent automatically with OCR.</p>
+                        </div>
+                        <p class="text-[11px] text-gray-500">Flow: resolve repository → load fields → OCR → build metadata → upload-archive.</p>
+                        <button type="button" id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium pg-btn-primary flex items-center justify-center gap-2">
+                            <span id="btnLabel">Upload File To Repository</span>
+                            <svg id="spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        </button>
+                        <div id="errBox" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-md p-2.5"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-base font-semibold text-gray-900 mb-2">Response</h3>
+                        <div id="emptyHint" class="text-gray-500 text-xs text-center py-10">Submit to see OCR metadata + archive result.</div>
+                        <pre id="response" class="hidden bg-gray-50 border rounded p-3 text-xs overflow-auto max-h-[75vh]"></pre>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-end">
+                            <a href="examples.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-neutral-800 hover:bg-neutral-900">Code examples</a>
+                            <a href="playground-documentation.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">Docs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/playground-common.js"></script>
+    <script>
+        const PC = window.PlaygroundCommon;
+        PC.restoreFields();
+
+        const apiKeyInput = document.getElementById('apiKey');
+        const repoSelect = document.getElementById('repositoryName');
+        const repoHint = document.getElementById('repoHint');
+        const fieldsPreview = document.getElementById('fieldsPreview');
+        const fieldsHint = document.getElementById('fieldsHint');
+        let lastLoadedKey = '';
+        let loadSeq = 0;
+        let fieldsSeq = 0;
+        let currentFieldsJson = '';
+
+        function reposUrl() {
+            return window.PlaygroundBase
+                ? PlaygroundBase.apiUrl('/api/v6/repositories')
+                : '/api/v6/repositories';
+        }
+
+        function repoDetailUrl(id) {
+            return window.PlaygroundBase
+                ? PlaygroundBase.apiUrl('/api/v6/repositories/' + id)
+                : '/api/v6/repositories/' + id;
+        }
+
+        function buildFieldsJson(fields) {
+            if (!Array.isArray(fields) || !fields.length) return '';
+            const rows = fields.map(function (f) {
+                return {
+                    level: f.level != null ? f.level : (f.Level != null ? f.Level : 0),
+                    order: f.orderId != null ? f.orderId : (f.OrderId != null ? f.OrderId : 999999),
+                    name: (f.name || f.Name || '').trim(),
+                    type: (f.dataType || f.DataType || 'SHORT_TEXT').trim()
+                };
+            }).filter(function (r) { return !!r.name; })
+              .sort(function (a, b) { return a.level - b.level || a.order - b.order; });
+            return JSON.stringify(rows.map(function (r) { return r.name + ', ' + r.type; }));
+        }
+
+        function clearFieldsPreview(msg) {
+            currentFieldsJson = '';
+            fieldsPreview.textContent = msg || 'Select a repository to load fields…';
+            fieldsHint.textContent = 'Loaded from repository field definitions and sent automatically with OCR.';
+        }
+
+        async function loadRepositoryFields() {
+            const apiKey = apiKeyInput.value.trim();
+            const selected = repoSelect.options[repoSelect.selectedIndex];
+            const id = selected && selected.dataset ? selected.dataset.id : '';
+            if (!apiKey || !id) {
+                clearFieldsPreview();
+                return;
+            }
+            const seq = ++fieldsSeq;
+            fieldsPreview.textContent = 'Loading fields…';
+            fieldsHint.textContent = 'Fetching repository field definitions…';
+            try {
+                const res = await fetch(repoDetailUrl(id), {
+                    method: 'GET',
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const text = await res.text();
+                if (seq !== fieldsSeq) return;
+                let data;
+                try { data = JSON.parse(text); } catch (_) { data = null; }
+                if (!res.ok) {
+                    clearFieldsPreview((data && (data.error || data.message)) || 'Could not load fields.');
+                    return;
+                }
+                const fields = (data && (data.fields || data.Fields)) || [];
+                currentFieldsJson = buildFieldsJson(fields);
+                if (!currentFieldsJson) {
+                    clearFieldsPreview('No fields defined on this repository.');
+                    return;
+                }
+                fieldsPreview.textContent = currentFieldsJson;
+                const count = JSON.parse(currentFieldsJson).length;
+                fieldsHint.textContent = count + ' field(s) loaded — passed automatically on upload.';
+            } catch (e) {
+                if (seq !== fieldsSeq) return;
+                clearFieldsPreview(e.message || String(e));
+            }
+        }
+
+        function setRepoOptions(items, selectedName) {
+            const prev = selectedName || repoSelect.value || '';
+            repoSelect.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = items.length ? 'Select a repository…' : 'No repositories found';
+            repoSelect.appendChild(placeholder);
+            items.forEach(function (r) {
+                const opt = document.createElement('option');
+                opt.value = r.name;
+                opt.textContent = r.name + (r.fileCount != null ? ' (' + r.fileCount + ' files)' : '');
+                opt.dataset.id = r.id || '';
+                if (prev && r.name.toLowerCase() === prev.toLowerCase()) opt.selected = true;
+                repoSelect.appendChild(opt);
+            });
+            clearFieldsPreview();
+            if (repoSelect.value) loadRepositoryFields();
+        }
+
+        async function loadRepositories(force) {
+            const apiKey = apiKeyInput.value.trim();
+            const err = document.getElementById('errBox');
+            if (!apiKey) {
+                setRepoOptions([]);
+                repoSelect.options[0].textContent = 'Enter API key to load repositories…';
+                repoHint.textContent = 'Repositories load for this API key’s tenant.';
+                lastLoadedKey = '';
+                clearFieldsPreview();
+                return;
+            }
+            if (!force && apiKey === lastLoadedKey) return;
+
+            const seq = ++loadSeq;
+            repoHint.textContent = 'Loading repositories…';
+            try {
+                const res = await fetch(reposUrl(), {
+                    method: 'GET',
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const text = await res.text();
+                if (seq !== loadSeq) return;
+                let data;
+                try { data = JSON.parse(text); } catch (_) { data = null; }
+                if (!res.ok) {
+                    const msg = (data && (data.message || data.error)) || text || ('Failed (' + res.status + ')');
+                    setRepoOptions([]);
+                    repoSelect.options[0].textContent = 'Could not load repositories';
+                    repoHint.textContent = msg;
+                    err.textContent = typeof msg === 'string' ? msg : PC.prettyJson(msg);
+                    err.classList.remove('hidden');
+                    return;
+                }
+                err.classList.add('hidden');
+                const list = Array.isArray(data) ? data : (data && (data.items || data.Items)) || [];
+                const items = list.map(function (r) {
+                    return {
+                        id: r.id || r.Id || '',
+                        name: r.name || r.Name || '',
+                        fileCount: r.fileCount != null ? r.fileCount : r.FileCount
+                    };
+                }).filter(function (r) { return !!r.name; })
+                  .sort(function (a, b) { return a.name.localeCompare(b.name); });
+                setRepoOptions(items);
+                lastLoadedKey = apiKey;
+                repoHint.textContent = items.length
+                    ? items.length + ' repository(ies) for this tenant — pick one from the list.'
+                    : 'No repositories found for this tenant.';
+            } catch (e) {
+                if (seq !== loadSeq) return;
+                setRepoOptions([]);
+                repoSelect.options[0].textContent = 'Could not load repositories';
+                repoHint.textContent = e.message || String(e);
+            }
+        }
+
+        apiKeyInput.addEventListener('blur', function () { loadRepositories(false); });
+        apiKeyInput.addEventListener('change', function () { loadRepositories(true); });
+        repoSelect.addEventListener('change', loadRepositoryFields);
+        if (apiKeyInput.value.trim()) {
+            setTimeout(function () { loadRepositories(true); }, 0);
+        }
+
+        document.getElementById('submitBtn').onclick = async () => {
+            const err = document.getElementById('errBox');
+            err.classList.add('hidden');
+            const apiKey = apiKeyInput.value.trim();
+            const repositoryName = repoSelect.value.trim();
+            const file = document.getElementById('uploadFile').files[0];
+            if (!apiKey) { err.textContent = 'API key is required.'; err.classList.remove('hidden'); return; }
+            if (!repositoryName) { err.textContent = 'Select a repository from the list.'; err.classList.remove('hidden'); return; }
+            if (!file) { err.textContent = 'File is required.'; err.classList.remove('hidden'); return; }
+            document.getElementById('btnLabel').textContent = 'Uploading...';
+            document.getElementById('spinner').classList.remove('hidden');
+            try {
+                const form = new FormData();
+                form.append('repositoryName', repositoryName);
+                const selected = repoSelect.options[repoSelect.selectedIndex];
+                if (selected && selected.dataset.id) form.append('repositoryId', selected.dataset.id);
+                form.append('file', file, file.name);
+                const ocrType = document.getElementById('ocrType').value.trim();
+                const pageNo = document.getElementById('pageNo').value.trim();
+                if (ocrType) form.append('ocrType', ocrType);
+                if (pageNo) form.append('pageNo', pageNo);
+                // fields are loaded from repository on the server (and shown above)
+                const url = window.PlaygroundBase
+                    ? PlaygroundBase.apiUrl('/api/v6/repositories/upload-file')
+                    : '/api/v6/repositories/upload-file';
+                const resRaw = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey },
+                    body: form
+                });
+                const resText = await resRaw.text();
+                let data;
+                try { data = JSON.parse(resText); } catch (_) { data = resText; }
+                document.getElementById('emptyHint').classList.add('hidden');
+                const out = document.getElementById('response');
+                out.classList.remove('hidden');
+                out.textContent = PC.prettyJson(data);
+                document.getElementById('postOutputActions').classList.remove('hidden');
+                if (!resRaw.ok) { err.textContent = typeof data === 'string' ? data : (data.error || PC.prettyJson(data)); err.classList.remove('hidden'); }
+            } catch (e) {
+                err.textContent = e.message || String(e);
+                err.classList.remove('hidden');
+            } finally {
+                document.getElementById('btnLabel').textContent = 'Upload File To Repository';
+                document.getElementById('spinner').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

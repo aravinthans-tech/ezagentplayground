@@ -10,14 +10,23 @@
         workflow: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>',
         inbox: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0H4"></path>',
         arrow: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>',
+        upload: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>',
+        download: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>',
+        filter: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>',
         doc: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8"></path>',
         chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 4 4 5-7"></path>'
     };
 
-    const FUNCTION_ITEMS = [
+    const WORKFLOW_ITEMS = [
         { href: '/workflow-start.html', label: 'Initiate Request', icon: 'play' },
         { href: '/workflow-get.html', label: 'Workflow List', icon: 'workflow' },
-        { href: '/move-next.html', label: 'Advance Workflow', icon: 'arrow' }
+        { href: '/move-next.html', label: 'Move Transaction', icon: 'arrow' }
+    ];
+
+    const REPOSITORY_ITEMS = [
+        { href: '/upload-file.html', label: 'Upload File To Repository', icon: 'upload' },
+        { href: '/download-file.html', label: 'Download File From Repository', icon: 'download' },
+        { href: '/repository-filter.html', label: 'Repository Filter', icon: 'filter' }
     ];
 
     function href(path) {
@@ -50,8 +59,12 @@
         html += '<div class="pg-sidebar-section"><h3 class="pg-sidebar-heading">API KEY</h3>';
         html += '<a href="' + href('/apikey.html') + '" class="' + linkClass(active === '/apikey.html') + '">' + svg('key') + '<span>Generate API Key</span></a>';
         html += '<a href="' + href('/my-api-keys.html') + '" class="' + linkClass(active === '/my-api-keys.html') + '">' + svg('shield') + '<span>My API Keys</span></a>';
-        html += '</div><div class="pg-sidebar-section"><h3 class="pg-sidebar-heading">FUNCTIONS</h3>';
-        FUNCTION_ITEMS.forEach(function (item) {
+        html += '</div><div class="pg-sidebar-section"><h3 class="pg-sidebar-heading">WORKFLOW</h3>';
+        WORKFLOW_ITEMS.forEach(function (item) {
+            html += '<a href="' + href(item.href) + '" class="' + linkClass(active === item.href) + '">' + svg(item.icon) + '<span>' + item.label + '</span></a>';
+        });
+        html += '</div><div class="pg-sidebar-section"><h3 class="pg-sidebar-heading">REPOSITORY</h3>';
+        REPOSITORY_ITEMS.forEach(function (item) {
             html += '<a href="' + href(item.href) + '" class="' + linkClass(active === item.href) + '">' + svg(item.icon) + '<span>' + item.label + '</span></a>';
         });
         html += '</div><div class="pg-sidebar-section"><h3 class="pg-sidebar-heading">TOOLS</h3>';

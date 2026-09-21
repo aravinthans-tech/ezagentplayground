@@ -40,22 +40,22 @@
         .key-enable-cell-inner { display: inline-flex; align-items: center; gap: .5rem; }
     </style>
 </head>
-<body class="pg-app bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+<body class="pg-app bg-gradient-to-br from-gray-50 via-neutral-100 to-neutral-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
     <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
         <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
-            <img src="ezofis-logo.png?v=20260716" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            <img src="ezofis-logo.png?v=20260721" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
             
             <h1 class="pg-brand-title">API Playground</h1>
         </a>
         <div class="flex space-x-4 text-sm">
             <a href="examples.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Code Examples</a>
             <a href="playground-documentation.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">Developer Docs</a>
-            <a href="my-api-keys.html" class="px-3 py-1 rounded text-white bg-gradient-to-r from-purple-600 to-blue-600">My API Keys</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded text-white bg-gradient-to-r from-neutral-800 to-neutral-900">My API Keys</a>
             <a href="usage-report.html" class="px-3 py-1 rounded text-gray-700 hover:bg-gray-100">API Usage</a>
         </div>
     </nav>
 
-    <div id="toast" class="hidden fixed top-16 right-4 z-[60]"><div id="toastContent" class="bg-white rounded-lg shadow-xl p-3 border-l-4 border-cyan-500 max-w-sm"><p id="toastMessage" class="text-sm font-medium text-cyan-900"></p></div></div>
+    <div id="toast" class="hidden fixed top-16 right-4 z-[60]"><div id="toastContent" class="bg-white rounded-lg shadow-xl p-3 border-l-4 border-neutral-800 max-w-sm"><p id="toastMessage" class="text-sm font-medium text-neutral-900"></p></div></div>
 
     <div class="flex flex-1 overflow-hidden">
         <aside id="sidebar"></aside>
@@ -64,17 +64,17 @@
         <script>PlaygroundSidebar.mount('/my-api-keys.html');</script>
         <main class="flex-1 overflow-y-auto p-4">
             <div class="max-w-6xl mx-auto w-full space-y-4">
-                <div class="text-center mb-2">
+                <div class="text-center mb-2 animate-fadeInUp">
                     <h2 class="text-xl font-semibold text-gray-900">My API Keys</h2>
                     <p class="text-xs text-gray-600 mt-1">Keys for your logged-in account. Use the eye icon to reveal a key.</p>
                 </div>
 
-                <div id="needLogin" class="hidden bg-white rounded-lg shadow-md p-6 max-w-md mx-auto text-center">
+                <div id="needLogin" class="hidden bg-white rounded-lg shadow-md p-6 max-w-md mx-auto text-center animate-fadeInUp delay-100">
                     <p class="text-sm text-gray-700 mb-3">Generate an API key first so we can load your tenant keys automatically.</p>
                     <a href="apikey.html" class="inline-block px-4 py-2 rounded-md text-white text-sm pg-btn-primary">Generate API Key</a>
                 </div>
 
-                <div id="keysPanel" class="hidden space-y-3">
+                <div id="keysPanel" class="hidden space-y-3 animate-slideInLeft delay-100">
                     <div class="flex items-center justify-between flex-wrap gap-2 bg-white rounded-lg shadow-sm px-4 py-3 border border-gray-100">
                         <div>
                             <p id="signedInAs" class="text-sm font-medium text-gray-800"></p>
@@ -94,7 +94,7 @@
                             <svg class="animate-spin h-8 w-8 mx-auto text-cyan-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             <p class="text-xs text-gray-500 mt-3">Loading keys...</p>
                         </div>
-                        <div id="myKeysEmpty" class="hidden text-center py-10 text-xs text-gray-500">No API keys yet. <a href="apikey.html" class="text-purple-700 hover:underline font-medium">Generate your first key</a>.</div>
+                        <div id="myKeysEmpty" class="hidden text-center py-10 text-xs text-gray-500">No API keys yet. <a href="apikey.html" class="text-neutral-800 hover:underline font-medium">Generate your first key</a>.</div>
                         <div id="myKeysError" class="hidden text-center py-6 text-sm text-red-600"></div>
                         <div class="overflow-x-auto">
                             <table id="myKeysTable" class="my-keys-table min-w-full divide-y divide-gray-200 hidden">
@@ -127,7 +127,7 @@
                 <input id="showKeyValue" readonly class="w-full pl-3 pr-10 py-2 text-sm font-mono border border-gray-300 rounded-md" />
                 <button type="button" id="copyShowKeyBtn" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-purple-600" title="Copy">Copy</button>
             </div>
-            <div class="flex justify-end"><button type="button" id="showKeyCloseBtn" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 text-white">Close</button></div>
+            <div class="flex justify-end"><button type="button" id="showKeyCloseBtn" class="text-xs px-3 py-1.5 rounded-md bg-gradient-to-r from-neutral-800 to-neutral-900 text-white">Close</button></div>
         </div>
     </div>
 
@@ -142,8 +142,8 @@
             const tc = document.getElementById('toastContent');
             const m = document.getElementById('toastMessage');
             m.textContent = msg;
-            tc.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 max-w-sm ' + (ok ? 'border-cyan-500' : 'border-red-500');
-            m.className = 'text-sm font-medium ' + (ok ? 'text-cyan-900' : 'text-red-900');
+            tc.className = 'bg-white rounded-lg shadow-xl p-3 border-l-4 max-w-sm ' + (ok ? 'border-neutral-800' : 'border-red-500');
+            m.className = 'text-sm font-medium ' + (ok ? 'text-neutral-900' : 'text-red-900');
             t.classList.remove('hidden');
             setTimeout(() => t.classList.add('hidden'), 2500);
         }
@@ -199,7 +199,7 @@
                         <td class="col-enabled">
                             <div class="key-enable-cell-inner">
                                 <span class="key-toggle-track ${expired ? '' : 'on'}" title="${expired ? 'Expired' : 'Enabled'}"><span class="key-toggle-thumb"></span></span>
-                                <span class="text-xs ${expired ? 'text-gray-400' : 'text-purple-700 font-medium'}">${expired ? 'Expired' : 'Enabled'}</span>
+                                <span class="text-xs ${expired ? 'text-gray-400' : 'text-neutral-800 font-medium'}">${expired ? 'Expired' : 'Enabled'}</span>
                             </div>
                         </td>
                         <td class="col-actions"></td>

@@ -25,14 +25,14 @@ aside#sidebar {
 /* Visible hover when v6 rules are not loaded on a page */
 #sidebar a.pg-nav-item:not(.pg-nav-item--active):hover,
 #sidebar a.api-nav:not(.pg-nav-item--active):hover {
-    background: #f0edff !important;
-    border-color: rgba(124, 92, 252, 0.45) !important;
-    color: #6a48eb !important;
-    box-shadow: 0 1px 4px rgba(124, 92, 252, 0.15) !important;
+    background: #f0f0f0 !important;
+    border-color: rgba(34, 34, 34, 0.35) !important;
+    color: #111111 !important;
+    box-shadow: 0 1px 4px rgba(34, 34, 34, 0.12) !important;
 }
 
 #sidebar a.pg-nav-item--active:hover {
-    background: rgba(124, 92, 252, 0.14) !important;
-    border-color: #7c5cfc !important;
-    color: #7c5cfc !important;
+    background: rgba(34, 34, 34, 0.12) !important;
+    border-color: #222222 !important;
+    color: #222222 !important;
 }

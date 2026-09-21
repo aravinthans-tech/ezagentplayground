@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download File From Repository - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="css/playground-animations.css">
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-shell.js" defer></script>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-neutral-100 to-neutral-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260721" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 text-sm">
+            <a href="examples.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div id="toast" class="hidden fixed top-14 right-4 z-50 bg-white shadow-lg rounded-lg p-3 border-l-4 border-neutral-800 max-w-md">
+        <p id="toastMessage" class="text-sm font-medium text-neutral-900"></p>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="sidebar"></aside>
+        <script src="js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/download-file.html');</script>
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-4 py-1 animate-fadeInUp">
+                    <h2 class="text-xl font-semibold text-gray-900">Download File From Repository</h2>
+                    <p class="text-xs text-gray-600 mt-1">
+                        Pick a repository and file, then download via <code class="bg-gray-100 px-1 rounded">GET /api/v6/repositories/{id}/items/{itemId}/file</code>
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 space-y-3 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-base font-semibold text-gray-900">Request</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
+                            <input type="text" id="apiKey" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono" placeholder="X-API-Key value" autocomplete="off">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Repository name <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="repositoryName" class="w-full appearance-none border border-gray-300 rounded-md px-3 py-2 pr-9 text-sm bg-white">
+                                    <option value="">Enter API key to load repositories…</option>
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-500" aria-hidden="true">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </span>
+                            </div>
+                            <p id="repoHint" class="text-[11px] text-gray-500 mt-1">Repositories load for this API key’s tenant.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">File <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="itemSelect" class="w-full appearance-none border border-gray-300 rounded-md px-3 py-2 pr-9 text-sm bg-white">
+                                    <option value="">Select a repository first…</option>
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-500" aria-hidden="true">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </span>
+                            </div>
+                            <p id="itemHint" class="text-[11px] text-gray-500 mt-1">Files load from the selected repository.</p>
+                        </div>
+                        <p class="text-[11px] text-gray-500">Wrapper: <code>GET /api/v6/repositories/{repositoryId}/items/{itemId}/file</code></p>
+                        <button type="button" id="submitBtn" class="w-full py-2 rounded-md text-white text-sm font-medium pg-btn-primary flex items-center justify-center gap-2">
+                            <span id="btnLabel">Download File From Repository</span>
+                            <svg id="spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        </button>
+                        <div id="errBox" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-md p-2.5"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-base font-semibold text-gray-900 mb-2">Response</h3>
+                        <div id="emptyHint" class="text-gray-500 text-xs text-center py-10">Download to save the file to your computer.</div>
+                        <pre id="response" class="hidden bg-gray-50 border rounded p-3 text-xs overflow-auto max-h-[75vh]"></pre>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-end">
+                            <a href="examples.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-neutral-800 hover:bg-neutral-900">Code examples</a>
+                            <a href="playground-documentation.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">Docs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/playground-common.js"></script>
+    <script>
+        const PC = window.PlaygroundCommon;
+        PC.restoreFields();
+        const apiKeyInput = document.getElementById('apiKey');
+        const repoSelect = document.getElementById('repositoryName');
+        const itemSelect = document.getElementById('itemSelect');
+        const repoHint = document.getElementById('repoHint');
+        const itemHint = document.getElementById('itemHint');
+        let lastLoadedKey = '';
+        let loadSeq = 0;
+        let itemSeq = 0;
+
+        function apiUrl(path) {
+            return window.PlaygroundBase ? PlaygroundBase.apiUrl(path) : path;
+        }
+
+        function setItemOptions(items) {
+            itemSelect.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = items.length ? 'Select a file…' : 'No files found';
+            itemSelect.appendChild(placeholder);
+            items.forEach(function (it) {
+                const opt = document.createElement('option');
+                opt.value = it.id;
+                opt.textContent = (it.fileName || it.id) + (it.id ? '  ·  ' + it.id : '');
+                opt.dataset.name = it.fileName || '';
+                itemSelect.appendChild(opt);
+            });
+        }
+
+        async function loadItems() {
+            const apiKey = apiKeyInput.value.trim();
+            const selected = repoSelect.options[repoSelect.selectedIndex];
+            const id = selected && selected.dataset ? selected.dataset.id : '';
+            if (!apiKey || !id) {
+                setItemOptions([]);
+                itemSelect.options[0].textContent = 'Select a repository first…';
+                itemHint.textContent = 'Files load from the selected repository.';
+                return;
+            }
+            const seq = ++itemSeq;
+            itemHint.textContent = 'Loading files…';
+            try {
+                const res = await fetch(apiUrl('/api/v6/repositories/' + id + '/items?page=1&pageSize=50'), {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const text = await res.text();
+                if (seq !== itemSeq) return;
+                let data;
+                try { data = JSON.parse(text); } catch (_) { data = null; }
+                if (!res.ok) {
+                    setItemOptions([]);
+                    itemSelect.options[0].textContent = 'Could not load files';
+                    itemHint.textContent = (data && (data.error || data.message)) || text;
+                    return;
+                }
+                const list = Array.isArray(data)
+                    ? data
+                    : (data && (data.data || data.Data || data.items || data.Items)) || [];
+                const items = list.map(function (r) {
+                    return {
+                        id: r.id || r.Id || '',
+                        fileName: r.fileName || r.FileName || ''
+                    };
+                }).filter(function (r) { return !!r.id; });
+                setItemOptions(items);
+                itemHint.textContent = items.length
+                    ? items.length + ' file(s) loaded — pick one to download.'
+                    : 'No files found in this repository.';
+            } catch (e) {
+                if (seq !== itemSeq) return;
+                setItemOptions([]);
+                itemSelect.options[0].textContent = 'Could not load files';
+                itemHint.textContent = e.message || String(e);
+            }
+        }
+
+        function setRepoOptions(items) {
+            const prev = repoSelect.value || '';
+            repoSelect.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = items.length ? 'Select a repository…' : 'No repositories found';
+            repoSelect.appendChild(placeholder);
+            items.forEach(function (r) {
+                const opt = document.createElement('option');
+                opt.value = r.name;
+                opt.textContent = r.name;
+                opt.dataset.id = r.id || '';
+                if (prev && r.name.toLowerCase() === prev.toLowerCase()) opt.selected = true;
+                repoSelect.appendChild(opt);
+            });
+            setItemOptions([]);
+            if (repoSelect.value) loadItems();
+        }
+
+        async function loadRepositories(force) {
+            const apiKey = apiKeyInput.value.trim();
+            const err = document.getElementById('errBox');
+            if (!apiKey) {
+                setRepoOptions([]);
+                repoSelect.options[0].textContent = 'Enter API key to load repositories…';
+                lastLoadedKey = '';
+                return;
+            }
+            if (!force && apiKey === lastLoadedKey) return;
+            const seq = ++loadSeq;
+            repoHint.textContent = 'Loading repositories…';
+            try {
+                const res = await fetch(apiUrl('/api/v6/repositories'), { headers: { 'X-API-Key': apiKey } });
+                const text = await res.text();
+                if (seq !== loadSeq) return;
+                let data;
+                try { data = JSON.parse(text); } catch (_) { data = null; }
+                if (!res.ok) {
+                    const msg = (data && (data.message || data.error)) || text;
+                    setRepoOptions([]);
+                    repoHint.textContent = msg;
+                    err.textContent = typeof msg === 'string' ? msg : PC.prettyJson(msg);
+                    err.classList.remove('hidden');
+                    return;
+                }
+                err.classList.add('hidden');
+                const list = Array.isArray(data) ? data : [];
+                const items = list.map(function (r) {
+                    return { id: r.id || r.Id || '', name: r.name || r.Name || '' };
+                }).filter(function (r) { return !!r.name; })
+                  .sort(function (a, b) { return a.name.localeCompare(b.name); });
+                setRepoOptions(items);
+                lastLoadedKey = apiKey;
+                repoHint.textContent = items.length
+                    ? items.length + ' repository(ies) — pick one, then pick a file.'
+                    : 'No repositories found for this tenant.';
+            } catch (e) {
+                if (seq !== loadSeq) return;
+                setRepoOptions([]);
+                repoHint.textContent = e.message || String(e);
+            }
+        }
+
+        apiKeyInput.addEventListener('blur', function () { loadRepositories(false); });
+        apiKeyInput.addEventListener('change', function () { loadRepositories(true); });
+        repoSelect.addEventListener('change', loadItems);
+        if (apiKeyInput.value.trim()) setTimeout(function () { loadRepositories(true); }, 0);
+
+        document.getElementById('submitBtn').onclick = async () => {
+            const err = document.getElementById('errBox');
+            err.classList.add('hidden');
+            const apiKey = apiKeyInput.value.trim();
+            const repoOpt = repoSelect.options[repoSelect.selectedIndex];
+            const repoId = repoOpt && repoOpt.dataset ? repoOpt.dataset.id : '';
+            const itemId = itemSelect.value.trim();
+            if (!apiKey) { err.textContent = 'API key is required.'; err.classList.remove('hidden'); return; }
+            if (!repoId) { err.textContent = 'Select a repository.'; err.classList.remove('hidden'); return; }
+            if (!itemId) { err.textContent = 'Select a file.'; err.classList.remove('hidden'); return; }
+            document.getElementById('btnLabel').textContent = 'Downloading...';
+            document.getElementById('spinner').classList.remove('hidden');
+            try {
+                const url = apiUrl('/api/v6/repositories/' + repoId + '/items/' + itemId + '/file?disposition=attachment');
+                const resRaw = await fetch(url, { headers: { 'X-API-Key': apiKey } });
+                const ctype = resRaw.headers.get('content-type') || '';
+                if (!resRaw.ok) {
+                    const resText = await resRaw.text();
+                    let data;
+                    try { data = JSON.parse(resText); } catch (_) { data = resText; }
+                    document.getElementById('emptyHint').classList.add('hidden');
+                    const out = document.getElementById('response');
+                    out.classList.remove('hidden');
+                    out.textContent = PC.prettyJson(data);
+                    document.getElementById('postOutputActions').classList.remove('hidden');
+                    err.textContent = typeof data === 'string' ? data : (data.error || PC.prettyJson(data));
+                    err.classList.remove('hidden');
+                    return;
+                }
+                if (ctype.indexOf('json') >= 0) {
+                    const resText = await resRaw.text();
+                    let data;
+                    try { data = JSON.parse(resText); } catch (_) { data = resText; }
+                    err.textContent = typeof data === 'string' ? data : (data.error || PC.prettyJson(data));
+                    err.classList.remove('hidden');
+                    return;
+                }
+                const blob = await resRaw.blob();
+                let fileName = 'download';
+                const disp = resRaw.headers.get('content-disposition') || '';
+                const m = /filename\*?=(?:UTF-8'')?["']?([^"';]+)/i.exec(disp);
+                if (m) fileName = decodeURIComponent(m[1]);
+                else {
+                    const selected = itemSelect.options[itemSelect.selectedIndex];
+                    if (selected && selected.dataset.name) fileName = selected.dataset.name;
+                }
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(a.href);
+                document.getElementById('emptyHint').classList.add('hidden');
+                const out = document.getElementById('response');
+                out.classList.remove('hidden');
+                out.textContent = PC.prettyJson({
+                    status: 'downloaded',
+                    fileName: fileName,
+                    bytes: blob.size,
+                    repositoryId: repoId,
+                    itemId: itemId
+                });
+                document.getElementById('postOutputActions').classList.remove('hidden');
+            } catch (e) {
+                err.textContent = e.message || String(e);
+                err.classList.remove('hidden');
+            } finally {
+                document.getElementById('btnLabel').textContent = 'Download File From Repository';
+                document.getElementById('spinner').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

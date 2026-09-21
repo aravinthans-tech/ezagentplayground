@@ -1,36 +1,38 @@
 :root {
-  --primary: #7c5cfc;
-  --primary-hover: #6a48eb;
-  --primary-rgb: 124, 92, 252;
-  --surface-primary: #fdfcfd;
+  /* EZOFIS logo mark (WITH BG PNG/3.png) — charcoal brand, no purple/blue */
+  --primary: #222222;
+  --primary-hover: #111111;
+  --primary-rgb: 34, 34, 34;
+  --surface-primary: #f7f7f7;
   --surface-raised: #ffffff;
-  --surface-muted: #faf9fb;
-  --border-color: #f2eff3;
-  --text-primary: #211f26;
-  --text-secondary: #65636d;
-  --text-muted: #84828e;
-  --code-bg: #faf9fb;
-  --code-text: #211f26;
-  --focus-ring: rgba(124, 92, 252, 0.12);
-  --active-bg: rgba(124, 92, 252, 0.08);
-  --active-shadow: 0 10px 25px -5px rgba(124, 92, 252, 0.15);
+  --surface-muted: #f0f0f0;
+  --border-color: #e5e5e5;
+  --text-primary: #171717;
+  --text-secondary: #525252;
+  --text-muted: #737373;
+  --code-bg: #f5f5f5;
+  --code-text: #171717;
+  --focus-ring: rgba(34, 34, 34, 0.12);
+  --active-bg: rgba(34, 34, 34, 0.08);
+  --active-shadow: 0 10px 25px -5px rgba(34, 34, 34, 0.18);
 }
 
 html[data-theme="dark"] {
-  --primary: #8b72fc;
-  --primary-hover: #7c5cfc;
-  --surface-primary: #15131a;
-  --surface-raised: #1d1a24;
-  --surface-muted: #25212d;
-  --border-color: #2f2a38;
-  --text-primary: #f8f7fb;
-  --text-secondary: #d4cfdd;
-  --text-muted: #aaa5b5;
-  --code-bg: #111015;
-  --code-text: #f8f7fb;
-  --focus-ring: rgba(139, 114, 252, 0.16);
-  --active-bg: rgba(139, 114, 252, 0.16);
-  --active-shadow: 0 10px 25px -5px rgba(139, 114, 252, 0.24);
+  --primary: #e5e5e5;
+  --primary-hover: #ffffff;
+  --primary-rgb: 229, 229, 229;
+  --surface-primary: #0a0a0a;
+  --surface-raised: #171717;
+  --surface-muted: #262626;
+  --border-color: #404040;
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
+  --code-bg: #0a0a0a;
+  --code-text: #fafafa;
+  --focus-ring: rgba(229, 229, 229, 0.16);
+  --active-bg: rgba(229, 229, 229, 0.12);
+  --active-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
   color-scheme: dark;
 }
 

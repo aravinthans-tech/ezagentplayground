@@ -187,6 +187,30 @@ public sealed class V6ApiClient
         return new HttpProxyResult((int)response.StatusCode, body, contentType);
     }
 
+    public async Task<HttpProxyBytesResult> SendBytesAsync(
+        HttpMethod method,
+        string relativePath,
+        string accessToken,
+        Guid? tenantId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromMinutes(5);
+        var path = relativePath.StartsWith('/') ? relativePath : "/" + relativePath;
+        using var request = new HttpRequestMessage(method, $"{BaseUrl}{path}");
+        if (tenantId.HasValue && tenantId.Value != Guid.Empty)
+            request.Headers.TryAddWithoutValidation("X-Tenant-Id", tenantId.Value.ToString());
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        var contentType = response.Content.Headers.ContentType?.ToString()
+            ?? "application/octet-stream";
+        var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+            ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"');
+        return new HttpProxyBytesResult((int)response.StatusCode, bytes, contentType, fileName);
+    }
+
     public async Task<HttpProxyResult> SendMultipartAsync(
         string relativePath,
         string accessToken,
@@ -198,7 +222,37 @@ public sealed class V6ApiClient
         Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
+        var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(context))
+            fields["context"] = context;
+        if (!string.IsNullOrWhiteSpace(envType))
+            fields["envType"] = envType;
+
+        return await SendMultipartFormAsync(
+            relativePath,
+            accessToken,
+            fields,
+            fileName,
+            contentType,
+            fileBytes,
+            tenantId,
+            cancellationToken: cancellationToken);
+    }
+
+    /// <summary>POST multipart with arbitrary form fields + optional file part named <c>file</c>.</summary>
+    public async Task<HttpProxyResult> SendMultipartFormAsync(
+        string relativePath,
+        string accessToken,
+        IReadOnlyDictionary<string, string>? fields,
+        string? fileName = null,
+        string? contentType = null,
+        byte[]? fileBytes = null,
+        Guid? tenantId = null,
+        string fileFieldName = "file",
+        CancellationToken cancellationToken = default)
+    {
         var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromMinutes(5);
         var path = relativePath.StartsWith('/') ? relativePath : "/" + relativePath;
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}{path}");
         if (tenantId.HasValue && tenantId.Value != Guid.Empty)
@@ -206,16 +260,22 @@ public sealed class V6ApiClient
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         using var form = new MultipartFormDataContent();
-        if (!string.IsNullOrWhiteSpace(context))
-            form.Add(new StringContent(context), "context");
-        if (!string.IsNullOrWhiteSpace(envType))
-            form.Add(new StringContent(envType), "envType");
+        if (fields != null)
+        {
+            foreach (var (key, value) in fields)
+            {
+                if (string.IsNullOrWhiteSpace(key) || value is null)
+                    continue;
+                form.Add(new StringContent(value), key);
+            }
+        }
+
         if (fileBytes is { Length: > 0 } && !string.IsNullOrWhiteSpace(fileName))
         {
             var fileContent = new ByteArrayContent(fileBytes);
             if (!string.IsNullOrWhiteSpace(contentType))
                 fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-            form.Add(fileContent, "file", fileName);
+            form.Add(fileContent, fileFieldName, fileName);
         }
 
         request.Content = form;
@@ -267,6 +327,8 @@ public sealed record TenantEmailItem(
     string TenantName);
 
 public sealed record HttpProxyResult(int StatusCode, string Body, string ContentType);
+
+public sealed record HttpProxyBytesResult(int StatusCode, byte[] Body, string ContentType, string? FileName);
 
 public sealed class V6ApiException : Exception
 {

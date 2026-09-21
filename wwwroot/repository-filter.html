@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repository Filter - API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="css/playground-sidebar.css">
+    <link rel="stylesheet" href="css/playground-animations.css">
+    <link rel="stylesheet" href="css/playground-v6.css">
+    <link rel="stylesheet" href="css/playground-dark.css">
+    <script src="js/playground-base.js"></script>
+    <script src="js/playground-shell.js" defer></script>
+</head>
+<body class="pg-app bg-gradient-to-br from-gray-50 via-neutral-100 to-neutral-50 flex flex-col" style="height:100vh;margin:0;overflow:hidden;">
+    <nav class="bg-white shadow-md h-12 flex items-center justify-between px-6 sticky top-0 z-40">
+        <a href="apikey.html" class="pg-brand flex items-center gap-2.5 flex-shrink-0 min-w-0 no-underline">
+            <img src="ezofis-logo.png?v=20260721" alt="EZOFIS" class="pg-brand-logo" width="36" height="36">
+            <h1 class="pg-brand-title">API Playground</h1>
+        </a>
+        <div class="flex space-x-4 text-sm">
+            <a href="examples.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Code Examples</a>
+            <a href="playground-documentation.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">Developer Docs</a>
+            <a href="my-api-keys.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">My API Keys</a>
+            <a href="usage-report.html" class="px-3 py-1 rounded font-semibold text-gray-700 hover:bg-gray-100">API Usage</a>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="sidebar"></aside>
+        <script src="js/playground-sidebar.js"></script>
+        <script>PlaygroundSidebar.mount('/repository-filter.html');</script>
+        <main class="flex-1 overflow-y-auto p-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-4 py-1 animate-fadeInUp">
+                    <h2 class="text-xl font-semibold text-gray-900">Repository Filter</h2>
+                    <p class="text-xs text-gray-600 mt-1">
+                        Pick a repository → click a filter (e.g. Supplier) → click a value → see matching files
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-lg shadow-md p-4 space-y-3 card-hover animate-slideInLeft delay-100">
+                        <h3 class="text-base font-semibold text-gray-900">Request</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Playground API key <span class="text-red-500">*</span></label>
+                            <input type="text" id="apiKey" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono" placeholder="X-API-Key value" autocomplete="off">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Repository <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="repositoryName" class="w-full appearance-none border border-gray-300 rounded-md px-3 py-2 pr-9 text-sm bg-white">
+                                    <option value="">Enter API key to load repositories…</option>
+                                </select>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-gray-500">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </span>
+                            </div>
+                            <p id="repoHint" class="text-[11px] text-gray-500 mt-1">Repositories load for this API key’s tenant.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Filters</label>
+                            <div id="filterChips" class="flex flex-wrap gap-1.5 min-h-[40px]"></div>
+                            <p id="filterHint" class="text-[11px] text-gray-500 mt-1">Select a repository to load filters.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Values <span id="valueLabel" class="text-gray-400 font-normal"></span></label>
+                            <div id="valueChips" class="flex flex-wrap gap-1.5 max-h-40 overflow-auto min-h-[40px]"></div>
+                            <p id="valueHint" class="text-[11px] text-gray-500 mt-1">Click a filter to load available values.</p>
+                        </div>
+                        <p class="text-[11px] text-gray-500">
+                            <code>GET …/filter-fields</code> → <code>GET …/facets/{field}</code> → <code>POST …/items/query</code>
+                        </p>
+                        <div id="errBox" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-md p-2.5"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4 card-hover animate-slideInRight delay-200">
+                        <h3 class="text-base font-semibold text-gray-900 mb-2">Files</h3>
+                        <div id="emptyHint" class="text-gray-500 text-xs text-center py-10">Click a filter value to list matching files.</div>
+                        <div id="fileList" class="hidden space-y-1.5 max-h-[52vh] overflow-auto"></div>
+                        <pre id="response" class="hidden bg-gray-50 border rounded p-3 text-xs overflow-auto max-h-[30vh] mt-3"></pre>
+                        <div id="postOutputActions" class="hidden mt-3 flex flex-wrap gap-2 justify-end">
+                            <a href="examples.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-neutral-800 hover:bg-neutral-900">Code examples</a>
+                            <a href="playground-documentation.html" class="text-xs px-3 py-1.5 rounded-md font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50">Docs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/playground-common.js"></script>
+    <script>
+        const PC = window.PlaygroundCommon;
+        PC.restoreFields();
+        const apiKeyInput = document.getElementById('apiKey');
+        const repoSelect = document.getElementById('repositoryName');
+        const chipOn = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-neutral-800 text-white';
+        const chipOff = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200';
+        let lastLoadedKey = '';
+        let loadSeq = 0;
+        let filterSeq = 0;
+        let facetSeq = 0;
+        let querySeq = 0;
+        let selectedField = '';
+        let selectedValue = '';
+
+        function apiUrl(path) { return window.PlaygroundBase ? PlaygroundBase.apiUrl(path) : path; }
+        function repoId() {
+            const opt = repoSelect.options[repoSelect.selectedIndex];
+            return opt && opt.dataset ? (opt.dataset.id || '') : '';
+        }
+        function showErr(msg) {
+            const err = document.getElementById('errBox');
+            err.textContent = msg;
+            err.classList.remove('hidden');
+        }
+        function hideErr() { document.getElementById('errBox').classList.add('hidden'); }
+
+        function setRepoOptions(items) {
+            const prev = repoSelect.value || '';
+            repoSelect.innerHTML = '';
+            const ph = document.createElement('option');
+            ph.value = '';
+            ph.textContent = items.length ? 'Select a repository…' : 'No repositories found';
+            repoSelect.appendChild(ph);
+            items.forEach(function (r) {
+                const opt = document.createElement('option');
+                opt.value = r.name;
+                opt.textContent = r.name;
+                opt.dataset.id = r.id || '';
+                if (prev && r.name.toLowerCase() === prev.toLowerCase()) opt.selected = true;
+                repoSelect.appendChild(opt);
+            });
+            clearFilters();
+            if (repoSelect.value) loadFilters();
+        }
+
+        function clearFilters() {
+            selectedField = '';
+            selectedValue = '';
+            document.getElementById('filterChips').innerHTML = '';
+            document.getElementById('valueChips').innerHTML = '';
+            document.getElementById('valueLabel').textContent = '';
+            document.getElementById('filterHint').textContent = 'Select a repository to load filters.';
+            document.getElementById('valueHint').textContent = 'Click a filter to load available values.';
+            document.getElementById('emptyHint').classList.remove('hidden');
+            document.getElementById('fileList').classList.add('hidden');
+            document.getElementById('fileList').innerHTML = '';
+        }
+
+        async function loadRepositories(force) {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                setRepoOptions([]);
+                repoSelect.options[0].textContent = 'Enter API key to load repositories…';
+                lastLoadedKey = '';
+                return;
+            }
+            if (!force && apiKey === lastLoadedKey) return;
+            const seq = ++loadSeq;
+            document.getElementById('repoHint').textContent = 'Loading repositories…';
+            try {
+                const res = await fetch(apiUrl('/api/v6/repositories'), { headers: { 'X-API-Key': apiKey } });
+                const text = await res.text();
+                if (seq !== loadSeq) return;
+                const data = JSON.parse(text);
+                if (!res.ok) { showErr(data.message || data.error || text); return; }
+                hideErr();
+                const list = Array.isArray(data) ? data : [];
+                const items = list.map(function (r) {
+                    return { id: r.id || r.Id || '', name: r.name || r.Name || '' };
+                }).filter(function (r) { return !!r.name; })
+                  .sort(function (a, b) { return a.name.localeCompare(b.name); });
+                setRepoOptions(items);
+                lastLoadedKey = apiKey;
+                document.getElementById('repoHint').textContent = items.length
+                    ? items.length + ' repository(ies) — pick one to see filters.'
+                    : 'No repositories found.';
+            } catch (e) {
+                if (seq !== loadSeq) return;
+                showErr(e.message || String(e));
+            }
+        }
+
+        async function loadFilters() {
+            const apiKey = apiKeyInput.value.trim();
+            const id = repoId();
+            if (!apiKey || !id) { clearFilters(); return; }
+            const seq = ++filterSeq;
+            document.getElementById('filterHint').textContent = 'Loading filters…';
+            try {
+                const res = await fetch(apiUrl('/api/v6/repositories/' + id + '/items/filter-fields'), {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const data = await res.json();
+                if (seq !== filterSeq) return;
+                if (!res.ok) { showErr(data.error || data.message || 'Could not load filters.'); return; }
+                hideErr();
+                const fields = (data.fields || data.Fields || []).map(function (f) {
+                    return {
+                        name: f.name || f.Name || f.sqlColumnName || f.SqlColumnName,
+                        type: f.dataType || f.DataType || ''
+                    };
+                }).filter(function (f) { return !!f.name; });
+                const box = document.getElementById('filterChips');
+                box.innerHTML = '';
+                if (!fields.length) {
+                    document.getElementById('filterHint').textContent = 'No filters for this repository.';
+                    return;
+                }
+                fields.forEach(function (f) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = chipOff;
+                    btn.textContent = f.name;
+                    btn.onclick = function () { selectFilter(f.name, btn); };
+                    box.appendChild(btn);
+                });
+                document.getElementById('filterHint').textContent = fields.length + ' filter(s) — click one (e.g. Supplier).';
+            } catch (e) {
+                if (seq !== filterSeq) return;
+                showErr(e.message || String(e));
+            }
+        }
+
+        async function selectFilter(name, btn) {
+            selectedField = name;
+            selectedValue = '';
+            document.getElementById('valueLabel').textContent = '· ' + name;
+            Array.from(document.getElementById('filterChips').children).forEach(function (el) {
+                el.className = chipOff;
+            });
+            btn.className = chipOn;
+            document.getElementById('fileList').classList.add('hidden');
+            document.getElementById('emptyHint').classList.remove('hidden');
+            document.getElementById('emptyHint').textContent = 'Click a value to list matching files.';
+            const apiKey = apiKeyInput.value.trim();
+            const id = repoId();
+            const seq = ++facetSeq;
+            document.getElementById('valueHint').textContent = 'Loading ' + name + ' values…';
+            document.getElementById('valueChips').innerHTML = '';
+            try {
+                const res = await fetch(apiUrl('/api/v6/repositories/' + id + '/items/facets/' + encodeURIComponent(name) + '?limit=100'), {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const data = await res.json();
+                if (seq !== facetSeq) return;
+                if (!res.ok) { showErr(data.error || data.message || 'Could not load values.'); return; }
+                hideErr();
+                const list = Array.isArray(data) ? data : (data.items || data.Items || []);
+                const values = list.map(function (v) {
+                    if (typeof v === 'string') return { value: v, count: null };
+                    return { value: v.value || v.Value || '', count: v.count != null ? v.count : v.Count };
+                }).filter(function (v) { return v.value !== ''; });
+                const box = document.getElementById('valueChips');
+                if (!values.length) {
+                    document.getElementById('valueHint').textContent = 'No values for ' + name + '.';
+                    return;
+                }
+                values.forEach(function (v) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = chipOff;
+                    b.textContent = v.value + (v.count != null ? ' (' + v.count + ')' : '');
+                    b.onclick = function () { selectValue(v.value, b); };
+                    box.appendChild(b);
+                });
+                document.getElementById('valueHint').textContent = values.length + ' value(s) — click one to show files.';
+            } catch (e) {
+                if (seq !== facetSeq) return;
+                showErr(e.message || String(e));
+            }
+        }
+
+        async function selectValue(value, btn) {
+            selectedValue = value;
+            Array.from(document.getElementById('valueChips').children).forEach(function (el) {
+                el.className = chipOff;
+            });
+            btn.className = chipOn;
+            const apiKey = apiKeyInput.value.trim();
+            const id = repoId();
+            const seq = ++querySeq;
+            document.getElementById('emptyHint').textContent = 'Loading files…';
+            document.getElementById('emptyHint').classList.remove('hidden');
+            document.getElementById('fileList').classList.add('hidden');
+            const filters = {};
+            filters[selectedField] = [value];
+            try {
+                const res = await fetch(apiUrl('/api/v6/repositories/' + id + '/items/query'), {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filters: filters, page: 1, pageSize: 50 })
+                });
+                const data = await res.json();
+                if (seq !== querySeq) return;
+                if (!res.ok) { showErr(data.error || data.message || 'Query failed.'); return; }
+                hideErr();
+                const items = Array.isArray(data) ? data : (data.data || data.Data || data.items || data.Items || []);
+                const files = items.map(function (r) {
+                    return {
+                        id: r.id || r.Id || '',
+                        fileName: r.fileName || r.FileName || '(unnamed)',
+                        supplier: r.supplier || r.Supplier || '',
+                        invoice: r.invoiceNumber || r.InvoiceNumber || r.invoiceNo || ''
+                    };
+                });
+                const listEl = document.getElementById('fileList');
+                listEl.innerHTML = '';
+                if (!files.length) {
+                    document.getElementById('emptyHint').textContent = 'No files for ' + selectedField + ' = ' + value + '.';
+                    return;
+                }
+                files.forEach(function (f) {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between gap-2 border border-gray-200 rounded-md px-2.5 py-2 text-xs';
+                    const meta = [f.fileName, f.supplier, f.invoice].filter(Boolean).join('  ·  ');
+                    row.innerHTML = '<span class="truncate font-medium text-gray-800">' + meta.replace(/</g, '') + '</span>';
+                    if (f.id) {
+                        const a = document.createElement('a');
+                        a.href = apiUrl('/api/v6/repositories/' + id + '/items/' + f.id + '/file?disposition=attachment');
+                        a.className = 'flex-shrink-0 text-xs px-2 py-1 rounded bg-neutral-800 text-white no-underline';
+                        a.textContent = 'Download';
+                        a.onclick = async function (ev) {
+                            ev.preventDefault();
+                            const dl = await fetch(a.href, { headers: { 'X-API-Key': apiKey } });
+                            if (!dl.ok) { showErr('Download failed.'); return; }
+                            const blob = await dl.blob();
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = f.fileName || 'file';
+                            link.click();
+                        };
+                        row.appendChild(a);
+                    }
+                    listEl.appendChild(row);
+                });
+                document.getElementById('emptyHint').classList.add('hidden');
+                listEl.classList.remove('hidden');
+                const out = document.getElementById('response');
+                out.classList.remove('hidden');
+                out.textContent = PC.prettyJson({
+                    filter: selectedField,
+                    value: value,
+                    count: files.length,
+                    files: files
+                });
+                document.getElementById('postOutputActions').classList.remove('hidden');
+            } catch (e) {
+                if (seq !== querySeq) return;
+                showErr(e.message || String(e));
+            }
+        }
+
+        apiKeyInput.addEventListener('blur', function () { loadRepositories(false); });
+        apiKeyInput.addEventListener('change', function () { loadRepositories(true); });
+        repoSelect.addEventListener('change', loadFilters);
+        if (apiKeyInput.value.trim()) setTimeout(function () { loadRepositories(true); }, 0);
+    </script>
+</body>
+</html>

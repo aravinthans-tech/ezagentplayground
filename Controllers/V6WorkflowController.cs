@@ -231,7 +231,7 @@ public sealed class V6WorkflowController : ControllerBase
     }
 
     /// <summary>
-    /// Advance Workflow: client may send <c>workflowName</c> in the JSON body; playground resolves
+    /// Move Transaction: client may send <c>workflowName</c> in the JSON body; playground resolves
     /// it to <c>workflowId</c> then proxies POST /api/workflows/instances/{instanceId}/move-next.
     /// </summary>
     [HttpPost("workflows/instances/{instanceId:guid}/move-next")]

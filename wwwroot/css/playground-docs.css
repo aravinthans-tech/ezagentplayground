@@ -1,8 +1,8 @@
 /* Developer documentation — isolated from generic pg-app card rules */
 .pg-docs-page {
-  --doc-accent: #7c5cfc;
-  --doc-border: #e8e4ee;
-  --doc-muted: #65636d;
+  --doc-accent: #222222;
+  --doc-border: #e5e5e5;
+  --doc-muted: #525252;
 }
 
 .pg-docs-page main {
