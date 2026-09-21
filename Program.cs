@@ -4,6 +4,11 @@ using V6Playground.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render (and similar hosts) inject PORT; bind all interfaces.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Services.Configure<V6ApiOptions>(
     builder.Configuration.GetSection(V6ApiOptions.SectionName));
 builder.Services.Configure<SocialAuthOptions>(

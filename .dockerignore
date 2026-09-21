@@ -1,0 +1,9 @@
+**/.git
+**/bin
+**/obj
+**/logs
+**/.vs
+**/Data
+**/*.user
+**/_build_verify*
+**/agent-tools
